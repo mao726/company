@@ -1,0 +1,5 @@
+# secrets - never commit
+.env
+*.env
+business-os/automation/**/.env
+business-os/automation/**/secrets.json
