@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>時短ワークス｜制作実績</title>
+<meta name="description" content="Excel・スプレッドシートの作業代行、GASによる業務自動化、LP制作の実績とサンプル。">
+<style>
+  :root{--bg:#f7f8fa;--surface:#fff;--ink:#1f2933;--muted:#5f6b7a;--accent:#1f7a5c;--line:#e3e7ec}
+  @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121619;--surface:#1b2126;--ink:#e8edf2;--muted:#9aa7b4;--accent:#4cc39a;--line:#2a333b}}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:"Hiragino Sans","Noto Sans JP",system-ui,sans-serif;line-height:1.8}
+  .wrap{max-width:960px;margin:0 auto;padding:0 16px}
+  header{padding:56px 0 32px}
+  h1{font-size:clamp(26px,5vw,38px);margin:0 0 8px;line-height:1.3}
+  h1 span{color:var(--accent)}
+  .lead{color:var(--muted);margin:0}
+  .badges{display:flex;flex-wrap:wrap;gap:8px;margin-top:20px}
+  .badge{font-size:13px;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:4px 12px}
+  h2{font-size:20px;margin:48px 0 16px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:20px;display:flex;flex-direction:column}
+  .card h3{margin:0 0 6px;font-size:17px}
+  .card p{margin:0 0 12px;color:var(--muted);font-size:14px;flex:1}
+  .card a{color:var(--accent);font-weight:700;text-decoration:none;font-size:14px}
+  .tag{font-size:12px;color:var(--accent);font-weight:700;letter-spacing:.05em}
+  table{width:100%;border-collapse:collapse;background:var(--surface);border:1px solid var(--line);border-radius:16px;overflow:hidden;font-size:14px}
+  th,td{padding:12px 14px;border-bottom:1px solid var(--line);text-align:left}
+  th{color:var(--muted);font-weight:600;width:34%}
+  footer{color:var(--muted);font-size:13px;padding:48px 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>面倒なExcel・スプレッドシート作業を、<span>最短当日</span>で。</h1>
+    <p class="lead">作業代行・業務自動化（GAS）・LP制作をお受けしています。</p>
+    <div class="badges"><span class="badge">最短当日納品</span><span class="badge">見積・相談無料</span><span class="badge">納品後7日間無料修正</span><span class="badge">コード・手順書つき</span></div>
+  </header>
+
+  <h2>サンプル</h2>
+  <div class="grid">
+    <div class="card"><span class="tag">LP制作</span><h3>カフェのLP（デザイン見本）</h3><p>スマホ優先・軽量なつくりの1ページサイト。予約ボタンの固定表示つき。</p><a href="samples/lp-cafe/">見本を見る →</a></div>
+    <div class="card"><span class="tag">作業代行</span><h3>バラバラな表の整理</h3><p>表記ゆれ・重複・住所や電話番号の形式をそろえ、そのまま使える表に。</p><a href="samples/data-cleanup/">見本を見る →</a></div>
+    <div class="card"><span class="tag">GAS自動化</span><h3>フォーム自動返信＋担当者通知</h3><p>Googleフォームの回答に自動でお礼メール、担当者に通知、対応状況を記録。</p><a href="samples/gas/form-autoreply.gs">コードを見る →</a></div>
+    <div class="card"><span class="tag">GAS自動化</span><h3>毎朝の売上レポート</h3><p>前日の売上をカテゴリ別に集計し、Slackまたはメールに自動送信。</p><a href="samples/gas/daily-summary.gs">コードを見る →</a></div>
+    <div class="card"><span class="tag">GAS自動化</span><h3>請求書PDFの一括作成</h3><p>請求先リストからPDFを作成してGoogleドライブに保存。月末作業を数分に。</p><a href="samples/gas/invoice-pdf.gs">コードを見る →</a></div>
+  </div>
+
+  <h2>料金の目安</h2>
+  <table>
+    <tr><th>データ入力・転記・整理</th><td>3,000円〜（100件まで）</td></tr>
+    <tr><th>スプレッドシート自動化（GAS）</th><td>3,000円〜（内容によりお見積り）</td></tr>
+    <tr><th>LP制作</th><td>15,000円〜（1ページ）</td></tr>
+    <tr><th>月額サポート</th><td>3,000円〜／月</td></tr>
+  </table>
+
+  <footer>AIツールを活用して作業し、内容はすべて人が確認してから納品しています。<br>LPのサンプルは架空の店舗を題材にしたデザイン見本です。</footer>
+</div>
+</body>
+</html>
