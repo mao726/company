@@ -5,7 +5,7 @@
 ## 状態
 
 - PHASE 0：報告済み（`development/phase0-report.md`）
-- PHASE 1：基盤設計 **承認待ち**（本フォルダの各文書）
+- PHASE 1：基盤設計 **要修正**（レビュー結果：`development/design-review-2026-11-17.md`）
 - 実装：未着手
 
 ## 未回答の前提（仮定で設計している事項）
