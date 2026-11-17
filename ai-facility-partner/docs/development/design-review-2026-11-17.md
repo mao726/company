@@ -249,3 +249,60 @@
 - 令和6年介護サービス施設・事業所調査の概況 https://www.mhlw.go.jp/toukei/saikin/hw/kaigo/service24/
 - 運営指導マニュアル（令和6年7月改訂） https://www.mhlw.go.jp/content/12304250/001453053.pdf
 - Supabase Docs（User sessions、Database Backups） https://supabase.com/docs/guides/auth/sessions ／ https://supabase.com/docs/guides/platform/backups
+
+---
+
+## 7. 対応状況（2026-11-17 修正後）
+
+凡例：**修正済み**＝設計文書に反映／**判断待ち**＝`open-decisions.md` の項目／**専門家**＝同第3章の E 項目／**仕様確認**＝ホスティング確定時（Q2）に製品仕様を確認
+
+| No | 対応 | 反映先 |
+|---|---|---|
+| 1 | 修正済み | database-design 第2章、TD-031・TD-033 |
+| 2 | 修正済み | permission-design 第2・4・8章、TD-034（法人管理者は閲覧のみ） |
+| 3 | 修正済み（実施には Q1・Q5） | security-design 第3.2節、operation-guide 第3.2・4章、TD-042 |
+| 4 | 誤記を訂正、再委託先一覧を作成。判断は専門家（E-1） | security-design 第5章、subprocessors.md |
+| 5 | 仕組みを修正済み。C3 は判断待ち（D-8）、方針は専門家（E-1・E-5） | security-design 第2章、TD-039 |
+| 6 | 判断待ち（D-1）。チャネルの差し替え・印刷・受信時間帯は設計済み | open-decisions D-1、database-design 第4.10節 |
+| 7 | 判断待ち（D-2・TD-016）。夜勤を考慮した時間設定は施設設定に | open-decisions D-2 |
+| 8 | 修正済み | database-design 第5章、TD-037、test-strategy テスト5 |
+| 9 | 修正済み | permission-design 第6・7章、TD-035 |
+| 10 | 修正済み | permission-design 第1・5章、TD-036、各テーブルに部署列 |
+| 11 | 修正済み | database-design 第4.6節、TD-038 |
+| 12 | 修正済み | database-design 第4.7節、TD-035 |
+| 13 | 修正済み | database-design 第2.7・4.10節、TD-017・TD-019 |
+| 14 | 設計済み、仕様確認 | TD-030・TD-043、deployment-guide 第8章 |
+| 15 | 修正済み | security-design 第3.1節、module-specifications 共通基盤、deployment-guide 第7章 |
+| 16 | 修正済み（職員の手段は D-2、第7.0版での扱いは要確認） | security-design 第3.1節、TD-041 |
+| 17 | 修正済み | ai-architecture 第2・4章、TD-040 |
+| 18 | 当社の基準を設計。法令の詳細は専門家（E-2） | security-design 第6章、operation-guide 第6章 |
+| 19 | 修正済み。保存期間は専門家（E-3） | TD-029、database-design 第8章 |
+| 20 | 条項リストを作成。専門家（E-4・E-5） | security-design 第10章 |
+| 21 | 修正済み | security-design 第1章 |
+| 22 | 修正済み | test-strategy 第4章（正本）、product-roadmap |
+| 23 | 修正済み | product-roadmap 第2章（開始条件、2b の分割）、TD-044 |
+| 24 | 判断待ち（D-3） | product-roadmap 第2章 |
+| 25 | 修正済み | usage_events、product-roadmap 第3章、TD-045 |
+| 26 | 修正済み | task_gov_submissions、年度更新の期限再確認、画面例、TD-050 |
+| 27 | 判断待ち（D-7） | open-decisions D-7 |
+| 28 | 判断待ち（D-9）。未確認の一括確認画面は追加済み | module-specifications MODULE 04 |
+| 29 | 部署担当・本人の受信時間帯を設計済み。施設の運用は要確認 | TD-049、database-design 第4.10節 |
+| 30 | 判断待ち（D-4）。後から列を追加できる構造 | open-decisions D-4 |
+| 31 | 判断待ち（D-5）。料金戦略を改訂 | pricing-strategy |
+| 32 | 修正済み | target-market、pricing-strategy、phase0-report の訂正 |
+| 33 | 修正済み | 各文書（決定事項の状態、権利キー、英字コード、プラン外の扱い、支援アクセスの承認者、時点復元の期間、自動チェックの文言） |
+| 34 | 修正済み | holidays、domain_events、既読、棚卸し画面・API、subscription.view の付与、権限表 |
+| 35 | 修正済み | database-design（版番号の一意、承認待ち1件、所属期間の排他、NULLS NOT DISTINCT、二重送信防止キー、複合外部キー、参照先ごとの列） |
+| 36 | 修正済み | TD-015・TD-018 |
+| 37 | 修正済み | module-specifications 状態遷移・業務ルール、permission-design 第7章 |
+| 38 | 構造を修正済み。運用は要確認 | committee_requirements、外部出席者、委員長・書記の権限、職種、新規採用者、受講率の単位 |
+| 39 | 修正済み | test-strategy 第3章 |
+| 40 | 修正済み | security-design 第4章、ai-architecture 第6章 |
+| 41 | 修正済み | security-design 第3.4節 |
+| 42 | 修正済み。担当者は Q5 | operation-guide 第1・3・4章 |
+| 43 | 保存期間表を作成。期間は専門家（E-3） | security-design 第7章 |
+| 44 | 判断待ち（D-6） | open-decisions Q6/D-6 |
+| 45 | 修正済み | screen-design（初回登録・印刷・再送・入力保持・自分の依頼・送信失敗など）、職員の差分取込、ヒアリング項目 |
+| 46 | 修正済み | screen-design、product-roadmap、integration-design |
+| 47 | 修正済み | TD-046 |
+| 48 | 確認項目に追加、仕様確認 | deployment-guide 第8章 |

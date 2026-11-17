@@ -5,7 +5,8 @@
 ## 状態
 
 - PHASE 0：報告済み（`development/phase0-report.md`）
-- PHASE 1：基盤設計 **要修正**（レビュー結果：`development/design-review-2026-11-17.md`）
+- PHASE 1：基盤設計 **v2（レビュー指摘を修正）・承認待ち**。レビュー結果と対応状況：`development/design-review-2026-11-17.md`
+- 判断が必要な事項：`development/open-decisions.md`（Q1〜Q6、D-1〜D-9、専門家確認 E-1〜E-7）
 - 実装：未着手
 
 ## 未回答の前提（仮定で設計している事項）
@@ -34,12 +35,16 @@ PHASE 0 の質問 Q1〜Q6 は未回答のため、推奨案を「仮定」とし
 | | [security-design.md](architecture/security-design.md) | セキュリティ・個人情報保護 |
 | | [ai-architecture.md](architecture/ai-architecture.md) | AI接続層 |
 | | [integration-design.md](architecture/integration-design.md) | 外部連携・CSV |
+| | [subprocessors.md](architecture/subprocessors.md) | 再委託先（外部事業者）一覧 |
 | product | [product-roadmap.md](product/product-roadmap.md) | ロードマップ |
 | | [module-specifications.md](product/module-specifications.md) | モジュール仕様 |
 | | [user-flows.md](product/user-flows.md) | 業務の流れ |
 | | [screen-design.md](product/screen-design.md) | 画面設計 |
 | development | [development-progress.md](development/development-progress.md) | 進捗 |
 | | [technical-decisions.md](development/technical-decisions.md) | 判断記録 |
+| | [open-decisions.md](development/open-decisions.md) | 判断が必要な事項 |
+| | [design-review-2026-11-17.md](development/design-review-2026-11-17.md) | 設計レビュー結果・対応状況 |
+| | [phase0-report.md](development/phase0-report.md) | PHASE 0 報告 |
 | | [test-strategy.md](development/test-strategy.md) | テスト戦略 |
 | | [deployment-guide.md](development/deployment-guide.md) | 環境構築・デプロイ |
 | | [operation-guide.md](development/operation-guide.md) | 運用 |
