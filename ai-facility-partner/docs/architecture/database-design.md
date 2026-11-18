@@ -28,7 +28,7 @@
 | DB-13 | 論理削除と一意制約 | 名称などの一意制約は削除されていない行だけを対象にする（部分一意索引）。ただし**繰り返し業務の一意制約は取消・削除済みの行も含めて全行に掛ける**（第5章） |
 | DB-14 | 期間で変わる属性 | 所属（施設・部署・役職・職種）は期間付きの別テーブルで持ち、上書きしない |
 | DB-15 | 種類＋IDによる参照の禁止 | 「種類」と「ID」の2列で任意のテーブルを指す汎用参照は、外部キーが張れないため原則使わない。参照先ごとの列を持ち、「どれか1つだけ値がある」制約（CHECK）を付ける。例外は通知とAIの根拠（第4.10・4.11節に理由を記載） |
-| DB-16 | 空の値を含む一意制約 | 空の値（NULL）を含む列の一意制約は `NULLS NOT DISTINCT` を指定する（空同士を同じ値として扱う） |
+| DB-16 | 空の値を含む一意制約 | 任意の参照列（空の行が多数ありうる列）の一意制約は、**空の行を除く部分一意索引**（`WHERE 列 IS NOT NULL`）にする。空同士を同じ値として扱いたい制約（settings の範囲の列）に限り `NULLS NOT DISTINCT` を指定する |
 
 ---
 
@@ -47,128 +47,113 @@ flowchart TD
   ORG --> F2
 ```
 
-MVP では**1人のユーザーは1つの法人にだけ所属**する（`users.organization_id` は必須）。法人をまたぐ所属は必要になった時点で別途設計する（レビュー指摘：過剰設計・ログイン履歴の漏えい）。
+MVP では**1人のユーザーは1つの法人にだけ所属**する（`users.organization_id` は必須）。法人をまたぐ所属は必要になった時点で別途設計する。
 
-### 2.2 テーブルの種類とRLSの方針
+### 2.2 テーブルの種類
 
-| 種類 | 内容 | 例 | RLS |
+**すべてのテーブルは下表のいずれか1つの種類に属する**（第4章の各表に記載）。CI の「RLS 有効」検査は、種類 S・W 以外のすべてのテーブルを対象にする。
+
+| 種類 | 内容 | テーブル | RLS |
 |---|---|---|---|
-| S：システム専用 | 当社が管理し、全法人が参照する | permissions、business_types、holidays、plans、plan_entitlements、ai_provider_configs、ai_model_prices、requirement_candidates、job_types（システム標準分） | RLS なし。アプリ用DB利用者は **SELECT のみ**。書込みは管理用DB利用者のみ |
-| C：混在マスタ | システム標準の行（`organization_id` が空）と、法人・施設が作った行が同じテーブルにある | roles、role_permissions、task_categories、task_templates、document_categories、settings | 読み取り：システム標準の行＋自法人（・自施設）の行。書込み：自法人（・自施設）の行のみ（システム標準の行は書けない） |
-| T-F：施設データ | `facility_id` が必ずある | tasks、submission_requests、documents（施設分）、committees、meetings ほか大半 | 自法人かつ文脈の施設に一致する行のみ |
-| T-O：法人データ | `facility_id` が空の法人共通データ | positions、departments（法人部署）、法人共通の書類・テンプレート・設定 | 参照用マスタは自法人の全員が読める。法人共通の書類は法人権限者か「全職員」レベルのみ。書込みは法人権限者のみ |
-| T-P：人に関するデータ | 職員・ユーザー・所属・役割割当・ログイン履歴 | staff、staff_assignments、users、role_assignments、login_history | 第2.3節の個別ポリシー（**施設単位で分離**） |
+| S：システム専用 | 当社が管理し全法人が参照する | permissions、business_types、holidays、plans、plan_entitlements、options、option_entitlements、ai_provider_configs、ai_model_prices、ai_use_cases、requirement_candidates、console_users、auth_failures | なし。アプリ用DB利用者は SELECT のみ（console_users・auth_failures は権限なし）。書込みは当社の管理用DB利用者のみ |
+| W：処理用 | ジョブの待ち行列と実行記録 | jobs、job_runs | なし。**アプリ用DB利用者には権限を与えない**（登録は専用関数 `enqueue_job()` 経由。関数内で文脈の施設であることを確認）。取出し・更新・記録はワーカー用DB利用者のみ。**中身は ID だけ**（個人情報・本文を入れない） |
+| C：混在マスタ | システム標準の行（`organization_id` が空）と、法人・施設の行が同じテーブルにある | roles、role_permissions、positions、job_types、task_categories、task_templates、document_categories、retention_policies、settings（第2.7節の特則） | ポリシー P-C |
+| T-F：施設データ | `facility_id` が必ずある | 第4章で種類 T-F としたテーブル（業務、提出物、承認、通知、委員会、研修、AI 等） | ポリシー P-F |
+| T-M：施設・法人の混在データ | 施設の行（`facility_id` あり）と法人共通の行（`facility_id` が空）がある | departments、documents、document_versions、document_acl、files、audit_logs、audit_log_details、purge_records | ポリシー P-M |
+| T-O：法人データ | 法人単位だけのデータ | organizations、subscriptions、subscription_options、entitlement_overrides、audit_digests | ポリシー P-O |
+| T-P：人に関するデータ | 職員・ユーザー・所属・役割割当・ログイン・失効 | users、staff、staff_assignments、role_assignments、login_history、user_session_revocations、idempotency_keys | 第2.3節の個別ポリシー |
 
-### 2.3 RLSポリシー（設計）
+### 2.3 RLSポリシー
 
-文脈（リクエストごとにDBへ渡す値）：
+**文脈**（リクエストごとに DB へ渡す値。未設定は NULL で、比較は偽＝既定で拒否）：
 
-| 設定値 | 内容 | 未設定時 |
+| 設定値 | 内容 |
+|---|---|
+| `app.user_id` / `app.staff_id` | ログイン中のユーザーと、その職員ID |
+| `app.org_id` | ユーザーの法人 |
+| `app.facility_ids` | 文脈の施設。**MVP では選択中の施設1つだけ**。法人単位の処理（第2.5節）と PHASE 7 の法人横断画面では、許可された施設の一覧 |
+| `app.org_level` | 法人単位の役割割当（CORPORATE_ADMIN の法人単位の行）を持つか。法人共通データの**書込み**と、法人本部所属の職員の閲覧に使う |
+| `app.read_only` | 当社の支援アクセスなど読み取り専用の文脈か |
+| `app.support_grant_id` | 支援アクセスの許可ID（支援アクセス時のみ） |
+
+**共通のポリシー**（概略。すべての書込み条件に `not app_read_only()` を含む）：
+
+| 名前 | 読み取り（SELECT） | 書込み（INSERT・UPDATE・DELETE） |
 |---|---|---|
-| `app.user_id` | ログイン中のユーザー | NULL |
-| `app.org_id` | ユーザーの法人 | NULL（テナントデータは0件） |
-| `app.facility_ids` | 文脈の施設。**MVP では選択中の施設1つだけ**。PHASE 7 の法人横断画面では許可された施設の一覧 | NULL（施設データは0件） |
-| `app.org_level` | 法人単位の役割割当（CORPORATE_ADMIN）を持つか | off |
-| `app.read_only` | 当社の障害対応アクセスなど読み取り専用の文脈か | off |
+| P-F（T-F） | `organization_id = app_org_id() and facility_id = any(app_facility_ids())`。支援アクセス時は、さらに `support_grant_valid(facility_id)`（許可が承認済み・期限内・同じ施設） | 読み取りと同じ |
+| P-M（T-M） | `organization_id = app_org_id() and (facility_id = any(app_facility_ids()) or facility_id is null)` | `organization_id = app_org_id() and (facility_id = any(app_facility_ids()) or (facility_id is null and app_org_level()))` |
+| P-C（C） | `organization_id is null or (organization_id = app_org_id() and (facility_id is null or facility_id = any(app_facility_ids())))` | P-M の書込みと同じ（システム標準の行は書けない） |
+| P-O（T-O） | `organization_id = app_org_id()`（organizations は `id = app_org_id()`） | `app_org_level()`。契約（subscriptions）・法人の作成は当社の専用関数のみ |
 
-ポリシーの骨格（SQL の概略）：
+**個別のポリシー（T-P・特則）**：
 
-```sql
--- 文脈を読む関数（未設定は NULL を返し、比較は偽になる＝既定で拒否）
-create function app_org_id() returns uuid language sql stable
-  as $$ select nullif(current_setting('app.org_id', true), '')::uuid $$;
-create function app_facility_ids() returns uuid[] language sql stable
-  as $$ select nullif(current_setting('app.facility_ids', true), '')::uuid[] $$;
--- app_user_id(), app_org_level(), app_read_only() も同様
+| テーブル | 読み取り | 書込み |
+|---|---|---|
+| users | ①自分（`id = app_user_id()`。法人の文脈なしで読める＝ログイン直後の確認用）②法人一致かつ、職員として見える人（`exists (select 1 from staff s where s.user_id = users.id)`。staff の RLS が効く） | 招待・停止は専用関数 `invite_user()`・`suspend_user()`（対象が文脈の施設に所属していることを関数内で確認）。本人は表示名などを更新（`id = app_user_id()`） |
+| staff | ①自分（`user_id = app_user_id()`）②法人一致かつ、文脈の施設に所属履歴がある（`exists (select 1 from staff_assignments sa where sa.staff_id = staff.id and sa.facility_id = any(app_facility_ids()))`）③法人一致かつ法人本部所属（施設が空の所属）で `app_org_level()` | INSERT：法人一致（同じトランザクションで文脈の施設の所属を登録する。所属がないと以後見えない）。UPDATE：②③と同じ条件 |
+| staff_assignments | ①自分（`staff_id = app_staff_id()`）②法人一致かつ（`facility_id = any(app_facility_ids())` または（`facility_id is null and app_org_level()`））。※ staff を参照しないため再帰しない | ②と同じ |
+| role_assignments | ①自分（文脈なしで読める）②法人一致かつ（`facility_id = any(app_facility_ids())` または（`facility_id is null and app_org_level()`）） | ②と同じ。加えてトリガーで「自分自身への割当・変更・解除の禁止」「施設の最後の FACILITY_DIRECTOR の解除禁止」を DB でも強制（その他の割当規則はアプリで判定） |
+| login_history | ①自分 ②法人一致かつ、対象のユーザーが見える（users の EXISTS） | 専用関数 `record_login()` のみ。存在しないログインIDでの失敗は `auth_failures`（S、当社の監視用）に記録 |
+| user_session_revocations | ①自分（文脈なしで読める＝リクエストごとの確認用）②法人一致かつ対象のユーザーが見える | ②（管理者の即時停止）または自分（全端末からログアウト） |
+| idempotency_keys | `user_id = app_user_id()` | 同左 |
+| facilities | 法人一致かつ（`id = any(app_facility_ids())` または自分に役割割当がある施設〔施設の切替用〕） | UPDATE：`id = any(app_facility_ids())`。INSERT：当社の専用関数のみ |
+| settings | 範囲の種類ごと：system・business_type＝全員が読める・書けない／organization＝法人一致で読める・書込みは `app_org_level()`（PHASE 7 までは当社の専用関数で登録）／facility＝P-F／user＝`user_id = app_user_id()` のみ | 同左 |
+| support_access_grants | P-F | 申請は当社の専用関数 `request_support_access()`。承認・却下・取消は P-F（権限はアプリで確認） |
 
--- T-F：施設データ
-create policy t_f_read on tasks for select
-  using (organization_id = app_org_id() and facility_id = any(app_facility_ids()));
-create policy t_f_write on tasks for all
-  using (organization_id = app_org_id() and facility_id = any(app_facility_ids()) and not app_read_only())
-  with check (organization_id = app_org_id() and facility_id = any(app_facility_ids()) and not app_read_only());
-
--- C：混在マスタ（例：task_templates）
-create policy c_read on task_templates for select
-  using (organization_id is null
-         or (organization_id = app_org_id()
-             and (facility_id is null or facility_id = any(app_facility_ids()))));
-create policy c_write on task_templates for all
-  using (organization_id = app_org_id() and (facility_id = any(app_facility_ids())
-         or (facility_id is null and app_org_level())) and not app_read_only())
-  with check (/* 同じ条件 */);
-
--- T-P：職員（施設に所属履歴がある職員だけ見える。法人権限者は法人全体）
-create policy staff_read on staff for select
-  using (organization_id = app_org_id() and (
-           app_org_level()
-           or user_id = app_user_id()
-           or exists (select 1 from staff_assignments sa
-                      where sa.staff_id = staff.id
-                        and sa.facility_id = any(app_facility_ids()))));
-
--- T-P：ユーザー（自分自身は法人の文脈がなくても読める＝ログイン直後の所属確定用）
-create policy users_self on users for select using (id = app_user_id());
-create policy users_org on users for select
-  using (organization_id = app_org_id()
-         and exists (select 1 from staff s where s.user_id = users.id));  -- staff の RLS が効く
-
--- T-P：役割割当（自分の割当は文脈がなくても読める）
-create policy ra_self on role_assignments for select using (user_id = app_user_id());
-create policy ra_admin on role_assignments for select
-  using (organization_id = app_org_id()
-         and (facility_id = any(app_facility_ids()) or app_org_level()));
-```
-
-- すべてのテナントテーブルで `ENABLE ROW LEVEL SECURITY` と `FORCE ROW LEVEL SECURITY` を設定する。**RLS が有効でないテナントテーブルが1つでもあれば CI を失敗させる**検査を入れる
-- RLS 内の副問い合わせ（EXISTS）が使う列には索引を張る（`staff_assignments(staff_id, facility_id)`、`staff(user_id)`）
+- すべての RLS 対象テーブルで `ENABLE ROW LEVEL SECURITY` と `FORCE ROW LEVEL SECURITY` を設定し、**種類 S・W 以外で RLS が有効でないテーブルが1つでもあれば CI を失敗させる**
+- RLS 内の副問い合わせが使う列には索引を張る（`staff_assignments(staff_id, facility_id)`、`staff(user_id)`）
+- 書類のアクセスレベル・部署・本人の判定は **RLS では行わず、アプリで行う**（第2.6節）
 
 ### 2.4 文脈の設定手順（リクエストごと）
 
-1. 認証サービスのトークンを検証し、ユーザーIDを得る。ユーザーの状態（停止・退職）と失効記録を確認（`security-design.md` 第3章）
-2. 短いトランザクションで `app.user_id` だけを設定し、自分の `users` 行（法人）と `role_assignments` を読む（自分の行は文脈なしで読めるポリシー）
+1. 認証サービスのトークンを検証し、ユーザーIDを得る
+2. 短いトランザクションで `app.user_id` だけを設定し、自分の `users`（状態）・`staff`（退職日）・`user_session_revocations`（失効）・`role_assignments` を読む（いずれも「自分」のポリシーで、法人の文脈なしに読める）。停止・退職・失効なら 401
 3. 選択中の施設に有効な役割割当があることを確認。なければ「存在しない」として扱う（404）
-4. 以降の DB 処理は、`app.user_id`・`app.org_id`・`app.facility_ids`（選択中の施設）・`app.org_level` を設定した**短いトランザクション**で行う。設定は `set_config(…, true)`（トランザクション終了で自動消去）なので、共有接続でも次の利用者に残らない
-5. **AI・メール・ファイル保管などの外部呼び出しはトランザクションの外で行う**（接続を握り続けて接続が枯渇するのを防ぐ）
+4. 以降の DB 処理は、`app.user_id`・`app.staff_id`・`app.org_id`・`app.facility_ids`（選択中の施設）・`app.org_level` を設定した**短いトランザクション**で行う。設定は `set_config(…, true)`（トランザクション終了で自動消去）なので、共有接続でも次の利用者に残らない
+5. **AI・メール・ファイル保管などの外部呼び出しはトランザクションの外で行う**（接続を握り続けない）
 6. アプリ用DB利用者は RLS を迂回できない（`BYPASSRLS` なし、テーブル所有者ではない）
 
-### 2.5 全施設をまたぐ処理と当社の操作
+### 2.5 全施設・法人をまたぐ処理と当社の操作
 
-| 処理 | 方法 |
-|---|---|
-| 定期処理（繰り返し生成、通知、保存期限、退職日処理、集計） | ワーカー用DB利用者（RLS 迂回なし）が、**対象施設の一覧だけを返す専用関数** `list_active_facilities()`（法人ID・施設IDのみ返す）を呼び、施設ごとに文脈（`app.org_id`、`app.facility_ids`=[その施設]、操作者＝system）を設定して処理する。通常の RLS がそのまま効く |
-| 法人・施設の作成、初代施設長の招待 | 当社の管理画面から、管理用DB利用者が専用関数 `provision_organization()`・`provision_facility()`・`invite_initial_director()` を実行。管理用DB利用者はテナントテーブルを直接読めない（専用関数は法人名・施設名・状態・件数などの最小限だけ返す） |
-| 要件候補の改定 | システム専用の `requirement_candidates` に新しい版を追加するだけ。施設の記録は書き換えない。施設ごとの定期処理が「採用している候補の版」と「最新の版」を比べ、違えば施設に「再確認が必要」と通知（第4.9節） |
-| 当社の障害対応アクセス | 施設の承認済みアクセス（`support_access_grants`）がある場合だけ、その施設を文脈に、`app.read_only = on` で閲覧する。書込みは RLS で拒否。緊急時の手順は `development/operation-guide.md` 第4章 |
-| RLS を無効化する経路 | 作らない。ホスティングの管理画面・管理キーからの直接アクセスは、アプリの外の統制で管理する（`security-design.md` 第3.2節） |
+| 処理 | 実行者（DB 利用者） | 方法 |
+|---|---|---|
+| 施設ごとの定期処理（繰り返し生成、通知、保存期限、退職日、集計） | ワーカー用（RLS 迂回なし） | 専用関数 `list_active_facilities()`（法人ID・施設IDのみ返す）で対象を得て、施設ごとに文脈（`app.facility_ids`=[その施設]、操作者＝system）を設定して処理 |
+| 法人単位の処理（論理エクスポート、操作履歴のダイジェスト、解約前の出力） | ワーカー用（RLS 迂回なし） | 法人の文脈（`app.org_id`、`app.facility_ids`=法人の全施設、`app.org_level`=on、操作者＝system）で、RLS の範囲内で法人全体を読む |
+| ジョブの登録・取出し | 登録：アプリ用（`enqueue_job()`）、取出し：ワーカー用 | 種類 W のテーブル |
+| 当社の管理画面（法人・施設の作成、初代施設長の招待、要件候補、支援アクセスの申請） | 管理用（テナントテーブルの権限なし） | 種類 S のテーブルと専用関数（`provision_organization()`、`provision_facility()`、`invite_initial_director()`、`request_support_access()`、`list_tenants_summary()`〔名称・状態・件数のみ〕） |
+| 支援アクセスの閲覧 | 支援用（RLS 迂回なし） | 当社管理画面の読み取り専用の閲覧画面から。許可の法人・施設を文脈に、`app.read_only`=on、`app.support_grant_id` を設定。RLS が許可の有効性も確認。ファイルの中身は許可の `include_files` が真の場合のみ。操作者は当社スタッフ（`console_users`）として操作履歴に記録 |
+| 要件候補の改定 | 管理用 | システム専用の `requirement_candidates` に新しい版を追加するだけ。施設の記録は書き換えない。施設ごとの定期処理が版を比較して「再確認が必要」を通知 |
+| **保守処理（例外）**：DB 全体の論理バックアップ、解約時の物理削除、追記のみテーブルからの完全削除・墨消し | **保守用（RLS 迂回あり）** | 保守用DB利用者の認証情報は**保護された配置環境の定期処理にだけ**置き、Web アプリ・ワーカーには置かない。手作業での使用は2名承認（`operation-guide.md` 第4.2節）。完全削除・墨消しは専用関数（第4.12節）だけで行い、すべて `purge_records` と `job_runs` に記録 |
+
+RLS を無効化する経路は作らない。ホスティングの管理画面・管理キーからの直接アクセスは、アプリの外の統制で管理する（`security-design.md` 第3.2節）。
 
 ### 2.6 RLS で防げること・防げないこと
 
 | 防げる | 防げない（別の対策が必要） |
 |---|---|
 | アプリの不具合による、他法人・他施設のデータの取得・更新（条件の書き忘れ、ID の書き換え） | アプリ自体が乗っ取られた場合（文脈の設定値もアプリが書くため）→ 脆弱性対策・依存部品の管理・監視 |
-| 文脈の設定漏れによる全件露出（未設定は0件） | ホスティングの管理画面・管理キーを使った直接アクセス → インフラのアカウント統制 |
-| 部署・本人・書類のアクセスレベルの判定 | （RLS では行わない）→ アプリの権限判定（`permission-design.md`） |
+| 文脈の設定漏れによる全件露出（未設定は0件） | ホスティングの管理画面・管理キー・保守用DB利用者による直接アクセス → インフラの統制と2名承認 |
+| 自分自身への役割割当、最後の施設長の解除（トリガー） | 部署・本人・書類のアクセスレベル・承認者の判定（RLS では行わない）→ アプリの権限判定（`permission-design.md`） |
 
 ### 2.7 設定の階層
 
 `settings` テーブルで「システム既定 → 業態 → 法人 → 施設 → 利用者」の順に値を解決する。
 
-- 設定項目は**コード内の設定定義表（レジストリ）**に登録したものだけを保存できる。定義表には、項目名、値の型と検証ルール、既定値、上書きできる階層、**継承方式**、変更に必要な権限を書く
-- 継承方式は「置き換え」のみ（下の階層に値があれば、上の階層の値をすべて置き換える）。リストの項目（通知タイミングなど）も**リスト全体を置き換える**。合算は行わない（施設で一部を外せない問題を避ける）
-- 法人は項目ごとに**ロック**（施設での上書き禁止）できる。ロックは法人の設定行の `locked` 列で表す
+- 設定項目は**コード内の設定定義表（レジストリ）**に登録したものだけを保存できる。定義表には、項目名、値の型と検証ルール、既定値、上書きできる階層、継承方式、変更に必要な権限を書く
+- 継承方式は「置き換え」のみ（下の階層に値があれば、上の階層の値をすべて置き換える）。リストの項目（通知タイミングなど）も**リスト全体を置き換える**
+- 法人は項目ごとに**ロック**（施設での上書き禁止）できる。ロックは法人の設定行の `locked` 列で表す。法人の設定画面は PHASE 7 で、それまでは当社が専用関数で登録する
 - 利用者の階層で変えられるのは、本人の通知の受信時間帯などに限る
 
 | 列 | 内容 |
 |---|---|
 | id | |
 | scope_type | `system` / `business_type` / `organization` / `facility` / `user` |
-| business_type_id, organization_id, facility_id, user_id | 範囲（種類に応じて該当列だけ値がある。RLS は種類C・T-Pの規則に従う） |
+| business_type_id, organization_id, facility_id, user_id | 範囲（種類に応じて該当列だけ値がある） |
 | key | 定義表の項目名 |
 | value | jsonb（定義表の型で検証） |
 | locked | 法人の行のみ有効 |
 
-UQ(scope_type, business_type_id, organization_id, facility_id, user_id, key) NULLS NOT DISTINCT。
+UQ(scope_type, business_type_id, organization_id, facility_id, user_id, key) NULLS NOT DISTINCT（範囲の列の空同士を同じ値として扱い、同じ範囲・同じ項目の行を1つに限る）。
 
 ---
 
@@ -234,13 +219,13 @@ erDiagram
 
 | テーブル | 種類 | 主な列 | 説明・制約 | 実装 |
 |---|---|---|---|---|
-| organizations | T-O | id, name, corporate_type, status | 法人 | 2a |
+| organizations | T-O | id, name, corporate_type, status | 法人。作成は当社の専用関数のみ | 2a |
 | business_types | S | id, code（tokuyo / chiiki_tokuyo / roken / yuryo …）, name, active | 業態マスタ。コードで業態名による分岐はしない | 2a |
-| facilities | T-F※ | id, organization_id, business_type_id, name, facility_code, capacity, fiscal_year_start_month（既定4）, timezone, status | 施設。※読めるのは、文脈の施設と、自分に役割割当がある施設（施設の切替画面用）の行 | 2a |
-| departments | T-O/T-F | id, organization_id, facility_id（空＝法人部署）, name, parent_id, sort_order | 部署。部署範囲の権限は**子部署を含む** | 2a |
-| positions | T-O | id, organization_id, name, rank | 役職マスタ。権限は役職ではなく役割で決める | 2a |
-| job_types | C | id, organization_id（空＝システム標準）, code, name | 職種（介護職員、看護職員、生活相談員、機能訓練指導員、管理栄養士、介護支援専門員など）。研修の対象指定に使う | 2a |
-| settings | C/T | 第2.7節 | 設定の階層 | 2a |
+| facilities | 特則（第2.3節） | id, organization_id, business_type_id, name, facility_code, capacity, fiscal_year_start_month（既定4）, timezone, status | 施設 | 2a |
+| departments | T-M | id, organization_id, facility_id（空＝法人部署）, name, parent_id, sort_order | 部署。部署範囲の権限は**子部署を含む**。施設の部署は施設長・事務長が登録、法人部署は法人単位の権限（PHASE 7） | 2a |
+| positions | C | id, organization_id（空＝システム標準）, facility_id（空＝法人共通）, name, rank | 役職マスタ。システム標準（施設長、事務長、主任など）＋施設が追加する役職。権限は役職ではなく役割で決める | 2a |
+| job_types | C | id, organization_id（空＝システム標準）, facility_id, code, name | 職種（介護職員、看護職員、生活相談員、機能訓練指導員、管理栄養士、介護支援専門員など。システム標準＋施設が追加）。研修の対象指定に使う | 2a |
+| settings | C（特則） | 第2.7節 | 設定の階層 | 2a |
 | holidays | S | date, name, source | 祝日（内閣府の公表をもとに年1回登録） | 2b |
 
 ### 4.2 ユーザー・職員
@@ -248,21 +233,23 @@ erDiagram
 | テーブル | 種類 | 主な列 | 説明・制約 | 実装 |
 |---|---|---|---|---|
 | users | T-P | id, organization_id, auth_subject, login_id, email（任意）, display_name, status（`active` / `suspended` / `deleted`）, mfa_required, last_login_at | ログインする人。UQ(auth_subject) | 2a |
-| staff | T-P | id, organization_id, staff_code, family_name, given_name, kana, employment_type, hired_on, left_on, status（`active` / `on_leave` / `left`）, user_id（任意） | 職員台帳（法人単位）。ログインしない職員も登録可。健康情報・家族情報・マイナンバーは持たない。UQ(organization_id, staff_code)、UQ(user_id) | 2a |
+| staff | T-P | id, organization_id, staff_code, family_name, given_name, kana, employment_type, hired_on, left_on, status（`active` / `on_leave` / `left`）, user_id（任意） | 職員台帳（法人単位）。ログインしない職員も登録可。健康情報・家族情報・マイナンバーは持たない。UQ(organization_id, staff_code)、UQ(user_id) WHERE user_id IS NOT NULL | 2a |
 | staff_assignments | T-P | id, organization_id, staff_id, facility_id（空＝法人本部）, department_id, position_id, job_type_id, is_primary, valid_from, valid_to | 所属の期間付き履歴。兼務は複数行。**排他制約**：同じ職員の主所属の期間は重ならない（`EXCLUDE USING gist (staff_id WITH =, daterange(valid_from, valid_to) WITH &&) WHERE (is_primary)`）、同じ施設・部署の所属の期間も重ならない | 2a |
-| login_history | T-P | id, organization_id, user_id, occurred_at, result（`success` / `failure` / `throttled`）, ip, user_agent, mfa_used | ログイン履歴（追記のみ）。施設の管理者は、自施設に所属履歴がある職員の分だけ見える | 2a |
+| login_history | T-P | id, organization_id, user_id, occurred_at, result（`success` / `failure` / `throttled`）, ip, user_agent, mfa_used | ログイン履歴（追記のみ、専用関数 `record_login()` で記録）。施設の管理者は、自施設に所属履歴がある職員の分だけ見える | 2a |
+| auth_failures | S | id, login_id_hash, occurred_at, ip | 存在しないログインIDでの失敗（当社の監視用。アプリからは読めない） | 2a |
 | user_session_revocations | T-P | user_id, revoked_after, reason | この時刻より前に発行されたトークンを無効にする（退職・停止・端末紛失） | 2a |
-| usage_events | T-F | id, organization_id, facility_id, user_id, event（`session_start` / `screen_view` / `action`）, name, occurred_at | 効果測定用の利用記録（日次の利用者数、画面別の利用、通知から対応までの時間）。内容（業務名・本文）は記録しない。保存2年【要決定】 | 2a |
+| usage_events | T-F | id, organization_id, facility_id, user_id, event（`session_start` / `screen_view` / `action`）, name, occurred_at | 効果測定用の利用記録（日次の利用者数、画面別の利用、通知から対応までの時間、代理登録率）。内容（業務名・本文）は記録しない。集計は施設の「利用状況」画面（A29）で見る。保存2年【要決定】 | 2a |
 
 ### 4.3 権限
 
 | テーブル | 種類 | 主な列 | 説明・制約 | 実装 |
 |---|---|---|---|---|
 | permissions | S | code（例 `task.approve`）, module, description, is_protected | 権限マスタ。`is_protected` は役割管理などの高い権限（割当の制限に使う） | 2a |
-| roles | C | id, organization_id（空＝システム標準）, owner_facility_id（施設が作ったカスタムロール）, code, name, is_system, is_protected | 標準6役割はシステム標準の行（変更不可）。カスタムロールは法人または施設が所有 | 2a（カスタムは3） |
+| roles | C | id, organization_id（空＝システム標準）, facility_id（空＝法人所有。施設が作ったカスタムロールは施設ID）, code, name, is_system, is_protected | 標準の役割はシステム標準の行（変更不可）。カスタムロールは法人または施設が所有 | 2a（カスタムは3） |
 | role_permissions | C | role_id, permission_code, scope（`own` / `department` / `facility` / `organization`） | UQ(role_id, permission_code) | 2a |
 | role_assignments | T-P | id, organization_id, user_id, role_id, facility_id（空＝法人単位）, department_id, valid_from, valid_to, granted_by | DEPARTMENT_MANAGER の割当は department_id 必須（CHECK）。CORPORATE_ADMIN は法人単位の行＋許可された施設ごとの行 | 2a |
-| support_access_grants | T-F | id, organization_id, facility_id, support_user_ref, reason, requested_at, approved_by, approved_at, expires_at, status（`pending` / `approved` / `rejected` / `expired` / `revoked`） | 当社の障害対応アクセスの許可。承認は `support_access.approve` 権限者 | 2a |
+| support_access_grants | T-F | id, organization_id, facility_id, console_user_id, reason, include_files, requested_at, approved_by, approved_at, expires_at, status（`pending` / `approved` / `rejected` / `expired` / `revoked`） | 当社の障害対応アクセスの許可。申請は当社の専用関数、承認は `support_access.approve` 権限者。`include_files`＝ファイルの中身の閲覧を含むか | 2a |
+| console_users | S | id, name, email, mfa_required, status | 当社の管理画面の利用者（テナントの users とは別） | 2a |
 | access_reviews | T-F | id, organization_id, facility_id, reviewed_by, reviewed_at, summary | 権限の棚卸しの実施記録（四半期） | 3 |
 
 ### 4.4 契約・プラン
@@ -343,8 +330,8 @@ flowchart LR
 | （追加）保留前の状態 | status_before_hold | 保留解除時の戻り先 |
 
 制約・索引：
-- **UQ(series_id, occurrence_date)**（取消・削除済みも含む全行）：繰り返し業務の二重生成と、取り消した回の復活を防ぐ
-- **UQ(series_id, previous_task_id)**：完了日ベースの次回分は1件だけ
+- **UQ(series_id, occurrence_date) WHERE series_id IS NOT NULL**（取消・削除済みも含む全行）：繰り返し業務の二重生成と、取り消した回の復活を防ぐ。シリーズのない臨時業務・業務依頼は対象外
+- **UQ(series_id, previous_task_id) WHERE previous_task_id IS NOT NULL**：完了日ベースの次回分は1件だけ
 - 索引：(facility_id, due_on, status)、(facility_id, status)、(series_id, occurrence_date)
 - 期限超過は状態として保存しない（第6章の算出定義）
 
@@ -352,7 +339,7 @@ flowchart LR
 
 | テーブル | 種類 | 主な列 | 説明・制約 | 実装 |
 |---|---|---|---|---|
-| submission_requests | T-F | id, organization_id, facility_id, department_id, title, instructions, due_on, due_time, task_id, **data_class**（`c1` / `c2` / `c3` / `c4`）, **file_mode**（`file_required` / `file_optional` / `no_file`）, required_items(jsonb), target_rule(jsonb：全員 / 部署 / 職種 / 役職 / 個別), reviewer_staff_id, allow_late, status（`draft` / `open` / `closed`） | 提出依頼。**data_class の入力は必須**。`c4`（健康診断結果など要配慮個人情報）は `no_file`（「提出済み・確認済み」だけを記録し、ファイルを受け取らない）に強制。マイナンバーを含む書類は対象外（画面で明示） | 2b |
+| submission_requests | T-F | id, organization_id, facility_id, department_id, title, instructions, due_on, due_time, task_id, **data_class**（`c1` / `c2` / `c3` / `c4`。`c3` は D-8 の決定まで選択不可）, **file_mode**（`file_required` / `file_optional` / `no_file`）, required_items(jsonb), target_rule(jsonb：全員 / 部署 / 職種 / 役職 / 個別), reviewer_staff_id, allow_late, status（`draft` / `open` / `closed`） | 提出依頼。**data_class の入力は必須**。`c4`（健康診断結果など要配慮個人情報）は `no_file`（「提出済み・確認済み」だけを記録し、ファイルを受け取らない）に強制。マイナンバーを含む書類は対象外（画面で明示） | 2b |
 | submission_targets | T-F | id, request_id, staff_id, department_id（作成時点の所属）, status（`not_submitted` / `submitted` / `approved` / `returned` / `excluded`）, has_login（作成時点）, excluded_reason | UQ(request_id, staff_id)。対象者は依頼作成時に確定して保存 | 2b |
 | submissions | T-F | id, target_id, version, comment, submitted_by, submitted_at, is_proxy（代理登録）, proxy_reason | **追記のみ**。UQ(target_id, version) | 2b |
 | submission_files | T-F | submission_id, file_id | 提出物のファイル。**書類（documents）とは別に保存**し、書類の一覧・検索に出さない。閲覧は本人・確認者・`submission.review` の範囲内の人のみ。確認者が「書類として保管」を選んだ場合だけ、閲覧者リスト付きの「限定」書類として複製 | 2b |
@@ -374,11 +361,11 @@ flowchart LR
 
 | テーブル | 種類 | 主な列 | 説明・制約 | 実装 |
 |---|---|---|---|---|
-| files | T-F/T-O | id, organization_id, facility_id, storage_key, original_name, mime_type, size_bytes, sha256_received, sha256_stored, metadata_removed, status（`quarantined` / `clean` / `rejected`）, uploaded_by, uploaded_at | ファイル。保存先は `org/{法人ID}/fac/{施設ID}/{推測できないID}`。受領直後は隔離領域に置き、検査・位置情報等の除去後に保管領域へ移す。**隔離領域の原本は処理後に削除**し、受領時のハッシュ値だけ残す（`security-design.md` 第3章） | 2a |
-| document_categories | C | id, organization_id, facility_id, name, default_access_level, **default_data_class**, default_retention_years | 書類カテゴリ。データ区分の既定値を持つ | 2b |
-| documents | T-F/T-O | id, organization_id, facility_id（空＝法人共通）, title, category_id, access_level（`all_staff` / `managers` / `restricted`）, **data_class**, retention_until, owner_staff_id, current_version_id, status | 書類台帳。data_class は登録時に必須（カテゴリの既定値を初期表示） | 2b |
-| document_versions | T-F/T-O | id, document_id, version, file_id, note, created_by, created_at, extracted_text, extraction_status（`none` / `ai_extracted` / `human_verified`） | **追記のみ**。UQ(document_id, version) | 2b |
-| document_acl | T-F/T-O | document_id, staff_id, department_id, role_id（どれか1つ）, permission（`read` / `write`） | 「限定」書類の閲覧者リスト | 2b |
+| files | T-M | id, organization_id, facility_id, storage_key, original_name, mime_type, size_bytes, sha256_received, sha256_stored, metadata_removed, status（`quarantined` / `clean` / `rejected`）, uploaded_by, uploaded_at | ファイル。保存先は `org/{法人ID}/fac/{施設ID}/{推測できないID}`。受領直後は隔離領域に置き、検査・位置情報等の除去後に保管領域へ移す。**隔離領域の原本は処理後に削除**し、受領時のハッシュ値だけ残す（`security-design.md` 第3章） | 2a |
+| document_categories | C | id, organization_id, facility_id, name, default_access_level, **default_data_class**, default_retention_years | 書類カテゴリ。データ区分の既定値を持つ（委員会の議事録・事故関係のカテゴリは `c4_possible`） | 2b |
+| documents | T-M | id, organization_id, facility_id（空＝法人共通）, title, category_id, access_level（`all_staff` / `managers` / `restricted`）, **data_class**（`c1` / `c2` / `c3` / `c4_possible`）, retention_until, owner_staff_id, current_version_id, status（`active` / `quarantined`〔混入の疑いで閲覧停止〕） | 書類台帳。data_class は登録時に必須（カテゴリの既定値を初期表示）。`c4`（要配慮個人情報と分かっているもの）は書類として登録できない。`c4_possible`（含む可能性あり）は AI に送らず、アクセスレベル「管理職」以上を既定にする | 2b |
+| document_versions | T-M | id, document_id, version, file_id, note, created_by, created_at, extracted_text, extraction_status（`none` / `ai_extracted` / `human_verified`） | **追記のみ**。UQ(document_id, version) | 2b |
+| document_acl | T-M | document_id, staff_id, department_id, role_id（どれか1つ）, permission（`read` / `write`） | 「限定」書類の閲覧者リスト | 2b |
 | document_links | T-F | id, organization_id, facility_id, document_id, task_id, required_item_id, meeting_id, decision_id, training_session_id（どれか1つ、CHECK）, relation（`evidence` / `attachment` / `required_item` / `related`） | 業務・委員会・研修と書類の紐付け。各参照は `(id, facility_id)` の複合外部キー。法人共通の書類は `(document_id, organization_id)` で参照 | 2b |
 | retention_policies | C | id, organization_id, facility_id, category_id, retention_years, basis_note | 保存期限ルール（施設が設定、根拠を記録） | 3 |
 
@@ -393,12 +380,12 @@ flowchart LR
 | committee_members | T-F | committee_id, staff_id, role（`chair` / `secretary` / `member`） | 委員。委員長・書記には、その委員会の範囲の権限が付く（`permission-design.md` 第6章） |
 | meetings | T-F | id, organization_id, facility_id, meeting_type（`committee` / `general`）, committee_id, task_id, fiscal_year, title, scheduled_at, held_at, location, status（`scheduled` / `held` / `cancelled` / `postponed`） | 開催回。MODULE 06（会議）でも同じテーブルを使う |
 | meeting_attendees | T-F | meeting_id, staff_id, external_name, external_affiliation（職員か外部のどちらか、CHECK）, attendance（`present` / `absent` / `excused`） | 出席者。外部委員（嘱託医など）は氏名・所属を記録 |
-| meeting_minutes | T-F | id, meeting_id, version, body, source（`manual` / `ai_draft`）, created_by, created_at | **追記のみ**。UQ(meeting_id, version)。承認は approval_requests（minutes_id） |
+| meeting_minutes | T-F | id, meeting_id, version, body, data_class（既定 `c4_possible`）, source（`manual` / `ai_draft`）, created_by, created_at | **追記のみ**。UQ(meeting_id, version)。承認は approval_requests（minutes_id） |
 | decisions | T-F | id, meeting_id, content, improvement_detail, owner_staff_id, due_on, status（`open` / `in_progress` / `implemented` / `verified` / `dropped`）, dropped_reason, verified_meeting_id | 決定事項（PDCA の5状態、TD-025） |
 | training_plans | T-F | id, organization_id, facility_id, department_id（任意）, fiscal_year, title, category, target_rule(jsonb：全員 / 部署 / 職種 / 個別), planned_month, include_new_hires | 研修計画 |
 | training_targets | T-F | id, plan_id, staff_id, added_reason（`initial` / `new_hire` / `manual`）, excluded_reason | 対象者（計画作成時に確定。途中入職者は追加理由付き） |
 | training_sessions | T-F | id, plan_id, scheduled_at, held_at, instructor, format（`in_person` / `video` / `external`）, status | 研修の開催回（同じ研修を複数回開ける） |
-| training_attendance | T-F | id, session_id, target_id, attendance（`present` / `absent` / `makeup` / `excluded`）, completion_status（`unconfirmed` / `confirmed`）, confirmed_by, confirmed_at | 出欠・受講確認。受講率は**研修計画の単位**で、対象者ごとに「いずれかの回で受講確認済み」かで集計 |
+| training_attendance | T-F | id, session_id, target_id, attendance（`present` / `absent` / `makeup` / `excluded`）, completion_status（`unconfirmed` / `confirmed`）, confirmed_by, confirmed_at | 出欠・受講確認。受講率は**研修計画の単位**で、対象者ごとに「いずれかの回で受講確認済み」かで集計。受講確認と要件の「確認済み」は、差し戻しのない単独の確認行為のため承認テーブルを使わず、**履歴は操作履歴（追記のみ）に残す** |
 
 委員会の表示：
 - 開催：`scheduled` → `held` → 議事録承認済み
@@ -411,7 +398,7 @@ flowchart LR
 
 | テーブル | 種類 | 主な列 | 説明・制約 | 実装 |
 |---|---|---|---|---|
-| notifications | T-F | id, organization_id, facility_id, recipient_user_id, event, target_kind, target_id, channel（`in_app` / `email` / 将来 `web_push` 等）, title, body, **dedupe_key**, status（`pending` / `sent` / `failed` / `skipped` / `cancelled`）, scheduled_for, attempts, last_error, sent_at, read_at | UQ(dedupe_key)。`dedupe_key`＝`{event}:{target}:{recipient}:{期限日}:{timing}:{channel}`。`target_kind`/`target_id` は画面へのリンク用の参照で、表示時に閲覧権限を再確認する（整合性が必要なデータではないため、DB-15 の例外） | 2b（メールは3） |
+| notifications | T-F | id, organization_id, facility_id, recipient_user_id, event, target_kind, target_id, channel（`in_app` / `email` / 将来 `web_push` 等）, title, body, **dedupe_key**, status（`pending` / `sent` / `failed` / `skipped` / `cancelled`）, scheduled_for, attempts, last_error, sent_at, read_at | UQ(dedupe_key) WHERE status <> 'cancelled'（取り消した通知は重複判定から外す。期限を変更して元に戻した場合も、新しい通知を作れる）。`dedupe_key`＝`{event}:{target}:{recipient}:{期限日}:{timing}:{channel}`。`target_kind`/`target_id` は画面へのリンク用の参照で、表示時に閲覧権限を再確認する（整合性が必要なデータではないため、DB-15 の例外） | 2b（メールは3） |
 
 既定の通知表（施設・法人の設定で置き換え可能）：
 
@@ -455,12 +442,14 @@ AI 事業者の条件（データ保持、学習利用、処理地域、契約�
 
 | テーブル | 種類 | 主な列 | 説明・制約 | 実装 |
 |---|---|---|---|---|
-| audit_logs | T-F/T-O | id（bigint）, occurred_at, organization_id, facility_id, actor_type（`user` / `system` / `ai` / `support`）, actor_user_id, action（`read` / `create` / `update` / `delete` / `approve` / `export` / `login` / `role_change` …）, target_kind, target_id, changes(jsonb：変更前後), request_id, ip, user_agent | **追記のみ**（DB-6）。月単位で分割保存。閲覧の記録は機密性の高い閲覧に限定（書類のダウンロード、提出物の閲覧、職員詳細、出力、操作履歴の閲覧）。改ざん検知は第8章の日次ダイジェスト。保存期間は【要決定 TD-022】 | 2a |
-| audit_digests | T-O | organization_id, date, row_count, digest, exported_at | 法人ごと・日ごとの操作履歴のハッシュ値。**別アカウントの書換え不可の保管領域にも複製** | 3 |
-| jobs | T-F/S | id, organization_id, facility_id, job_type, payload, run_after, status（`queued` / `running` / `done` / `failed`）, attempts, locked_at, last_error | ジョブの待ち行列。取り出しは `FOR UPDATE SKIP LOCKED`（自前で実装し、常駐プロセスを前提にしない） | 2a |
-| job_runs | S | id, job_type, started_at, finished_at, processed_count, result, error | 定期処理の実行記録（監視用） | 2a |
+| audit_logs | T-M | id（bigint）, occurred_at, organization_id, facility_id, actor_type（`user` / `system` / `ai` / `support`）, actor_user_id, console_user_id, action（`read` / `create` / `update` / `delete` / `approve` / `confirm` / `export` / `login` / `role_change` / `purge` …）, target_kind, target_id, request_id, ip, user_agent | **追記のみ**（DB-6）。誰が・いつ・何に・何をしたかだけを持ち、個人情報を含む変更内容は持たない。月単位で分割保存。閲覧の記録は機密性の高い閲覧に限定（書類のダウンロード、提出物の閲覧、職員詳細、出力、操作履歴の閲覧）。日次ダイジェストはこの表の行だけで計算する。保存期間は【要決定 TD-022】 | 2a |
+| audit_log_details | T-M | audit_log_id, organization_id, facility_id, changes(jsonb：変更前後) | 変更内容（個人情報を含みうる）。**追記のみ**。保存期間の経過後や削除依頼時は、保守用の専用関数で墨消し（要約に置換）し、`purge_records` に記録する。ダイジェストの対象外なので、墨消ししても改ざんとして検出されない | 2a |
+| purge_records | T-M | id, organization_id, facility_id, target_kind, target_id, action（`purge`＝完全削除 / `redact`＝墨消し）, reason, requested_by, approved_by, content_hash_before, executed_at | 追記のみテーブルからの完全削除・墨消しの記録（追記のみ）。完全削除・墨消しは専用関数 `purge_submission_version()`、`purge_document_version()`、`redact_minutes_version()`、`redact_audit_details()`、`purge_organization()` だけで行う（保守用DB利用者が所有。施設の依頼は施設長の承認、当社の作業は2名承認） | 2a（関数は使う時点で） |
+| audit_digests | T-O | organization_id, date, row_count, digest, exported_at | 法人ごと・日ごとの操作履歴（audit_logs の行）のハッシュ値。法人の文脈の定期処理で計算し、**別アカウントの書換え不可の保管領域にも複製** | 3 |
+| jobs | W | id, organization_id, facility_id, job_type, payload, run_after, status（`queued` / `running` / `done` / `failed`）, attempts, locked_at, last_error | ジョブの待ち行列。取り出しは `FOR UPDATE SKIP LOCKED`（自前で実装し、常駐プロセスを前提にしない） | 2a |
+| job_runs | W | id, job_type, started_at, finished_at, processed_count, result, error | 定期処理の実行記録（監視用） | 2a |
 | domain_events | T-F | id, organization_id, facility_id, event_type, payload(jsonb), created_at, processed_at | モジュール間の連携イベント（例：決定事項の登録 → 改善業務の作成） | 2b |
-| idempotency_keys | T-P | user_id, key, endpoint, response_status, response_body_hash, created_at | 二重送信防止。UQ(user_id, key)。24時間で削除 | 2a |
+| idempotency_keys | T-P | organization_id, user_id, key, endpoint, response_status, response_body_hash, created_at | 二重送信防止。UQ(user_id, key)。24時間経過分は法人の文脈の定期処理で削除 | 2a |
 | import_jobs / export_jobs | T-F | id, organization_id, facility_id, type, file_id, status, summary(jsonb), requested_by | CSV 取込・出力の記録 | 2a〜3 |
 
 ---
@@ -501,7 +490,7 @@ AI 事業者の条件（データ保持、学習利用、処理地域、契約�
 
 | 項目 | 方針 |
 |---|---|
-| DB | マネージドDBの日次バックアップ＋時点復元（本番14日、実証期は7日以上。費用は予算に計上）。加えて、**日次の暗号化した論理バックアップを別アカウント・国内の書換え不可の保管領域へ**（同じアカウントの乗っ取り・ランサムウェア対策） |
+| DB | マネージドDBの日次バックアップ＋時点復元（**本番14日、実証期は最低7日**。費用は予算に計上）。加えて、保守用DB利用者による**日次の暗号化した論理バックアップを別アカウント・国内の書換え不可の保管領域へ**（同じアカウントの乗っ取り・ランサムウェア対策） |
 | ファイル | 保管領域のファイルを、**別アカウントの版管理付き・書換え不可の保管領域へ日次で複製**（ホスティングの保管機能に版管理がない場合の対策。製品仕様は要確認） |
 | 操作履歴 | 法人ごと・日ごとのダイジェスト（ハッシュ値）を別アカウントへ複製し、後から改ざん・欠落を検出できるようにする（行ごとのハッシュ連鎖は採用しない：TD-029） |
 | 論理エクスポート | 法人単位のデータ出力（CSV＋ファイル一式）。解約時の返却・移行に使用 |

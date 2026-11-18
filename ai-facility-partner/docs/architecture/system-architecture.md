@@ -167,7 +167,8 @@ ai-facility-partner/
 | 提出依頼 | `GET/POST /facilities/{id}/submission-requests`、`GET /submission-requests/{reqId}/targets`、`POST /submission-requests/{reqId}/remind`（送信内容の確認後）、`POST /submission-targets/{targetId}/submissions`（本人）、`POST /submission-targets/{targetId}/proxy-submissions`、`POST /submission-targets/{targetId}/exclude`、`GET /submission-files/{fileId}/download` | 2b |
 | 承認 | `GET /facilities/{id}/approvals?status=pending`、`POST /approvals/{id}/approve`、`POST /approvals/{id}/return`、`POST /approvals/{id}/reassign` | 2b |
 | 書類 | `POST /facilities/{id}/uploads`（隔離領域へのアップロードURL発行）、`GET/POST /facilities/{id}/documents`、`GET/PATCH /documents/{docId}`、`POST /documents/{docId}/versions`、`PUT /documents/{docId}/acl`、`GET /document-versions/{verId}/download`、`POST/DELETE /document-links` | 2b |
-| 通知 | `GET /me/notifications`、`POST /notifications/{nid}/read`、管理者向け送信状況 `GET /facilities/{id}/notifications?status=failed` | 2b |
+| 通知 | `GET /me/notifications`、`POST /notifications/{nid}/read`、管理者向け `GET /facilities/{id}/notifications?status=failed`・`POST /notifications/{nid}/retry`（`notification.manage`） | 2b-1 |
+| 利用状況 | `GET /facilities/{id}/usage?from=&to=`（`usage.view`） | 2b-2 |
 | CSV | `POST /facilities/{id}/imports`（プレビュー）、`POST /imports/{id}/commit`、`POST /facilities/{id}/exports`、`GET /exports/{eid}` | 2b（取込）〜3（出力） |
 | 委員会 | `GET/POST /facilities/{id}/committees`、`GET/POST /committees/{cid}/meetings`、`PATCH /meetings/{mid}`、`POST /meetings/{mid}/minutes`、`POST /meetings/{mid}/decisions`、`POST /decisions/{did}/actions/{start|implement|verify|drop}` | 3 |
 | 研修 | `GET/POST /facilities/{id}/training-plans`、`POST /training-plans/{pid}/targets`、`POST /training-plans/{pid}/sessions`、`PUT /training-sessions/{sid}/attendance`、`POST /training-attendance/{aid}/confirm` | 3 |

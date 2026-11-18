@@ -29,7 +29,7 @@
 | ADMIN_MANAGER | 事務長 | 施設 | 施設長と同じ権限。違いは「割り当てられる役割」（第4章）と承認者の既定値（施設設定） |
 | DEPARTMENT_MANAGER | 部署管理者・介護主任 | 施設＋部署（必須） | 自部署の業務・依頼・提出物・委員会・研修の管理と承認 |
 | STAFF | 一般職員 | 施設 | 自分の業務・依頼・提出物の確認と報告 |
-| SUPPORT_READONLY | 当社の障害対応（固定） | 承認された支援アクセスの期間のみ | 施設データの閲覧のみ（DB で書込み拒否）。ファイルの中身は承認時に「ファイル閲覧を含む」とした場合のみ |
+| SUPPORT_READONLY | 当社の障害対応（固定） | 承認された支援アクセスの期間のみ（テナントの役割割当ではない） | 当社管理画面の閲覧画面から、許可された施設のデータを閲覧のみ（DB で書込み拒否、RLS が許可の有効性も確認）。ファイルの中身は許可の `include_files` が真の場合のみ（`database-design.md` 第2.5節） |
 
 ## 3. 権限一覧
 
@@ -57,12 +57,15 @@
 | | `document.read_managers` | アクセスレベル「管理職」の書類の閲覧 | |
 | | `document.create` / `document.update` / `document.delete` | 書類の登録・新しい版の追加・削除 | |
 | | `document.manage_acl` | 「限定」書類の閲覧者リストの設定 | ○ |
-| 委員会・研修 | `committee.manage` | 委員会の定義・委員の設定 | |
+| 委員会・研修 | `committee.read` | 委員会・開催・議事録・決定事項の閲覧 | |
+| | `committee.manage` | 委員会の定義・委員の設定 | |
 | | `meeting.manage` | 開催の登録・出席者 | |
 | | `minutes.edit` | 議事録の作成・編集 | |
 | | `minutes.approve` | 議事録の承認 | |
 | | `decision.manage` | 決定事項の登録・状態変更 | |
 | | `training.manage` / `training.confirm` | 研修の管理・受講確認 | |
+| | `training.read` | 研修計画・開催・出欠の閲覧 | |
+| | `requirement.read` | 法令等の要件一覧の閲覧 | |
 | | `requirement.manage` | 要件の採用・編集 | |
 | | `requirement.verify` | 要件の「確認済み」設定（根拠の確認） | ○ |
 | 職員 | `staff.read` | 職員台帳の閲覧 | |
@@ -73,7 +76,9 @@
 | 施設 | `facility.manage` | 施設情報 | ○ |
 | | `settings.manage` | 施設設定・通知タイミング・承認ルール | ○ |
 | 出力 | `data.export` | CSV 等の出力 | ○ |
+| 通知 | `notification.manage` | 送信に失敗した通知の確認・再送 | |
 | 監査 | `audit.read` | 操作履歴・ログイン履歴の閲覧 | ○ |
+| 利用状況 | `usage.view` | 施設の利用状況（利用者数・画面別の利用・代理登録率）の閲覧 | |
 | | `access_review.run` | 権限の棚卸しの実施（PHASE 3） | ○ |
 | AI | `ai.use` | AI アシスタントの利用（PHASE 4） | |
 | | `ai.usage.view` | AI 利用量・推定費用・AI事業者の条件の閲覧 | |
@@ -134,10 +139,12 @@
 | 研修 | training_plans.department_id |
 | 職員 | staff_assignments の部署（その時点で有効な所属） |
 
-### 5.3 法人単位（organization）の判定
+### 5.3 法人単位（organization）の判定と法人共通データ
 
 - 法人単位の役割割当（`facility_id` が空）は、**同じ人に施設ごとの割当がある施設**についてだけ効く（許可されていない施設は対象外）
-- 法人共通データ（法人部署、法人共通書類など）は、法人単位の割当で判定する
+- 法人共通データの**閲覧**：参照用の法人共通データ（法人の基本情報、契約・プラン、システム標準・法人共通の役職・職種・部署、法人共通の書類）は、施設の範囲の権限でも閲覧できる（例：施設長の `subscription.view`〔facility〕で法人の契約を閲覧できる）。法人共通の書類のアクセスレベルはアプリで判定する
+- 法人共通データの**書込み**：法人単位の権限（`app.org_level`）が必要。MVP の CORPORATE_ADMIN は閲覧のみなので、法人共通データは当社の手続き（専用関数）で登録する（PHASE 7 で法人の編集権限を設計）
+- 施設が必要とする役職・職種・部署は、施設の `org_structure.manage` で**施設の行**として登録する（法人共通の行を変更しない）
 
 ## 6. 承認できる人の判定式
 
@@ -150,8 +157,10 @@
 4. 自己承認でない（U が完了報告・提出・議事録作成をした本人ではない）。ただし下記の例外を除く
 
 承認者の指定・確定：
-- 承認依頼の作成時に、業務・シリーズ・カテゴリ・施設設定の順で承認者（職員または役割）を決め、**条件3を満たす職員に確定**する。満たさない場合は施設設定の既定の承認者（既定：FACILITY_DIRECTOR）に回す
-- 自己承認になる場合は、次の承認者（既定：FACILITY_DIRECTOR）に回す。**施設長本人の業務で他に承認者がいない場合のみ自己承認を認め、`is_self_approval` として記録・表示**する
+- 承認者は、業務 → シリーズ → カテゴリの順に指定を探し、どれにもなければ施設設定 `approval.default_approver_staff_id`（**既定の承認者。導入時に事務長本人を設定**）を使う
+- 指定が「役割」の場合：施設内でその役割を持つ職員が1人ならその人。複数なら施設設定 `approval.role_designee.{役割}` で指定した人。いなければ施設設定 `approval.fallback_approver_staff_id`（**予備の承認者。導入時に施設長本人を設定**）
+- 決まった職員が条件3を満たさない場合は、予備の承認者に回す
+- 自己承認になる場合（承認者＝完了報告した本人）は予備の承認者に回す。予備の承認者本人の業務で他に承認者がいない場合のみ自己承認を認め、`is_self_approval` として記録・表示する
 - 承認者が権限を失った・退職した場合、承認依頼に「承認者に権限なし」と表示し、`approval.reassign` を持つ人が付け替える（理由必須）
 - 事務長の「最終承認」は権限ではなく、施設設定の「既定の承認者」で表す
 
@@ -159,14 +168,14 @@
 
 | 操作 | 遷移 | 必要な権限・条件 |
 |---|---|---|
-| 着手 | 未着手 → 進行中 | `task.progress`（own）または `task.update`（範囲内） |
-| 提出待ちにする／戻す | 進行中 ⇄ 提出待ち | `task.progress`（own）または `task.update` |
-| 完了報告 | 未着手・進行中・提出待ち・差し戻し → 承認待ち（承認必要）／完了（承認不要） | `task.progress`（own）。**必須の必要提出物がそろっていること**。承認が必要な業務は「完了」に直接移せない（サーバで拒否） |
+| 着手（API `start`） | 未着手・差し戻し・提出待ち → 進行中 | `task.progress`（own）または `task.update`（範囲内） |
+| 提出待ちにする（API `wait-submission`） | 進行中 → 提出待ち | `task.progress`（own）または `task.update` |
+| 完了報告（API `report-completion`） | 未着手・進行中・提出待ち・差し戻し → 承認待ち（承認必要）／完了（承認不要） | `task.progress`（own）。**必須の必要提出物がそろっていること**。承認が必要な業務は「完了」に直接移せない（サーバで拒否） |
 | 承認・差し戻し | 承認待ち → 完了／差し戻し | 第6章の判定式。差し戻しは理由必須 |
-| 保留・解除 | 完了以外 → 保留 → 保留前の状態 | `task.hold`（範囲内）。理由必須。承認待ちを保留にすると承認依頼は取消 |
-| 再開 | 完了 → 進行中 | `task.reopen`（範囲内）。理由必須 |
-| 例外完了 | 完了以外 → 完了 | `task.force_complete`（施設長・事務長）。理由必須。業務詳細とダッシュボードに「例外完了」と表示 |
-| 取消 | 完了以外 → （取消の記録） | `task.delete`（範囲内）。理由必須。保留中の承認依頼は取消 |
+| 保留・解除（API `hold`・`resume`） | 完了以外 → 保留 → 保留前の状態（**承認待ちだった場合は進行中**） | `task.hold`（範囲内）。理由必須。承認待ちを保留にすると承認依頼は取消 |
+| 再開（API `reopen`） | 完了 → 進行中 | `task.reopen`（範囲内）。理由必須 |
+| 例外完了（API `force-complete`） | 完了以外 → 完了 | `task.force_complete`（施設長・事務長）。理由必須。業務詳細とダッシュボードに「例外完了」と表示 |
+| 取消（API `cancel`） | 完了以外 → （取消の記録） | `task.delete`（範囲内）。理由必須。保留中の承認依頼は取消 |
 | 内容の編集 | — | `task.update`（範囲内）。担当者は進捗とコメントのみ |
 
 状態遷移図は `product/module-specifications.md` を参照。
@@ -193,16 +202,21 @@
 | document.create | — | facility | facility | facility | own（指定カテゴリ） |
 | document.update / document.delete | — | facility | facility | own | own（自分が登録・未確定のもの） |
 | document.manage_acl | — | facility | facility | — | — |
+| committee.read / training.read | organization | facility | facility | department | own（委員・出席者・対象者として関係するもの） |
 | committee.manage / meeting.manage / decision.manage | — | facility | facility | department | — |
 | minutes.edit | — | facility | facility | department | — |
 | minutes.approve | — | facility | facility | — | — |
 | training.manage / training.confirm | — | facility | facility | department | — |
+| requirement.read | organization | facility | facility | facility | — |
 | requirement.manage / requirement.verify | — | facility | facility | — | — |
 | staff.read | organization | facility | facility | department | — |
 | staff.manage / org_structure.manage | — | facility | facility | — | — |
 | role.assign | — | facility | facility | — | — |
+| role.manage（PHASE 3） | — | facility | facility | — | — |
 | facility.manage / settings.manage | — | facility | facility | — | — |
 | data.export / audit.read | — | facility | facility | — | — |
+| access_review.run（PHASE 3） | — | facility | facility | — | — |
+| notification.manage / usage.view | — | facility | facility | — | — |
 | ai.use（PHASE 4） | organization | facility | facility | department | own |
 | ai.usage.view / subscription.view | organization | facility | facility | — | — |
 | ai.output.accept | — | facility | facility | department | — |
