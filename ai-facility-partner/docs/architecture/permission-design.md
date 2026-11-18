@@ -29,7 +29,7 @@
 | ADMIN_MANAGER | 事務長 | 施設 | 施設長と同じ権限。違いは「割り当てられる役割」（第4章）と承認者の既定値（施設設定） |
 | DEPARTMENT_MANAGER | 部署管理者・介護主任 | 施設＋部署（必須） | 自部署の業務・依頼・提出物・委員会・研修の管理と承認 |
 | STAFF | 一般職員 | 施設 | 自分の業務・依頼・提出物の確認と報告 |
-| SUPPORT_READONLY | 当社の障害対応（固定） | 承認された支援アクセスの期間のみ（テナントの役割割当ではない） | 当社管理画面の閲覧画面から、許可された施設のデータを閲覧のみ（DB で書込み拒否、RLS が許可の有効性も確認）。ファイルの中身は許可の `include_files` が真の場合のみ（`database-design.md` 第2.5節） |
+| SUPPORT_READONLY | 当社の障害対応（固定） | 承認された支援アクセスの期間のみ（テナントの役割割当ではない） | 当社管理画面の閲覧画面から、許可された施設のデータを閲覧のみ。DB 利用者 app_support は SELECT 権限だけを持ち、すべての RLS ポリシーが許可の有効性を確認する。法人共通の行は読めない。ファイルの中身は許可の `include_files` が真の場合のみ（`database-design.md` 第2.5節） |
 
 ## 3. 権限一覧
 
@@ -76,6 +76,8 @@
 | 施設 | `facility.manage` | 施設情報 | ○ |
 | | `settings.manage` | 施設設定・通知タイミング・承認ルール | ○ |
 | 出力 | `data.export` | CSV 等の出力 | ○ |
+| 削除 | `data.purge_request` | 完全削除・墨消しの依頼（要配慮情報の混入、保存期限の到来）。依頼と同時に表示停止 | ○ |
+| | `data.purge_approve` | 完全削除・墨消しの承認（実行は当社の保守処理） | ○ |
 | 通知 | `notification.manage` | 送信に失敗した通知の確認・再送 | |
 | 監査 | `audit.read` | 操作履歴・ログイン履歴の閲覧 | ○ |
 | 利用状況 | `usage.view` | 施設の利用状況（利用者数・画面別の利用・代理登録率）の閲覧 | |
@@ -96,13 +98,14 @@
 | R2 自分の権限の範囲内 | 割り当てる役割のすべての（権限, 範囲）が、割当者がその施設で持つ（権限, 範囲）に含まれること |
 | R3 割り当てられる人の表 | 下表に従う |
 | R4 最後の施設長 | 施設の最後の FACILITY_DIRECTOR は解除できない（施設が管理不能になるのを防ぐ） |
+| R7 DB での強制 | 保護された役割（CORPORATE_ADMIN・FACILITY_DIRECTOR）は Web アプリからは割り当てられない（DB のトリガーで拒否）。R1・R4 も DB のトリガーで強制 |
 | R5 通知と記録 | 役割の割当・変更・解除は、その施設の FACILITY_DIRECTOR と ADMIN_MANAGER 全員に通知し、操作履歴に記録 |
 | R6 再認証 | 割当の操作には再認証が必要 |
 
 | 割り当てる役割 | 割り当てられる人 |
 |---|---|
-| CORPORATE_ADMIN（法人単位・各施設） | **当社の手続きのみ**（契約者からの書面の依頼に基づく。MVP） |
-| FACILITY_DIRECTOR | CORPORATE_ADMIN（PHASE 7）または当社の手続き（施設長交代の依頼に基づく） |
+| CORPORATE_ADMIN（法人単位・各施設） | **当社の手続きのみ**（契約者からの書面の依頼に基づき、専用関数 `assign_protected_role()`。MVP） |
+| FACILITY_DIRECTOR | 当社の手続き（施設長交代の依頼に基づき、同上）。PHASE 7 で CORPORATE_ADMIN による割当を設計 |
 | ADMIN_MANAGER | FACILITY_DIRECTOR |
 | DEPARTMENT_MANAGER、STAFF | FACILITY_DIRECTOR、ADMIN_MANAGER |
 | カスタムロール（PHASE 3） | 作成元（法人／施設）の範囲内で、R2 を満たす人 |
@@ -215,6 +218,8 @@
 | role.manage（PHASE 3） | — | facility | facility | — | — |
 | facility.manage / settings.manage | — | facility | facility | — | — |
 | data.export / audit.read | — | facility | facility | — | — |
+| data.purge_request | — | facility | facility | — | — |
+| data.purge_approve | — | facility | — | — | — |
 | access_review.run（PHASE 3） | — | facility | facility | — | — |
 | notification.manage / usage.view | — | facility | facility | — | — |
 | ai.use（PHASE 4） | organization | facility | facility | department | own |

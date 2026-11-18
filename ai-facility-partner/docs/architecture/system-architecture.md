@@ -61,6 +61,7 @@ flowchart TB
 | DB の直接公開窓口 | ホスティングが提供する DB の直接公開 API（Supabase の Data API 等）は無効化し、RLS を迂回する管理キーをアプリで使わない |
 | ウイルス検査 | サーバレス関数内では動かさず、国内の検査用コンテナまたは検査サービスで行う（TD-030） |
 | ファイルのバックアップ | DB のバックアップにファイル本体は含まれないため、別アカウントへ日次複製する |
+| 保守処理 | 全体の論理バックアップ・承認済みの削除は、国内の**保守専用の実行環境**で動かす（RLS を迂回できる認証情報を Web アプリ・ワーカー・CI に置かない。`database-design.md` 第2.2.1節） |
 | 認証 | メールのない職員のログイン・共用端末への対応（D-2）を満たすかで認証サービスを確定（TD-016） |
 | プレビュー環境 | 変更ごとのプレビュー環境はアクセス保護を有効にし、架空データのみ使用 |
 
@@ -169,6 +170,8 @@ ai-facility-partner/
 | 書類 | `POST /facilities/{id}/uploads`（隔離領域へのアップロードURL発行）、`GET/POST /facilities/{id}/documents`、`GET/PATCH /documents/{docId}`、`POST /documents/{docId}/versions`、`PUT /documents/{docId}/acl`、`GET /document-versions/{verId}/download`、`POST/DELETE /document-links` | 2b |
 | 通知 | `GET /me/notifications`、`POST /notifications/{nid}/read`、管理者向け `GET /facilities/{id}/notifications?status=failed`・`POST /notifications/{nid}/retry`（`notification.manage`） | 2b-1 |
 | 利用状況 | `GET /facilities/{id}/usage?from=&to=`（`usage.view`） | 2b-2 |
+| 削除依頼 | `GET/POST /facilities/{id}/purge-requests`（`data.purge_request`、作成と同時に表示停止）、`POST /purge-requests/{id}/approve`・`reject`（`data.purge_approve`） | 2b-2 |
+| 兼務・異動の受入れ | `POST /facilities/{id}/staff-assignments/by-staff-code`（`staff.manage`） | 2a |
 | CSV | `POST /facilities/{id}/imports`（プレビュー）、`POST /imports/{id}/commit`、`POST /facilities/{id}/exports`、`GET /exports/{eid}` | 2b（取込）〜3（出力） |
 | 委員会 | `GET/POST /facilities/{id}/committees`、`GET/POST /committees/{cid}/meetings`、`PATCH /meetings/{mid}`、`POST /meetings/{mid}/minutes`、`POST /meetings/{mid}/decisions`、`POST /decisions/{did}/actions/{start|implement|verify|drop}` | 3 |
 | 研修 | `GET/POST /facilities/{id}/training-plans`、`POST /training-plans/{pid}/targets`、`POST /training-plans/{pid}/sessions`、`PUT /training-sessions/{sid}/attendance`、`POST /training-attendance/{aid}/confirm` | 3 |
