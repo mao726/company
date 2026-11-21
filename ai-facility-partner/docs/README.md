@@ -7,7 +7,7 @@
 - PHASE 0：報告済み（`development/phase0-report.md`）
 - PHASE 1：基盤設計 **v2（レビュー指摘を修正）・承認待ち**。レビュー結果と対応状況：`development/design-review-2026-11-17.md`
 - 判断が必要な事項：`development/open-decisions.md`（Q1〜Q6、D-1〜D-9、専門家確認 E-1〜E-8）
-- 実装：未着手
+- 実装：本番は未着手。画面と流れを確かめる**試作品 v0**（この端末だけで動く1ファイル、架空データのみ）：[`../prototype/`](../prototype/README.md)
 
 ## 未回答の前提（仮定で設計している事項）
 

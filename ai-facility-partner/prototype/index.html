@@ -1,0 +1,1417 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI施設運営パートナー 試作品</title>
+<style>
+:root{
+  --text:#1A1A1A; --text-2:#4D4D4D; --muted:#5C5C5C;
+  --primary:#0B5E8A; --primary-dark:#084A6D;
+  --bg:#F5F6F7; --surface:#FFFFFF; --line:#DADADA; --input:#767676;
+  --danger:#B42318; --danger-bg:#FDECEA;
+  --warn:#7A4100; --warn-bg:#FFF3D6;
+  --info:#1849A9; --info-bg:#E8F0FE;
+  --focus:#FFD43B;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--text);font-family:"Noto Sans JP","Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic UI","Meiryo",sans-serif;font-size:16px;line-height:1.7}
+a{color:var(--primary)}a:hover{color:var(--primary-dark)}
+h1{font-size:24px;line-height:1.4;margin:0}
+h2{font-size:20px;line-height:1.5;margin:0}
+h3{font-size:18px;line-height:1.5;margin:0}
+p{margin:0}
+:focus-visible{outline:2px solid #000;outline-offset:2px;box-shadow:0 0 0 6px var(--focus)}
+h1[tabindex="-1"]:focus,h2[tabindex="-1"]:focus,main[tabindex="-1"]:focus{outline:none;box-shadow:none}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.skip{position:absolute;left:-9999px;top:8px}
+.skip:focus{left:16px;background:#fff;padding:8px 12px;z-index:20}
+.text-2{color:var(--text-2)} .text-muted{color:var(--muted)}
+.due-soon{color:var(--warn);font-weight:700}
+.row{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px}
+.row-between{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px 16px}
+.stack{display:flex;flex-direction:column;gap:12px}
+.stack-sm{display:flex;flex-direction:column;gap:4px}
+
+/* 試作品の操作バー */
+.proto-bar{background:#1A1A1A;color:#fff;padding:8px 16px;display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center}
+.proto-bar a{color:#fff}
+.proto-bar label{display:inline-flex;align-items:center;gap:8px}
+.proto-bar select{font:inherit;min-height:44px;padding:0 8px;border-radius:6px;border:1px solid #fff;background:#1A1A1A;color:#fff}
+.pbtn{min-height:44px;padding:0 12px;border:1px solid #fff;border-radius:6px;background:transparent;color:#fff;font:inherit;cursor:pointer}
+.proto-label{font-weight:700;border:1px solid #fff;border-radius:4px;padding:0 8px}
+
+/* 管理者の画面 */
+.wrap{max-width:1200px;margin:0 auto;padding:0 32px}
+.site-header{background:var(--surface);border-bottom:1px solid var(--line)}
+.header-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px 24px;padding-top:12px;padding-bottom:12px}
+.brand{display:flex;align-items:baseline;gap:12px;flex:1 1 auto}
+.brand-name{font-size:20px;font-weight:700}
+.main-nav{display:flex;flex-wrap:wrap;gap:4px}
+.main-nav a{padding:10px 14px;border-radius:6px;color:var(--text);text-decoration:none;min-height:44px;display:inline-flex;align-items:center}
+.main-nav a[aria-current="page"]{background:var(--info-bg);color:var(--info);font-weight:700}
+.main{padding-top:24px;padding-bottom:48px;display:flex;flex-direction:column;gap:24px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:16px 20px}
+.grid-cards{display:flex;flex-wrap:wrap;gap:16px}
+.grid-cards>*{flex:1 1 240px;min-width:0}
+.cols{display:flex;flex-wrap:wrap;gap:16px}
+.cols>*{flex:1 1 420px;min-width:0}
+.stat-card{display:flex;flex-direction:column;gap:4px;text-decoration:none;color:var(--text)}
+.stat-card:hover{border-color:var(--primary);color:var(--text)}
+.stat-card.alert{border:2px solid var(--danger)}
+.stat-num{font-size:32px;font-weight:700;line-height:1.3}
+.list{list-style:none;margin:0;padding:0}
+.list>li{padding:10px 0;border-bottom:1px solid var(--line)}
+.list>li:last-child{border-bottom:none}
+.list.card{padding:0 20px}
+.split{display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start}
+.split>.main-col{flex:999 1 560px;min-width:0;display:flex;flex-direction:column;gap:16px}
+.split>.side-col{flex:1 1 340px;min-width:0}
+.table-wrap{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:8px}
+table{width:100%;border-collapse:collapse;min-width:640px}
+th,td{padding:10px 12px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}
+tbody tr:last-child td{border-bottom:none}
+tr.is-current td{background:var(--info-bg)}
+.list>li.is-current{background:var(--info-bg);margin:0 -20px;padding-left:20px;padding-right:20px}
+
+/* 部品 */
+.btn{min-height:48px;padding:0 20px;border-radius:6px;font:inherit;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid var(--primary);background:var(--surface);color:var(--primary);text-decoration:none}
+.btn:hover{color:var(--primary-dark);border-color:var(--primary-dark)}
+.btn-primary{background:var(--primary);color:#fff}
+.btn-primary:hover{background:var(--primary-dark);color:#fff}
+.btn-danger{background:var(--danger);border-color:var(--danger);color:#fff}
+.btn-danger:hover{background:#8f1b13;color:#fff}
+.btn-text{border:none;background:none;color:var(--primary);text-decoration:underline;padding:0 8px;min-height:44px;display:inline-flex;align-items:center;font:inherit;font-weight:400;cursor:pointer}
+.btn-lg{min-height:56px;width:100%}
+.btn-sm{min-height:44px;padding:0 14px}
+.tag{display:inline-flex;align-items:center;gap:4px;padding:2px 10px;border-radius:999px;line-height:1.5;white-space:nowrap}
+.tag-info{background:var(--info-bg);color:var(--info)}
+.tag-warn{background:var(--warn-bg);color:var(--warn)}
+.tag-danger{background:var(--danger-bg);color:var(--danger)}
+.tag-muted{background:var(--bg);color:var(--muted);border:1px solid var(--input)}
+.tag-outline{border:1px solid var(--input);color:var(--text-2);border-radius:4px;padding:0 8px;white-space:nowrap}
+.tag-plain{display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{min-height:44px;padding:0 14px;border:1px solid var(--input);border-radius:999px;background:var(--surface);color:var(--text);font:inherit;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--primary);border-color:var(--primary);color:#fff}
+.notice{padding:12px 16px;border-radius:6px;display:flex;gap:8px;align-items:flex-start}
+.notice-warn{background:var(--warn-bg);color:var(--warn)}
+.notice-info{background:var(--info-bg);color:var(--info)}
+.notice-plain{background:var(--bg)}
+.toast{padding:12px 16px;border-radius:6px;background:var(--info-bg);color:var(--info);font-weight:700}
+.toast-error{background:var(--danger-bg);color:var(--danger)}
+.field{display:flex;flex-direction:column;gap:4px}
+.lbl{font-weight:700}
+.req{font-weight:400;color:var(--text-2)}
+.hint{color:var(--text-2)}
+.err{color:var(--danger)}
+input[type=text],input[type=date],select,textarea{font:inherit;min-height:48px;padding:8px 12px;border:1px solid var(--input);border-radius:6px;background:var(--surface);color:var(--text);max-width:100%}
+textarea{min-height:96px;resize:vertical;width:100%}
+input[type=file]{font:inherit;min-height:48px;max-width:100%}
+input[type=file]::file-selector-button{font:inherit;font-weight:700;min-height:44px;padding:0 16px;margin-right:12px;border:1px solid var(--primary);border-radius:6px;background:var(--surface);color:var(--primary);cursor:pointer}
+input[type=text]{width:100%}
+.input-error{border:2px solid var(--danger) !important}
+fieldset{border:none;margin:0;padding:0}
+legend{font-weight:700;padding:0;margin-bottom:4px}
+.radio{display:flex;align-items:flex-start;gap:10px;min-height:44px;padding:6px 0}
+.radio input{width:22px;height:22px;margin-top:3px;flex:none}
+input[type=checkbox]{width:24px;height:24px}
+.file-btn{position:relative}
+.file-btn:focus-within{outline:2px solid #000;outline-offset:2px;box-shadow:0 0 0 6px var(--focus)}
+.file-btn input{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden}
+.dl{display:grid;grid-template-columns:max-content 1fr;gap:8px 16px;margin:0}
+.dl dt{color:var(--text-2)}
+.dl dd{margin:0}
+.history{list-style:none;margin:0;padding:0}
+.history li{padding:6px 0;border-bottom:1px solid var(--line)}
+.history li:last-child{border-bottom:none}
+.card ul:not(.list):not(.history){margin:0;padding-left:1.5em}
+
+/* 職員の画面（スマホ） */
+.staff-shell{max-width:480px;margin:0 auto;min-height:calc(100vh - 60px);display:flex;flex-direction:column;font-size:17px;background:var(--bg)}
+.staff-header{background:var(--surface);border-bottom:1px solid var(--line);padding:12px 16px}
+.staff-main{flex:1;padding:16px;display:flex;flex-direction:column;gap:20px}
+.tabbar{position:sticky;bottom:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));background:var(--surface);border-top:1px solid var(--line)}
+.tabbar a{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:64px;color:var(--text-2);text-decoration:none;font-size:16px}
+.tabbar a[aria-current="page"]{color:var(--primary);font-weight:700}
+.scard{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:16px;display:flex;flex-direction:column;gap:8px}
+.section-title{display:inline-flex;align-items:center;gap:6px}
+.quote{padding:8px 12px;background:var(--warn-bg);border-radius:6px;color:var(--warn)}
+.week{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:8px}
+.day{display:flex;flex-direction:column;align-items:center;min-height:64px;padding:4px 0;border-radius:6px}
+.day.today{background:var(--primary);color:#fff;font-weight:700}
+.dot{width:6px;height:6px;border-radius:3px;background:var(--text-2)}
+.day.today .dot{background:#fff}
+.checklist{list-style:none;margin:0;padding:0;background:var(--surface);border:1px solid var(--line);border-radius:8px}
+.checklist li{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 16px;border-bottom:1px solid var(--line);min-height:60px}
+.checklist li:last-child{border-bottom:none}
+.flow{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:16px;min-height:560px;width:100%;max-width:480px;margin:0 auto}
+.flow .bottom{margin-top:auto;display:flex;flex-direction:column;gap:12px}
+.thumb{height:180px;border:1px solid var(--line);border-radius:8px;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:var(--text-2);padding:8px;text-align:center;word-break:break-all}
+.done-mark{width:72px;height:72px;border-radius:36px;border:2px solid var(--text);display:inline-flex;align-items:center;justify-content:center}
+
+/* 確認ダイアログ */
+.backdrop{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;padding:16px;z-index:30}
+.dialog{background:var(--surface);border-radius:8px;max-width:520px;width:100%;padding:24px;display:flex;flex-direction:column;gap:16px}
+.dialog-actions{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px}
+
+@media (max-width:640px){.wrap{padding:0 16px}.dl{grid-template-columns:1fr}}
+@media print{.proto-bar,.site-header,.tabbar,.no-print{display:none !important}body{background:#fff}.card{border:none}}
+</style>
+</head>
+<body>
+<a class="skip" href="#main" data-action="skip">本文へ移動</a>
+<div id="proto-bar" class="proto-bar" role="region" aria-label="試作品の操作"></div>
+<div id="app"></div>
+<div id="live" class="sr-only" aria-live="polite"></div>
+<div id="dialog-root"></div>
+<script>
+'use strict';
+(function(){
+/* ============================================================
+   AI施設運営パートナー 試作品 v0
+   - このファイルだけで動きます（サーバー・インターネット不要）
+   - データはこの端末のブラウザの中（localStorage）にだけ保存します
+   - すべて架空のデータです。実在の人の情報は入力しないでください
+   ============================================================ */
+var STORAGE_KEY = 'afp-prototype-v0';
+var WEEK = ['日','月','火','水','木','金','土'];
+var CATEGORIES = ['行政提出','委員会','研修','点検','人事','会計','その他'];
+var STATUS_LABEL = {not_started:'未着手',in_progress:'進行中',awaiting_submission:'提出待ち',awaiting_approval:'承認待ち',returned:'差し戻し',completed:'完了',on_hold:'保留'};
+var BASIS_LABEL = {law:'法令',notice:'行政通知',corporate_rule:'法人規程',facility_rule:'施設ルール',unverified:'未確認'};
+var DATA_CLASS = {
+  c1:{label:'一般（業務の書類）',hint:'研修レポート、点検の記録など'},
+  c2:{label:'職員の基本情報を含む',hint:'氏名・所属が書かれた書類など'},
+  c4:{label:'健康情報など',hint:'健康診断の結果などはファイルを受け取らず、「提出した」ことだけを記録します'}
+};
+
+var I = {
+  alert:'<svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>',
+  excl:'<svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="6" x2="12" y2="13"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>',
+  check:'<svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>',
+  bigcheck:'<svg aria-hidden="true" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>',
+  warn:'<svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
+  back:'<svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>',
+  home:'<svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>',
+  list:'<svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><line x1="8" y1="8" x2="16" y2="8"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="8" y1="16" x2="13" y2="16"/></svg>',
+  upload:'<svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4"/><polyline points="7 9 12 4 17 9"/><path d="M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg>',
+  bell:'<svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>',
+  camera:'<svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="4"/></svg>',
+  doc:'<svg aria-hidden="true" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="14 3 14 9 20 9"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="13" y2="17"/></svg>'
+};
+
+var app = document.getElementById('app');
+var protoBar = document.getElementById('proto-bar');
+var dialogRoot = document.getElementById('dialog-root');
+var live = document.getElementById('live');
+var data = null;
+var storageOK = true;
+var ui = {toast:null, flow:{}, filter:{}, selected:{}, panel:null, formErr:null, form:null, dialog:null, lastPath:null};
+
+/* ---------------- 共通の小さな関数 ---------------- */
+function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function byId(list,id){for(var i=0;i<list.length;i++){if(list[i].id===id)return list[i];}return null;}
+function pad(n){return String(n).padStart(2,'0');}
+function ymd(d){return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());}
+function parseDate(s){var p=s.split('-').map(Number);return new Date(p[0],p[1]-1,p[2]);}
+function addDays(s,n){var d=parseDate(s);d.setDate(d.getDate()+n);return ymd(d);}
+function diffDays(a,b){return Math.round((parseDate(b)-parseDate(a))/86400000);}
+function realToday(){return ymd(new Date());}
+function today(){return addDays(realToday(),(data&&data.todayOffset)||0);}
+function fmtDate(s){if(!s)return '';var d=parseDate(s);return (d.getMonth()+1)+'月'+d.getDate()+'日('+WEEK[d.getDay()]+')';}
+function nowStamp(){var t=new Date();return today()+'T'+pad(t.getHours())+':'+pad(t.getMinutes());}
+function stamp(dateStr,time){return dateStr+'T'+(time||'09:00');}
+function fmtStamp(s){if(!s)return '';var p=s.split('T');return fmtDate(p[0])+' '+(p[1]||'');}
+function rel(due){var n=diffDays(today(),due);if(n<0)return {text:(-n)+'日超過',kind:'over'};if(n===0)return {text:'今日まで',kind:'today'};return {text:'あと'+n+'日',kind:n<=3?'soon':'later'};}
+function byDue(a,b){return a.dueOn<b.dueOn?-1:a.dueOn>b.dueOn?1:0;}
+function nid(prefix){data.seq=(data.seq||1000)+1;return prefix+'-'+data.seq;}
+function staff(id){return byId(data.staff,id);}
+function staffName(id){if(id==='system')return '自動処理';var s=staff(id);return s?s.name:'（不明）';}
+function dept(id){return byId(data.departments,id);}
+function deptName(id){var d=dept(id);return d?d.name:'';}
+function me(){return staff(data.currentUserId);}
+function isManager(u){return u.role!=='STAFF';}
+function isFacilityAdmin(u){return u.role==='FACILITY_DIRECTOR'||u.role==='ADMIN_MANAGER';}
+function reqById(id){return byId(data.requests,id);}
+function reqOf(x){return reqById(x.requestId);}
+function taskById(id){return byId(data.tasks,id);}
+function targetsOf(r){return data.targets.filter(function(x){return x.requestId===r.id;});}
+function qOf(r){return r.question||{text:'「'+r.title+'」は済みましたか',yes:'済みました',no:'まだです',date:'実施日',what:'済んだかどうかと実施日（書類は出しません）',laterTitle:'済んでから報告してください',later:'済んだら、もう一度この画面から報告してください。'};}
+function nameTitle(id){var s=staff(id);return s?s.name+'さん（'+s.title+'）':'';}
+
+/* ---------------- 保存と読み込み ---------------- */
+function save(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(data));storageOK=true;}catch(e){storageOK=false;}}
+function load(){
+  try{var raw=localStorage.getItem(STORAGE_KEY);if(raw){var d=JSON.parse(raw);if(d&&d.version===1){data=d;return;}}}catch(e){storageOK=false;}
+  seed();save();
+}
+
+/* ---------------- 操作の記録と通知 ---------------- */
+function log(action,target,actorId){data.audit.push({id:nid('a'),at:nowStamp(),actorId:actorId||data.currentUserId,action:action,target:target});}
+function notify(toId,title,body,link,urgent){var s=staff(toId);if(!s||!s.hasLogin||s.status!=='active')return false;data.notifications.push({id:nid('n'),toId:toId,at:nowStamp(),title:title,body:body||'',link:link||'#/',urgent:!!urgent,readAt:null});return true;}
+function unreadCount(u){return data.notifications.filter(function(n){return n.toId===u.id&&!n.readAt;}).length;}
+
+/* ---------------- 架空のデータ ---------------- */
+function mkTask(o){
+  var t={id:nid('t'),title:'',description:'',category:'その他',kind:'task',seriesId:null,occurrenceDate:null,isChecklist:false,departmentId:null,assignee:null,requestedById:null,requiresApproval:false,approverId:null,dueOn:today(),dueTime:'',status:'not_started',holdReason:'',statusBefore:null,completedAt:null,completedById:null,basisType:'unverified',gov:null,acknowledgedAt:null,comments:[],history:[],approval:null,cancelledAt:null,returnReason:'',createdAt:nowStamp(),createdById:data.currentUserId};
+  for(var k in o){t[k]=o[k];}
+  if(!t.departmentId&&t.assignee){t.departmentId=t.assignee.type==='dept'?t.assignee.id:(staff(t.assignee.id)||{}).deptId||null;}
+  return t;
+}
+function seed(){
+  var T=realToday();
+  data={version:1,todayOffset:0,currentUserId:'s-takagi',seq:1000,
+    facility:{name:'試作ホーム（架空）'},
+    settings:{defaultApproverId:'s-tanaka',fallbackApproverId:'s-takagi',escalateAfter:2},
+    departments:[{id:'d-office',name:'事務部'},{id:'d-care',name:'介護部'},{id:'d-nurse',name:'看護部'},{id:'d-nutrition',name:'栄養部'}],
+    staff:[
+      {id:'s-takagi',name:'高木 誠',title:'施設長',deptId:'d-office',role:'FACILITY_DIRECTOR',hasLogin:true,status:'active'},
+      {id:'s-tanaka',name:'田中 由美',title:'事務長',deptId:'d-office',role:'ADMIN_MANAGER',hasLogin:true,status:'active'},
+      {id:'s-sato',name:'佐藤 健一',title:'介護主任',deptId:'d-care',role:'DEPARTMENT_MANAGER',hasLogin:true,status:'active'},
+      {id:'s-yamada',name:'山田 花子',title:'介護職員',deptId:'d-care',role:'STAFF',hasLogin:true,status:'active'},
+      {id:'s-ito',name:'伊藤 さくら',title:'介護職員',deptId:'d-care',role:'STAFF',hasLogin:true,status:'active'},
+      {id:'s-kobayashi',name:'小林 美咲',title:'介護職員',deptId:'d-care',role:'STAFF',hasLogin:true,status:'active'},
+      {id:'s-kato',name:'加藤 大輔',title:'介護職員',deptId:'d-care',role:'STAFF',hasLogin:true,status:'active'},
+      {id:'s-takahashi',name:'高橋 次郎',title:'介護職員',deptId:'d-care',role:'STAFF',hasLogin:false,status:'active'},
+      {id:'s-nakamura',name:'中村 真',title:'介護職員',deptId:'d-care',role:'STAFF',hasLogin:true,status:'on_leave'},
+      {id:'s-suzuki',name:'鈴木 一郎',title:'看護職員',deptId:'d-nurse',role:'STAFF',hasLogin:true,status:'active'},
+      {id:'s-yoshida',name:'吉田 恵',title:'看護職員',deptId:'d-nurse',role:'STAFF',hasLogin:true,status:'active'},
+      {id:'s-watanabe',name:'渡辺 健',title:'管理栄養士',deptId:'d-nutrition',role:'STAFF',hasLogin:true,status:'active'}
+    ],
+    series:[
+      {id:'se-1',title:'居室の温度・湿度の確認',category:'点検',occurrence:'daily',assignee:{type:'dept',id:'d-care'},isChecklist:true},
+      {id:'se-2',title:'おむつ・消耗品の補充',category:'点検',occurrence:'daily',assignee:{type:'dept',id:'d-care'},isChecklist:true},
+      {id:'se-3',title:'車いすの空気圧の確認',category:'点検',occurrence:'daily',assignee:{type:'dept',id:'d-care'},isChecklist:true},
+      {id:'se-4',title:'介護記録の点検（月次）',category:'点検',occurrence:'monthly',day:25,assignee:{type:'staff',id:'s-sato'},isChecklist:false}
+    ],
+    tasks:[],requests:[],targets:[],submissions:[],notifications:[],audit:[]};
+  var S=function(id){return {type:'staff',id:id};};
+  var D=function(id){return {type:'dept',id:id};};
+  var tasks=[
+    {title:'浴室設備の点検',category:'点検',assignee:S('s-yamada'),dueOn:T,status:'in_progress',description:'浴室の手すり・床・給湯の状態を確認し、気になる点を記録してください。',basisType:'facility_rule'},
+    {title:'感染対策委員会の資料準備',category:'委員会',assignee:S('s-suzuki'),dueOn:T,status:'awaiting_approval',requiresApproval:true,approverId:'s-tanaka',approval:{approverId:'s-tanaka',status:'pending',requestedAt:stamp(addDays(T,-1),'17:40'),isSelf:false,requestedById:'s-suzuki',actions:[]}},
+    {title:'非常用食品の在庫確認',category:'点検',assignee:D('d-care'),dueOn:T,status:'not_started',basisType:'facility_rule'},
+    {title:'○○に関する変更の届出（架空）',category:'行政提出',assignee:S('s-tanaka'),dueOn:addDays(T,2),status:'not_started',requiresApproval:true,approverId:'s-takagi',basisType:'unverified',gov:{destination:'○○市 介護保険課（架空）',method:'電子申請・届出システム',receiptNumber:'',copyFile:''},description:'変更があった事項の届出です。提出したら、控えを登録してください。'},
+    {title:'消防設備の自主点検',category:'点検',assignee:S('s-takagi'),dueOn:addDays(T,3),status:'not_started',basisType:'facility_rule'},
+    {title:'身体拘束適正化委員会の開催',category:'委員会',assignee:S('s-sato'),dueOn:addDays(T,4),status:'not_started'},
+    {title:'感染症の研修の実施',category:'研修',assignee:S('s-sato'),dueOn:addDays(T,7),status:'not_started'},
+    {title:'事故防止委員会の開催',category:'委員会',assignee:S('s-sato'),dueOn:addDays(T,18),status:'not_started'},
+    {title:'職員健康診断の日程案内',category:'人事',assignee:S('s-tanaka'),dueOn:addDays(T,-5),status:'on_hold',statusBefore:'in_progress',holdReason:'健診機関と日程を調整中'},
+    {title:'夜勤の申し送り様式の見直し',category:'その他',assignee:S('s-sato'),dueOn:addDays(T,-2),status:'in_progress'},
+    {title:'シーツ交換の手順書の更新',category:'その他',assignee:S('s-nakamura'),dueOn:addDays(T,6),status:'not_started'},
+    {title:'避難訓練の計画づくり',category:'点検',assignee:null,departmentId:'d-office',dueOn:addDays(T,10),status:'not_started'},
+    {title:'物品庫の整理',category:'その他',assignee:null,departmentId:'d-care',dueOn:addDays(T,14),status:'not_started'},
+    {title:'物品の棚卸しの手伝い',category:'その他',kind:'request',requestedById:'s-tanaka',assignee:S('s-yamada'),dueOn:addDays(T,3),status:'not_started',description:'2階の物品庫の在庫を数えて、用紙に記入してください。用紙は事務所にあります。'},
+    {title:'給食委員会の議事録作成',category:'委員会',assignee:S('s-watanabe'),dueOn:addDays(T,-3),status:'completed',completedAt:stamp(addDays(T,-3),'15:10'),completedById:'s-watanabe'},
+    {title:'AEDの点検',category:'点検',assignee:S('s-yoshida'),dueOn:addDays(T,-6),status:'completed',completedAt:stamp(addDays(T,-6),'10:20'),completedById:'s-yoshida'},
+    {title:'請求書類の確認（月次）',category:'会計',assignee:S('s-tanaka'),dueOn:addDays(T,-2),status:'completed',completedAt:stamp(addDays(T,-2),'16:05'),completedById:'s-tanaka'},
+    {title:'新人職員のオリエンテーション',category:'研修',assignee:S('s-sato'),dueOn:addDays(T,-1),status:'completed',completedAt:stamp(addDays(T,-1),'11:30'),completedById:'s-sato'}
+  ];
+  tasks.forEach(function(o){var t=mkTask(o);t.createdById='s-tanaka';t.createdAt=stamp(addDays(T,-14),'09:00');data.tasks.push(t);});
+  ensureSeries();
+  data.tasks.forEach(function(t){if(t.seriesId==='se-3'&&t.occurrenceDate===T){t.status='completed';t.completedAt=stamp(T,'09:10');t.completedById='s-yamada';}});
+
+  var R1={id:'r-1',title:'感染症の研修レポート',instructions:'研修のレポートを1枚提出してください。紙の場合は写真で出せます。',dueOn:T,dueTime:'17:00',dataClass:'c1',fileMode:'file_required',target:{type:'depts',ids:['d-care','d-nurse']},reviewerId:'s-sato',requesterId:'s-sato',reminder:'default',rounds:2,escalatedOn:null,status:'open',createdAt:stamp(addDays(T,-10),'10:00')};
+  var R2={id:'r-2',title:'健康診断の受診報告',question:{text:'健康診断を受診しましたか',yes:'受診しました',no:'まだ受診していません',date:'受診日',what:'受診したかどうかと受診日（結果の用紙は出しません）',laterTitle:'受診してから報告してください',later:'受診したら、もう一度この画面から報告してください。'},instructions:'健康診断を受けたかどうかと、受診日を報告してください。結果の用紙は事務所へ直接提出してください。',dueOn:addDays(T,3),dueTime:'',dataClass:'c4',fileMode:'no_file',target:{type:'all'},reviewerId:'s-tanaka',requesterId:'s-tanaka',reminder:'default',rounds:0,escalatedOn:null,status:'open',createdAt:stamp(addDays(T,-7),'09:30')};
+  data.requests.push(R1,R2);
+  function tg(r,sid,st,extra){var s=staff(sid);var x={id:nid('x'),requestId:r.id,staffId:sid,departmentId:s.deptId,hasLogin:s.hasLogin,status:st,reminders:0,sentKeys:[],returnReason:'',excludedReason:'',actions:[],seenAt:stamp(addDays(T,-6),'12:00')};for(var k in (extra||{})){x[k]=extra[k];}data.targets.push(x);return x;}
+  function sub(x,dateStr,time,extra){var s={id:nid('sub'),targetId:x.id,version:1,at:stamp(dateStr,time),byId:x.staffId,proxy:false,fileName:'',fileSize:0,answer:null,comment:''};for(var k in (extra||{})){s[k]=extra[k];}data.submissions.push(s);return s;}
+  var x;
+  x=tg(R1,'s-sato','approved');sub(x,addDays(T,-6),'13:00',{fileName:'研修レポート_佐藤.jpg'});
+  x=tg(R1,'s-yamada','not_submitted',{reminders:1});
+  x=tg(R1,'s-ito','returned',{returnReason:'2枚目が写っていません。もう一度撮ってください。'});sub(x,addDays(T,-2),'20:11',{fileName:'研修レポート.jpg'});
+  x=tg(R1,'s-kobayashi','approved');sub(x,addDays(T,-4),'12:40',{fileName:'レポート.pdf'});
+  x=tg(R1,'s-kato','not_submitted',{reminders:2});
+  x=tg(R1,'s-takahashi','not_submitted');
+  x=tg(R1,'s-nakamura','excluded',{excludedReason:'休職中'});
+  x=tg(R1,'s-suzuki','submitted');sub(x,addDays(T,-1),'09:05',{fileName:'研修レポート_鈴木.jpg',comment:'研修の動画を見て書きました。'});
+  x=tg(R1,'s-yoshida','submitted');sub(x,addDays(T,-1),'18:20',{fileName:'IMG_2031.jpg'});
+  x=tg(R2,'s-takagi','approved');sub(x,addDays(T,-5),'10:00',{answer:{examined:'yes',date:addDays(T,-12)}});
+  x=tg(R2,'s-tanaka','approved');sub(x,addDays(T,-5),'10:30',{answer:{examined:'yes',date:addDays(T,-12)}});
+  x=tg(R2,'s-sato','submitted');sub(x,addDays(T,-1),'19:00',{answer:{examined:'yes',date:addDays(T,-9)}});
+  x=tg(R2,'s-yamada','returned',{returnReason:'受診日がちがうようです。もう一度確認してください。'});sub(x,addDays(T,-2),'21:15',{answer:{examined:'yes',date:addDays(T,-30)}});
+  x=tg(R2,'s-ito','not_submitted');
+  x=tg(R2,'s-kobayashi','not_submitted');
+  x=tg(R2,'s-kato','submitted');sub(x,addDays(T,-1),'08:15',{answer:{examined:'yes',date:addDays(T,-8)}});
+  x=tg(R2,'s-takahashi','not_submitted');
+  x=tg(R2,'s-nakamura','excluded',{excludedReason:'休職中'});
+  x=tg(R2,'s-suzuki','approved');sub(x,addDays(T,-3),'12:00',{answer:{examined:'yes',date:addDays(T,-10)}});
+  x=tg(R2,'s-yoshida','not_submitted');
+  x=tg(R2,'s-watanabe','approved');sub(x,addDays(T,-4),'15:00',{answer:{examined:'yes',date:addDays(T,-11)}});
+
+  var N=function(to,title,body,link,urgent,dateStr,time){data.notifications.push({id:nid('n'),toId:to,at:stamp(dateStr,time),title:title,body:body,link:link,urgent:urgent,readAt:null});};
+  N('s-yamada','差し戻し：健康診断の受診報告','受診日がちがうようです。もう一度確認してください。','#/submit/'+data.targets.filter(function(t){return t.requestId==='r-2'&&t.staffId==='s-yamada';})[0].id,true,addDays(T,-1),'10:12');
+  N('s-yamada','依頼：物品の棚卸しの手伝い','田中 由美さんからの依頼です','#/tasks/'+data.tasks.filter(function(t){return t.title==='物品の棚卸しの手伝い';})[0].id,true,addDays(T,-1),'11:00');
+  N('s-tanaka','確認の依頼：健康診断の受診報告','佐藤 健一さんが提出しました','#/approvals',true,addDays(T,-1),'19:00');
+  N('s-tanaka','確認の依頼：健康診断の受診報告','加藤 大輔さんが提出しました','#/approvals',true,addDays(T,-1),'08:15');
+  N('s-tanaka','承認の依頼：感染対策委員会の資料準備','鈴木 一郎さんが完了を報告しました','#/approvals',true,addDays(T,-1),'17:40');
+  N('s-sato','確認の依頼：感染症の研修レポート','鈴木 一郎さんが提出しました','#/approvals',true,addDays(T,-1),'09:05');
+  N('s-sato','確認の依頼：感染症の研修レポート','吉田 恵さんが提出しました','#/approvals',true,addDays(T,-1),'18:20');
+  N('s-ito','差し戻し：感染症の研修レポート','2枚目が写っていません。もう一度撮ってください。','#/submit/'+data.targets.filter(function(t){return t.requestId==='r-1'&&t.staffId==='s-ito';})[0].id,true,addDays(T,-1),'09:30');
+  data.audit.push({id:nid('a'),at:stamp(addDays(T,-10),'10:00'),actorId:'s-sato',action:'提出依頼を作成',target:'感染症の研修レポート'});
+  data.audit.push({id:nid('a'),at:stamp(addDays(T,-7),'09:30'),actorId:'s-tanaka',action:'提出依頼を作成',target:'健康診断の受診報告'});
+}
+
+/* ---------------- 毎日の自動処理（繰り返し業務・督促） ---------------- */
+function ensureSeries(){
+  var T=today();
+  data.series.forEach(function(se){
+    var dates=[];
+    if(se.occurrence==='daily'){dates=[T];}
+    else if(se.occurrence==='monthly'){
+      var p=T.split('-').map(Number);
+      for(var k=0;k<2;k++){var yy=p[0]+Math.floor((p[1]-1+k)/12);var mm=((p[1]-1+k)%12)+1;var last=new Date(yy,mm,0).getDate();var dd=Math.min(se.day,last);var ds=yy+'-'+pad(mm)+'-'+pad(dd);if(ds>=T)dates.push(ds);}
+    }
+    dates.forEach(function(dt){
+      var exists=data.tasks.some(function(t){return t.seriesId===se.id&&t.occurrenceDate===dt;});
+      if(exists)return; /* 同じ日の分は1件だけ（取り消した回も作り直さない） */
+      var t=mkTask({title:se.title,category:se.category,seriesId:se.id,occurrenceDate:dt,isChecklist:se.isChecklist,assignee:se.assignee?{type:se.assignee.type,id:se.assignee.id}:null,dueOn:dt,basisType:'facility_rule'});
+      t.createdById='system';
+      data.tasks.push(t);
+    });
+  });
+}
+function escalationCandidates(r){
+  var n=data.settings.escalateAfter;
+  return targetsOf(r).filter(function(x){
+    if(!(x.status==='not_submitted'||x.status==='returned'))return false;
+    if(x.hasLogin)return (x.reminders||0)>=n;
+    return (r.rounds||0)>=n;
+  });
+}
+function checkEscalation(r){
+  var c=escalationCandidates(r);
+  if(c.length&&!r.escalatedOn){
+    r.escalatedOn=today();
+    notify(r.requesterId,'直接声をかけてください：'+r.title,'督促しても未提出の人、通知が届かない人が'+c.length+'名います','#/requests/'+r.id,true);
+    log('声かけのお知らせ',r.title+'（'+c.length+'名）','system');
+  }
+}
+function autoReminders(){
+  var T=today();
+  data.requests.filter(function(r){return r.status==='open'&&r.reminder==='default';}).forEach(function(r){
+    var off=diffDays(r.dueOn,T);
+    if([-3,-1,0,1].indexOf(off)<0){checkEscalation(r);return;}
+    var key=String(off);
+    r.roundKeys=r.roundKeys||[];
+    if(r.roundKeys.indexOf(key)>=0){checkEscalation(r);return;}
+    r.roundKeys.push(key);r.rounds=(r.rounds||0)+1;
+    var label=off<0?('期限まであと'+(-off)+'日です'):off===0?'今日が期限です':'期限を過ぎています';
+    var sent=0;
+    targetsOf(r).forEach(function(x){
+      if(!(x.status==='not_submitted'||x.status==='returned'))return;
+      if(notify(x.staffId,'提出の期限：'+r.title,label,'#/submit/'+x.id,off>=0)){x.reminders=(x.reminders||0)+1;sent++;}
+    });
+    if(sent)log('督促を自動送信',r.title+'（'+sent+'名）','system');
+    checkEscalation(r);
+  });
+}
+function runDailyJobs(){ensureSeries();autoReminders();save();}
+
+/* ---------------- 見える範囲（権限の簡易版） ---------------- */
+function isAssignee(u,t){if(!t.assignee)return false;if(t.assignee.type==='staff')return t.assignee.id===u.id;return t.assignee.id===u.deptId;}
+function taskVisible(u,t){
+  if(t.cancelledAt)return false;
+  if(isFacilityAdmin(u))return true;
+  if(u.role==='DEPARTMENT_MANAGER')return t.departmentId===u.deptId||isAssignee(u,t)||t.requestedById===u.id||(t.approval&&t.approval.approverId===u.id);
+  return isAssignee(u,t)||(t.approval&&t.approval.approverId===u.id);
+}
+function isOpenTask(t){return !t.cancelledAt&&t.status!=='completed';}
+function canWork(u,t){return isAssignee(u,t)&&['not_started','in_progress','returned','awaiting_submission'].indexOf(t.status)>=0;}
+function canManageTask(u,t){return isFacilityAdmin(u)||(u.role==='DEPARTMENT_MANAGER'&&t.departmentId===u.deptId);}
+function visibleRequests(u){return data.requests.filter(function(r){return isFacilityAdmin(u)||r.requesterId===u.id||r.reviewerId===u.id;});}
+function canManageRequest(u,r){return isFacilityAdmin(u)||r.requesterId===u.id||r.reviewerId===u.id;}
+function myApprovals(u){
+  var tasks=data.tasks.filter(function(t){return t.status==='awaiting_approval'&&t.approval&&t.approval.status==='pending'&&t.approval.approverId===u.id;});
+  var targets=data.targets.filter(function(x){var r=reqOf(x);return x.status==='submitted'&&r.status==='open'&&r.reviewerId===u.id;});
+  return {tasks:tasks,targets:targets,count:tasks.length+targets.length};
+}
+function allApprovalsCount(u){return myApprovals(u).count+otherApprovals(u).length;}
+
+/* ---------------- 表示の部品 ---------------- */
+function taskStatusTag(t){
+  var s=t.status;
+  if(s==='completed')return '<span class="tag-plain">'+I.check+'完了</span>';
+  if(s==='not_started')return '<span>未着手</span>';
+  if(s==='returned')return '<span class="tag tag-warn">'+I.excl+'差し戻し</span>';
+  if(s==='on_hold')return '<span class="tag tag-muted">保留</span>';
+  return '<span class="tag tag-info">'+esc(STATUS_LABEL[s])+'</span>';
+}
+function dueBadge(dueOn,open){
+  if(!open)return '';
+  var r=rel(dueOn);
+  if(r.kind==='over')return '<span class="tag tag-danger">'+I.excl+esc(r.text)+'</span>';
+  if(r.kind==='today'||r.kind==='soon')return '<span class="due-soon">'+esc(r.text)+'</span>';
+  return '<span class="text-2">'+esc(r.text)+'</span>';
+}
+function targetTag(x){
+  var r=reqOf(x);
+  if(x.status==='not_submitted'){if(r.dueOn<today())return '<span class="tag tag-danger">'+I.excl+'未提出（期限超過）</span>';return '<span>未提出</span>';}
+  if(x.status==='submitted')return '<span class="tag tag-info">提出済み（確認待ち）</span>';
+  if(x.status==='approved')return '<span class="tag-plain">'+I.check+'承認済み</span>';
+  if(x.status==='returned')return '<span class="tag tag-warn">'+I.excl+'差し戻し</span>';
+  return '<span class="text-muted">対象外'+(x.excludedReason?'（'+esc(x.excludedReason)+'）':'')+'</span>';
+}
+function assigneeLabel(t){
+  if(!t.assignee)return '<span class="tag tag-warn">'+I.excl+'担当者未設定</span>';
+  if(t.assignee.type==='dept')return esc(deptName(t.assignee.id))+'（部署）';
+  var s=staff(t.assignee.id);var extra='';
+  if(s&&s.status!=='active')extra=' <span class="tag tag-muted">'+(s.status==='on_leave'?'休職中':'退職')+'</span>';
+  return esc(staffName(t.assignee.id))+extra;
+}
+function toastHtml(){if(!ui.toast)return '';return '<div class="toast'+(ui.toast.kind==='error'?' toast-error':'')+'" role="status">'+esc(ui.toast.text)+'</div>';}
+function toast(text,kind){ui.toast={text:text,kind:kind||'ok',path:null};}
+function go(path){ui.panel=null;ui.formErr=null;ui.form=null;if(ui.toast)ui.toast.path=path;if(location.hash==='#'+path){render();}else{location.hash=path;}}
+function pageTitle(text){return '<h1 id="page-title" tabindex="-1">'+esc(text)+'</h1>';}
+function fieldErr(name){if(ui.formErr&&ui.formErr[name])return '<span class="err" id="err-'+name+'">＊'+esc(ui.formErr[name])+'</span>';return '';}
+function formVal(name,def){if(ui.form&&ui.form[name]!=null)return ui.form[name];return def==null?'':def;}
+
+/* ---------------- 画面：管理者ダッシュボード ---------------- */
+function autoChecks(u,open,reqs){
+  var list=[];
+  var gov=open.filter(function(t){return t.category==='行政提出'&&t.basisType==='unverified';});
+  if(gov.length)list.push('根拠が「未確認」の行政提出の業務が '+gov.length+'件あります');
+  var away=open.filter(function(t){if(!t.assignee||t.assignee.type!=='staff')return false;var s=staff(t.assignee.id);return s&&s.status!=='active';});
+  if(away.length)list.push('休職中・退職した職員が担当の業務が '+away.length+'件あります（担当の変更が必要です）');
+  var esc2=0;reqs.forEach(function(r){esc2+=escalationCandidates(r).length;});
+  if(esc2)list.push('督促しても未提出の人、通知が届かない人が '+esc2+'名います（直接声をかけてください）');
+  var missed=open.filter(function(t){return t.isChecklist&&t.dueOn<today();}).length;
+  if(missed)list.push('前日までの毎日のチェックリストに、未実施が '+missed+'件あります');
+  return list;
+}
+function myTodoHtml(u){
+  var T=today();
+  var tasks=data.tasks.filter(function(t){return isOpenTask(t)&&isAssignee(u,t)&&!t.isChecklist&&t.status!=='awaiting_approval'&&t.status!=='on_hold'&&(t.status==='returned'||diffDays(T,t.dueOn)<=3);}).sort(byDue);
+  var subs=data.targets.filter(function(x){var r=reqOf(x);return x.staffId===u.id&&r.status==='open'&&(x.status==='not_submitted'||x.status==='returned');});
+  var appr=myApprovals(u).count;
+  var items=[];
+  if(appr)items.push('<li class="row"><a href="#/approvals" style="flex:1 1 200px;font-weight:500">あなたの承認待ち</a><span>'+appr+'件</span></li>');
+  subs.forEach(function(x){var r=reqOf(x);items.push('<li class="row"><a href="#/submit/'+x.id+'" style="flex:1 1 200px;font-weight:500">'+esc(r.title)+'（提出）</a>'+(x.status==='returned'?'<span class="tag tag-warn">'+I.excl+'差し戻し</span>':'')+dueBadge(r.dueOn,true)+'</li>');});
+  tasks.forEach(function(t){items.push('<li class="row"><a href="#/tasks/'+t.id+'" style="flex:1 1 200px;font-weight:500">'+esc(t.title)+'</a>'+(t.status==='returned'?'<span class="tag tag-warn">'+I.excl+'差し戻し</span>':'')+dueBadge(t.dueOn,true)+'</li>');});
+  return '<section aria-labelledby="h-mine" class="card stack"><h2 id="h-mine" style="font-size:18px">あなたのやること（3日以内・'+items.length+'件）</h2>'+(items.length?'<ul class="list">'+items.join('')+'</ul>':'<p class="text-2">3日以内にあなたがやることはありません</p>')+'</section>';
+}
+function viewDashboard(u){
+  var T=today();
+  var vis=data.tasks.filter(function(t){return taskVisible(u,t);});
+  var open=vis.filter(isOpenTask);
+  var overdue=open.filter(function(t){return t.dueOn<T&&!t.isChecklist;}).sort(byDue);
+  var hold=overdue.filter(function(t){return t.status==='on_hold';}).length;
+  var mine=myApprovals(u).count;
+  var pendAll=allApprovalsCount(u);
+  var reqs=visibleRequests(u).filter(function(r){return r.status==='open';});
+  var unsub=0,unsubReq=0;
+  reqs.forEach(function(r){var n=targetsOf(r).filter(function(x){return x.status==='not_submitted'||x.status==='returned';}).length;unsub+=n;if(n)unsubReq++;});
+  var unassigned=open.filter(function(t){return !t.assignee;});
+  var todayList=open.filter(function(t){return t.dueOn===T&&!t.isChecklist;}).sort(byDue);
+  var soon=open.filter(function(t){return t.dueOn>T&&diffDays(T,t.dueOn)<=3&&!t.isChecklist;}).sort(byDue);
+  var events=open.filter(function(t){return (t.category==='委員会'||t.category==='研修')&&t.dueOn>=T&&diffDays(T,t.dueOn)<=30;}).sort(byDue);
+  var checks=autoChecks(u,open,reqs);
+  var ym=T.slice(0,7);
+  var doneMonth=vis.filter(function(t){return t.status==='completed'&&!t.isChecklist&&(t.completedAt||'').slice(0,7)===ym;}).length;
+  var cl=vis.filter(function(t){return t.isChecklist&&t.dueOn===T;});
+  var clDone=cl.filter(function(t){return t.status==='completed';}).length;
+  var weekStart=addDays(T,-((parseDate(T).getDay()+6)%7));var weekEnd=addDays(weekStart,6);
+  var weekOpen=open.filter(function(t){return !t.isChecklist&&t.dueOn>=weekStart&&t.dueOn<=weekEnd;}).length;
+  var monthOpen=open.filter(function(t){return !t.isChecklist&&t.dueOn.slice(0,7)===ym;}).length;
+
+  function row(t){return '<li class="row"><a href="#/tasks/'+t.id+'" style="flex:1 1 200px;font-weight:500">'+esc(t.title)+'</a><span class="text-2">'+assigneeLabel(t)+'</span>'+taskStatusTag(t)+'</li>';}
+  function soonRow(t){
+    var gov=t.category==='行政提出'?'<span class="tag-outline">行政提出</span>':'';
+    var sub='';
+    if(t.category==='行政提出'){sub='<div class="row text-2">'+(t.basisType==='unverified'?'<span class="tag-plain" style="color:var(--warn)">'+I.warn+'根拠：未確認</span>':'<span>根拠：'+esc(BASIS_LABEL[t.basisType])+'</span>')+'<span>控え：'+(t.gov&&t.gov.copyFile?'登録済み':'未登録')+'</span></div>';}
+    return '<li class="stack-sm"><div class="row">'+gov+'<a href="#/tasks/'+t.id+'" style="flex:1 1 200px;font-weight:500">'+esc(t.title)+'</a>'+dueBadge(t.dueOn,true)+'</div>'+sub+'</li>';
+  }
+  var scope=u.role==='DEPARTMENT_MANAGER'?'<p class="text-2">'+esc(deptName(u.deptId))+'に関係する業務を表示しています</p>':'';
+  return pageTitle('施設の状況')+scope+
+  '<section aria-labelledby="h-urgent" class="stack"><h2 id="h-urgent">要対応</h2><div class="grid-cards">'+
+    '<a href="#/tasks" data-action="goto-filter" data-value="overdue" class="card stat-card'+(overdue.length?' alert':'')+'">'+
+      '<span class="tag-plain" style="font-weight:700;'+(overdue.length?'color:var(--danger)':'')+'">'+(overdue.length?I.alert:'')+'期限超過</span>'+
+      '<span><span class="stat-num">'+overdue.length+'</span> 件</span><span class="text-2">'+(hold?'うち保留中 '+hold+'件':'保留中はありません')+'</span></a>'+
+    '<a href="#/approvals" class="card stat-card"><span style="font-weight:700">承認待ち</span><span><span class="stat-num">'+pendAll+'</span> 件</span><span class="text-2">あなた宛て '+mine+'件</span></a>'+
+    '<a href="#/requests" class="card stat-card"><span style="font-weight:700">未提出</span><span><span class="stat-num">'+unsub+'</span> 名</span><span class="text-2">'+unsubReq+'件の提出依頼（延べ人数）</span></a>'+
+    '<a href="#/tasks" data-action="goto-filter" data-value="unassigned" class="card stat-card"><span style="font-weight:700">担当者未設定</span><span><span class="stat-num">'+unassigned.length+'</span> 件</span><span class="text-2">'+(unassigned.length?'担当を決めてください':'ありません')+'</span></a>'+
+  '</div></section>'+
+  myTodoHtml(u)+
+  '<div class="cols">'+
+    '<section aria-labelledby="h-today" class="card stack"><h2 id="h-today" style="font-size:18px">今日まで（'+todayList.length+'件）</h2>'+(todayList.length?'<ul class="list">'+todayList.slice(0,5).map(row).join('')+'</ul>':'<p class="text-2">今日が期限の業務はありません（0件）</p>')+(todayList.length>5?'<a href="#/tasks">すべて見る（'+todayList.length+'件）</a>':'')+
+      (cl.length?'<p class="text-2">今日のチェックリスト（介護部）：'+cl.length+'件中 '+clDone+'件完了</p>':'')+'</section>'+
+    '<section aria-labelledby="h-soon" class="card stack"><h2 id="h-soon" style="font-size:18px">期限が近い（3日以内・'+soon.length+'件）</h2>'+(soon.length?'<ul class="list">'+soon.slice(0,5).map(soonRow).join('')+'</ul>':'<p class="text-2">3日以内が期限の業務はありません（0件）</p>')+'</section>'+
+  '</div>'+
+  '<div class="cols">'+
+    '<section aria-labelledby="h-events" class="card stack"><h2 id="h-events" style="font-size:18px">今後30日の委員会・研修</h2>'+(events.length?'<ul class="list">'+events.map(function(t){return '<li class="row"><span class="text-2" style="min-width:120px">'+esc(fmtDate(t.dueOn))+'</span><a href="#/tasks/'+t.id+'">'+esc(t.title)+'</a></li>';}).join('')+'</ul>':'<p class="text-2">予定はありません</p>')+'</section>'+
+    '<section aria-labelledby="h-checks" class="card stack"><h2 id="h-checks" style="font-size:18px">自動チェック</h2><p class="text-2">決まったルールで見つけた確認事項です（AI ではありません）</p>'+(checks.length?'<ul class="list">'+checks.map(function(c){return '<li>'+esc(c)+'</li>';}).join('')+'</ul>':'<p>確認事項はありません</p>')+'</section>'+
+  '</div>'+
+  '<section aria-label="完了と件数のまとめ" class="card row-between"><span class="tag-plain">'+I.check+'今月完了した業務 '+doneMonth+'件</span><span class="text-2">未完了：今週 '+weekOpen+'件 ／ 今月 '+monthOpen+'件</span></section>';
+}
+
+/* ---------------- 画面：業務一覧（管理者） ---------------- */
+function viewTasks(u){
+  var T=today();
+  var f=ui.filter.tasks||'open';
+  var vis=data.tasks.filter(function(t){return taskVisible(u,t)&&!t.isChecklist;});
+  var defs=[
+    ['open','未完了',function(t){return isOpenTask(t);}],
+    ['overdue','期限超過',function(t){return isOpenTask(t)&&t.dueOn<T;}],
+    ['approval','承認待ち',function(t){return t.status==='awaiting_approval';}],
+    ['unassigned','担当者未設定',function(t){return isOpenTask(t)&&!t.assignee;}],
+    ['mine','自分の担当',function(t){return isOpenTask(t)&&isAssignee(u,t);}],
+    ['done','完了',function(t){return t.status==='completed';}],
+    ['all','すべて',function(){return true;}]
+  ];
+  var cur=defs.filter(function(d){return d[0]===f;})[0]||defs[0];
+  var rows=vis.filter(cur[2]).sort(byDue);
+  return '<div class="row-between">'+pageTitle('業務')+'<a class="btn btn-primary" href="#/tasks/new">業務・依頼を作成</a></div>'+
+  '<div class="chips" role="group" aria-label="状態で絞り込む">'+defs.map(function(d){var n=vis.filter(d[2]).length;return '<button type="button" class="chip" data-action="filter" data-scope="tasks" data-value="'+d[0]+'" aria-pressed="'+(d[0]===cur[0])+'">'+esc(d[1])+' '+n+'</button>';}).join('')+'</div>'+
+  '<p class="text-2">毎日のチェックリストは、この一覧に含めていません。</p>'+
+  (rows.length?'<div class="table-wrap"><table><thead><tr><th scope="col">業務</th><th scope="col">担当</th><th scope="col">期限</th><th scope="col">状態</th></tr></thead><tbody>'+
+    rows.map(function(t){return '<tr><td><a href="#/tasks/'+t.id+'" style="font-weight:500">'+esc(t.title)+'</a><br><span class="text-2">'+esc(t.category)+(t.kind==='request'?'・依頼':'')+'</span></td><td>'+assigneeLabel(t)+'</td><td>'+esc(fmtDate(t.dueOn))+'<br>'+dueBadge(t.dueOn,isOpenTask(t))+'</td><td>'+taskStatusTag(t)+'</td></tr>';}).join('')+
+  '</tbody></table></div>':'<p class="card">この条件に合う業務はありません（0件）</p>');
+}
+
+/* ---------------- 画面：業務詳細 ---------------- */
+function viewTaskDetail(u,id){
+  var t=taskById(id);
+  if(!t||!taskVisible(u,t))return notFound();
+  var open=isOpenTask(t);
+  var actions='';
+  if(t.status==='returned'&&t.returnReason)actions+='<p class="quote">差し戻しの理由：「'+esc(t.returnReason)+'」</p>';
+  if(canWork(u,t)){
+    var isGov=t.category==='行政提出';
+    var needCopy=isGov&&!(t.gov&&t.gov.copyFile);
+    actions+='<form data-form="complete-task" data-id="'+t.id+'" class="card stack" novalidate><h2 style="font-size:18px">完了を報告する</h2>'+
+      (t.requiresApproval?'<p class="text-2">報告すると、承認者が確認します。</p>':'')+
+      (needCopy?'<div class="field"><label class="lbl" for="copy">提出した書類の控え <span class="req">※必須</span></label><span class="hint" id="copy-hint">運営指導で「提出した証拠」として使います。写真でも構いません</span><input id="copy" name="copy" type="file" accept="image/*,application/pdf" aria-describedby="copy-hint'+(ui.formErr&&ui.formErr.copy?' err-copy':'')+'"'+(ui.formErr&&ui.formErr.copy?' class="input-error"':'')+'>'+fieldErr('copy')+'</div>':'')+
+      '<div class="field"><label class="lbl" for="comment">コメント <span class="req">※任意</span></label><textarea id="comment" name="comment" rows="3"></textarea></div>'+
+      '<div class="row"><button type="submit" class="btn btn-primary">完了を報告する</button>'+(t.status==='not_started'?'<button type="button" class="btn" data-action="start-task" data-id="'+t.id+'">着手する</button>':'')+'</div></form>';
+  }
+  if(t.status==='awaiting_approval'&&t.approval){
+    if(t.approval.approverId===u.id){actions+=reviewTaskPanel(t);}
+    else actions+='<p class="notice notice-info">'+esc(staffName(t.approval.approverId))+'さんの承認待ちです</p>';
+  }
+  if(canManageTask(u,t)&&open){
+    var mgr='';
+    if(!t.assignee){mgr+='<form data-form="assign-task" data-id="'+t.id+'" class="stack"><div class="field"><label class="lbl" for="assignee">担当を決める</label><select id="assignee" name="assignee">'+assigneeOptions('')+'</select></div><div><button type="submit" class="btn">担当を設定する</button></div></form>';}
+    if(t.status==='on_hold'){mgr+='<div class="row"><span>保留の理由：'+esc(t.holdReason)+'</span><button type="button" class="btn" data-action="resume-task" data-id="'+t.id+'">保留を解除する</button></div>';}
+    else{mgr+='<form data-form="hold-task" data-id="'+t.id+'" class="stack"><div class="field"><label class="lbl" for="hold">保留にする理由</label><input id="hold" name="reason" type="text"'+(ui.formErr&&ui.formErr.hold?' class="input-error"':'')+'>'+fieldErr('hold')+'</div><div><button type="submit" class="btn">保留にする</button></div></form>';}
+    actions+='<section class="card stack" aria-labelledby="h-mgr"><h2 id="h-mgr" style="font-size:18px">管理者の操作</h2>'+mgr+'</section>';
+  }
+  var gov='';
+  if(t.category==='行政提出'){var g=t.gov||{};gov='<section class="card stack" aria-labelledby="h-gov"><h2 id="h-gov" style="font-size:18px">行政提出</h2><dl class="dl"><dt>提出先</dt><dd>'+esc(g.destination||'未入力')+'</dd><dt>提出方法</dt><dd>'+esc(g.method||'未入力')+'</dd><dt>控え</dt><dd>'+(g.copyFile?esc(g.copyFile):'未登録')+'</dd></dl></section>';}
+  var hist=t.history.slice().reverse();
+  var comments=t.comments.slice().reverse();
+  return '<p class="no-print"><a href="'+(isManager(u)?'#/tasks':'#/')+'">'+I.back+'戻る</a></p>'+
+  '<div class="stack-sm">'+pageTitle(t.title)+'<div class="row">'+taskStatusTag(t)+dueBadge(t.dueOn,open)+'<span class="text-2">期限 '+esc(fmtDate(t.dueOn))+(t.dueTime?' '+esc(t.dueTime):'')+'</span><span class="tag-outline">'+esc(t.category)+'</span></div></div>'+
+  '<div class="split"><div class="main-col">'+
+    (t.description?'<section class="card"><p>'+esc(t.description)+'</p></section>':'')+
+    gov+actions+
+    '<section class="card stack" aria-labelledby="h-hist"><h2 id="h-hist" style="font-size:18px">コメントと履歴</h2>'+
+      (comments.length?'<ul class="history">'+comments.map(function(c){return '<li><span class="text-2">'+esc(fmtStamp(c.at))+' '+esc(staffName(c.byId))+'</span><br>'+esc(c.text)+'</li>';}).join('')+'</ul>':'')+
+      (hist.length?'<ul class="history">'+hist.map(function(h){return '<li><span class="text-2">'+esc(fmtStamp(h.at))+' '+esc(staffName(h.byId))+'</span>　'+esc(h.action)+(h.reason?'（'+esc(h.reason)+'）':'')+'</li>';}).join('')+'</ul>':'<p class="text-2">まだ履歴はありません</p>')+
+    '</section>'+
+  '</div><div class="side-col"><section class="card stack" aria-label="業務の情報"><dl class="dl">'+
+    '<dt>担当</dt><dd>'+assigneeLabel(t)+'</dd>'+
+    (t.departmentId?'<dt>部署</dt><dd>'+esc(deptName(t.departmentId))+'</dd>':'')+
+    (t.requestedById?'<dt>依頼した人</dt><dd>'+esc(staffName(t.requestedById))+'</dd>':'')+
+    '<dt>承認</dt><dd>'+(t.requiresApproval?'必要（'+esc(staffName(expectedApprover(t)))+'さん）':'不要')+'</dd>'+
+    '<dt>根拠</dt><dd>'+(t.basisType==='unverified'?'<span class="tag-plain" style="color:var(--warn)">'+I.warn+'未確認</span>':esc(BASIS_LABEL[t.basisType]))+'</dd>'+
+    (t.completedAt?'<dt>完了</dt><dd>'+esc(fmtStamp(t.completedAt))+'（'+esc(staffName(t.completedById))+'）</dd>':'')+
+    (t.approval&&t.approval.isSelf?'<dt>注記</dt><dd>自己承認</dd>':'')+
+  '</dl></section></div></div>';
+}
+function assigneeOptions(sel){
+  var o='<option value="">選んでください</option>';
+  o+='<optgroup label="職員">'+data.staff.filter(function(s){return s.status==='active';}).map(function(s){var v='staff:'+s.id;return '<option value="'+v+'"'+(sel===v?' selected':'')+'>'+esc(s.name)+'（'+esc(s.title)+'）</option>';}).join('')+'</optgroup>';
+  o+='<optgroup label="部署（部署のだれか）">'+data.departments.map(function(d){var v='dept:'+d.id;return '<option value="'+v+'"'+(sel===v?' selected':'')+'>'+esc(d.name)+'</option>';}).join('')+'</optgroup>';
+  return o;
+}
+function expectedApprover(t){
+  if(t.approval)return t.approval.approverId;
+  if(t.assignee&&t.assignee.type==='staff')return resolveApprover(t,t.assignee.id).approverId;
+  return t.approverId||data.settings.defaultApproverId;
+}
+function reviewTaskPanel(t,scope){
+  var report=t.comments.filter(function(c){return c.kind==='completion_report';}).slice(-1)[0];
+  return '<section class="card stack" aria-labelledby="h-review"><h2 id="h-review" style="font-size:18px">承認する</h2>'+
+    '<p>'+esc(staffName(t.approval.requestedById))+'さんが完了を報告しました（'+esc(fmtStamp(t.approval.requestedAt))+'）</p>'+
+    (report?'<p class="notice notice-plain">「'+esc(report.text)+'」</p>':'')+
+    (t.gov&&t.gov.copyFile?'<p>控え：'+esc(t.gov.copyFile)+'</p>':'')+
+    (t.approval.isSelf?'<p class="notice notice-warn">ほかに承認できる人がいないため、自己承認として記録されます</p>':'')+
+    '<div class="row"><button type="button" class="btn btn-primary" data-action="approve-task" data-id="'+t.id+'">承認する</button></div>'+
+    '<form data-form="return-task" data-id="'+t.id+'" class="stack" novalidate><div class="field"><label class="lbl" for="rt-'+t.id+'">差し戻す理由 <span class="req">※差し戻す場合は必須</span></label><span class="hint">担当者の画面にそのまま表示されます</span><textarea id="rt-'+t.id+'" name="reason" rows="2"'+(ui.formErr&&ui.formErr['rt-'+t.id]?' class="input-error"':'')+'></textarea>'+fieldErr('rt-'+t.id)+'</div><div><button type="submit" class="btn">差し戻す</button></div></form>'+(scope==='approvals'?approvalNextButton(me(),t.id):'')+'</section>';
+}
+
+/* ---------------- 画面：業務・依頼の作成 ---------------- */
+function viewTaskForm(u){
+  var kind=formVal('kind','task');
+  var errs=ui.formErr?Object.keys(ui.formErr).length:0;
+  return '<p class="no-print"><a href="#/tasks">'+I.back+'戻る</a></p>'+pageTitle('業務・依頼を作成')+
+  (errs?'<div class="notice notice-warn" role="alert">'+I.alert+'<span>入力内容を確認してください（'+errs+'か所）</span></div>':'')+
+  '<form data-form="new-task" class="card stack" novalidate style="max-width:720px">'+
+    '<fieldset><legend>種類 <span class="req">※必須</span></legend>'+
+      '<label class="radio"><input type="radio" name="kind" value="task"'+(kind==='task'?' checked':'')+'><span>業務<br><span class="hint">期限のある仕事（点検、届出、委員会の準備など）</span></span></label>'+
+      '<label class="radio"><input type="radio" name="kind" value="request"'+(kind==='request'?' checked':'')+'><span>依頼<br><span class="hint">職員に頼む仕事。依頼した人として記録されます</span></span></label></fieldset>'+
+    '<div class="field"><label class="lbl" for="f-title">業務名 <span class="req">※必須</span></label><input id="f-title" name="title" type="text" value="'+esc(formVal('title'))+'"'+(ui.formErr&&ui.formErr.title?' class="input-error"':'')+'>'+fieldErr('title')+'</div>'+
+    '<div class="field"><label class="lbl" for="f-cat">カテゴリ <span class="req">※必須</span></label><span class="hint" id="cat-hint">「行政提出」は完了に承認と控えの登録が必要になります</span><select id="f-cat" name="category" aria-describedby="cat-hint">'+CATEGORIES.map(function(c){return '<option'+(formVal('category','その他')===c?' selected':'')+'>'+esc(c)+'</option>';}).join('')+'</select></div>'+
+    '<div class="field"><label class="lbl" for="f-asg">担当 <span class="req">※依頼の場合は必須</span></label><select id="f-asg" name="assignee"'+(ui.formErr&&ui.formErr.assignee?' class="input-error"':'')+'>'+assigneeOptions(formVal('assignee'))+'</select>'+fieldErr('assignee')+'</div>'+
+    '<div class="field"><label class="lbl" for="f-due">期限 <span class="req">※必須</span></label><span class="hint">今日以降の日付を選べます</span><input id="f-due" name="dueOn" type="date" value="'+esc(formVal('dueOn',addDays(today(),7)))+'"'+(ui.formErr&&ui.formErr.dueOn?' class="input-error"':'')+'>'+fieldErr('dueOn')+'</div>'+
+    '<label class="radio"><input type="checkbox" name="requiresApproval" value="1"'+(formVal('requiresApproval')?' checked':'')+'><span>完了に承認が必要<br><span class="hint">承認する人：'+esc(nameTitle(data.settings.defaultApproverId))+'。'+esc(staffName(data.settings.defaultApproverId))+'さん本人が担当の業務は '+esc(nameTitle(data.settings.fallbackApproverId))+'</span></span></label>'+
+    '<div class="field"><label class="lbl" for="f-desc">説明 <span class="req">※任意</span></label><textarea id="f-desc" name="description" rows="3">'+esc(formVal('description'))+'</textarea></div>'+
+    '<div class="row-between"><a class="btn-text" href="#/tasks">キャンセル</a><button type="submit" class="btn btn-primary">作成する</button></div>'+
+  '</form>';
+}
+
+/* ---------------- 画面：提出依頼（管理者） ---------------- */
+function viewRequests(u){
+  var reqs=visibleRequests(u).slice().sort(byDue);
+  return '<div class="row-between">'+pageTitle('提出')+'<a class="btn btn-primary" href="#/requests/new">提出依頼を作成</a></div>'+
+  (reqs.length?'<div class="table-wrap"><table><thead><tr><th scope="col">提出依頼</th><th scope="col">期限</th><th scope="col">提出の状況</th><th scope="col">確認待ち</th></tr></thead><tbody>'+
+    reqs.map(function(r){var ts=targetsOf(r).filter(function(x){return x.status!=='excluded';});var done=ts.filter(function(x){return x.status==='submitted'||x.status==='approved';}).length;var wait=ts.filter(function(x){return x.status==='submitted';}).length;
+      return '<tr><td><a href="#/requests/'+r.id+'" style="font-weight:500">'+esc(r.title)+'</a><br><span class="text-2">確認する人：'+esc(staffName(r.reviewerId))+'</span></td><td>'+esc(fmtDate(r.dueOn))+'<br>'+dueBadge(r.dueOn,r.status==='open')+'</td><td>'+ts.length+'名中 '+done+'名が提出</td><td>'+wait+'名</td></tr>';}).join('')+
+  '</tbody></table></div>':'<p class="card">まだ提出依頼はありません。「提出依頼を作成」から始めてください。</p>')+myOwnSubmissionsHtml(u);
+}
+function myOwnSubmissionsHtml(u){
+  var mine=data.targets.filter(function(x){return x.staffId===u.id&&reqOf(x).status==='open'&&(x.status==='not_submitted'||x.status==='returned');});
+  if(!mine.length)return '';
+  return '<section class="stack" aria-labelledby="h-own"><h2 id="h-own" style="font-size:18px">あなたが出すもの（'+mine.length+'件）</h2><ul class="list card">'+mine.map(function(x){var r=reqOf(x);return '<li class="row"><span style="flex:1 1 200px;font-weight:500">'+esc(r.title)+'</span>'+dueBadge(r.dueOn,true)+targetTag(x)+'<a class="btn btn-sm" href="#/submit/'+x.id+'">'+(x.status==='returned'?'もう一度提出する':'提出する')+'</a></li>';}).join('')+'</ul></section>';
+}
+function viewRequestForm(u){
+  var errs=ui.formErr?Object.keys(ui.formErr).length:0;
+  var dc=formVal('dataClass','');
+  return '<p class="no-print"><a href="#/requests">'+I.back+'戻る</a></p>'+pageTitle('提出依頼を作成')+
+  (errs?'<div class="notice notice-warn" role="alert">'+I.alert+'<span>入力内容を確認してください（'+errs+'か所）</span></div>':'')+
+  '<form data-form="new-request" class="card stack" novalidate style="max-width:720px">'+
+    '<div class="field"><label class="lbl" for="q-title">提出依頼の名前 <span class="req">※必須</span></label><input id="q-title" name="title" type="text" value="'+esc(formVal('title'))+'"'+(ui.formErr&&ui.formErr.title?' class="input-error"':'')+'>'+fieldErr('title')+'</div>'+
+    '<div class="field"><label class="lbl" for="q-ins">職員への説明 <span class="req">※任意</span></label><textarea id="q-ins" name="instructions" rows="3">'+esc(formVal('instructions'))+'</textarea></div>'+
+    '<div class="field"><label class="lbl" for="q-due">期限 <span class="req">※必須</span></label><input id="q-due" name="dueOn" type="date" value="'+esc(formVal('dueOn',addDays(today(),7)))+'"'+(ui.formErr&&ui.formErr.dueOn?' class="input-error"':'')+'>'+fieldErr('dueOn')+'</div>'+
+    '<fieldset'+(ui.formErr&&ui.formErr.dataClass?' aria-describedby="err-dataClass"':'')+'><legend>出してもらう書類の区分 <span class="req">※必須</span></legend>'+
+      ['c1','c2','c4'].map(function(k){return '<label class="radio"><input type="radio" name="dataClass" value="'+k+'"'+(dc===k?' checked':'')+'><span>'+esc(DATA_CLASS[k].label)+'<br><span class="hint">'+esc(DATA_CLASS[k].hint)+'</span></span></label>';}).join('')+
+      fieldErr('dataClass')+'<p class="hint">マイナンバーを含む書類は依頼できません。</p></fieldset>'+
+    '<div class="field"><label class="lbl" for="q-target">対象 <span class="req">※必須</span></label><select id="q-target" name="target"><option value="all">全員</option>'+data.departments.map(function(d){return '<option value="'+d.id+'"'+(formVal('target')===d.id?' selected':'')+'>'+esc(d.name)+'</option>';}).join('')+'</select><span class="hint">休職中の人は自動で「対象外」になります</span></div>'+
+    '<div class="field"><label class="lbl" for="q-rev">確認する人 <span class="req">※必須</span></label><select id="q-rev" name="reviewerId">'+data.staff.filter(function(s){return s.role!=='STAFF';}).map(function(s){return '<option value="'+s.id+'"'+((formVal('reviewerId',u.id))===s.id?' selected':'')+'>'+esc(s.name)+'（'+esc(s.title)+'）</option>';}).join('')+'</select></div>'+
+    '<fieldset><legend>督促</legend>'+
+      '<label class="radio"><input type="radio" name="reminder" value="default"'+(formVal('reminder','default')==='default'?' checked':'')+'><span>既定<br><span class="hint">期限の3日前・前日・当日・翌日に、未提出の人にだけ送ります</span></span></label>'+
+      '<label class="radio"><input type="radio" name="reminder" value="none"'+(formVal('reminder')==='none'?' checked':'')+'><span>督促なし<br><span class="hint">最初のお知らせだけ送ります</span></span></label></fieldset>'+
+    '<div class="row-between"><a class="btn-text" href="#/requests">キャンセル</a><button type="submit" class="btn btn-primary">依頼を送る</button></div>'+
+  '</form>';
+}
+
+/* ---------------- 画面：提出状況表 ---------------- */
+function viewStatusTable(u,id){
+  var r=reqById(id);
+  if(!r||!canManageRequest(u,r))return notFound();
+  var all=targetsOf(r);
+  var counted=all.filter(function(x){return x.status!=='excluded';});
+  var approved=all.filter(function(x){return x.status==='approved';}).length;
+  var submitted=all.filter(function(x){return x.status==='submitted';}).length;
+  var f=ui.filter['req-'+r.id]||'all';
+  var defs=[['all','すべて',function(){return true;}],['not_submitted','未提出',function(x){return x.status==='not_submitted';}],['returned','差し戻し',function(x){return x.status==='returned';}],['submitted','確認待ち',function(x){return x.status==='submitted';}],['approved','承認済み',function(x){return x.status==='approved';}],['excluded','対象外',function(x){return x.status==='excluded';}]];
+  var cur=defs.filter(function(d){return d[0]===f;})[0]||defs[0];
+  var rows=all.filter(cur[2]);
+  var sel=(ui.selected[r.id]||[]).filter(function(tid){var x=byId(data.targets,tid);return x&&x.status==='submitted';});
+  ui.selected[r.id]=sel;
+  var esc2=escalationCandidates(r);
+  var isReviewer=r.reviewerId===u.id;
+  var panelHtml='';
+  if(ui.panel&&ui.panel.requestId===r.id){panelHtml=targetPanel(u,byId(data.targets,ui.panel.targetId),ui.panel.mode);}
+  if(!panelHtml)panelHtml='<section class="card stack"><h2 style="font-size:18px">提出物の確認</h2><p class="text-2">一覧の「確認する」を選ぶと、ここに内容が表示されます。</p></section>';
+  return '<p class="no-print"><a href="#/requests">'+I.back+'提出の一覧へ</a></p>'+
+  '<div class="split"><div class="main-col">'+
+    '<div class="row-between"><div class="stack-sm">'+pageTitle('提出状況：'+r.title)+'<p class="text-2">期限 '+esc(fmtDate(r.dueOn))+(r.dueTime?' '+esc(r.dueTime):'')+'　依頼 '+esc(staffName(r.requesterId))+'　確認 '+esc(staffName(r.reviewerId))+'　区分 '+esc(DATA_CLASS[r.dataClass].label)+'</p></div>'+
+    '<div class="row no-print"><button type="button" id="btn-remind" class="btn" data-action="remind" data-id="'+r.id+'">催促を送る</button><a class="btn" href="#/requests/'+r.id+'/print">未提出者一覧を印刷</a></div></div>'+
+    '<div class="card stack-sm"><p style="font-size:18px"><strong style="font-size:24px">'+counted.length+'名中 '+(approved+submitted)+'名</strong> が提出（承認済み '+approved+'名・確認待ち '+submitted+'名）</p>'+
+      (r.fileMode==='no_file'?'<p class="text-2">この依頼はファイルを受け取らず、回答と'+esc(qOf(r).date)+'だけを記録します。</p>':'')+'</div>'+
+    (esc2.length?'<p class="notice notice-warn">'+I.alert+'<span>督促しても未提出の人、通知が届かない人が'+esc2.length+'名います（'+esc2.map(function(x){return staffName(x.staffId);}).join('、')+'）。直接声をかけてください。</span></p>':'')+
+    '<div class="chips" role="group" aria-label="状態で絞り込む">'+defs.map(function(d){return '<button type="button" class="chip" data-action="filter" data-scope="req-'+r.id+'" data-value="'+d[0]+'" aria-pressed="'+(d[0]===cur[0])+'">'+esc(d[1])+' '+all.filter(d[2]).length+'</button>';}).join('')+'</div>'+
+    '<div class="table-wrap"><table><thead><tr><th scope="col"><span class="sr-only">選ぶ</span></th><th scope="col">職員</th><th scope="col">状態</th><th scope="col">提出</th><th scope="col">操作</th></tr></thead><tbody>'+
+      (rows.length?rows.map(function(x){
+        var s=staff(x.staffId);var last=lastSubmission(x);
+        var isCur=ui.panel&&ui.panel.targetId===x.id;
+        var ops=[];
+        if(x.status==='submitted'||x.status==='approved'||x.status==='returned')ops.push('<button type="button" class="btn-text" data-action="open-panel" data-mode="review" data-req="'+r.id+'" data-id="'+x.id+'">確認する</button>');
+        if(x.status==='not_submitted'||x.status==='returned')ops.push('<button type="button" class="btn-text" data-action="open-panel" data-mode="proxy" data-req="'+r.id+'" data-id="'+x.id+'">代理で登録</button>');
+        if(x.status==='not_submitted')ops.push('<button type="button" class="btn-text" data-action="open-panel" data-mode="exclude" data-req="'+r.id+'" data-id="'+x.id+'">対象外にする</button>');
+        return '<tr'+(isCur?' class="is-current"':'')+'><td>'+(x.status==='submitted'&&isReviewer?'<input type="checkbox" id="sel-'+x.id+'" data-select="'+r.id+'" value="'+x.id+'"'+(sel.indexOf(x.id)>=0?' checked':'')+' aria-label="'+esc(s.name)+'さんを選ぶ">':'')+'</td>'+
+          '<td>'+esc(s.name)+'<br><span class="text-2">'+esc(deptName(x.departmentId))+'</span></td>'+
+          '<td>'+targetTag(x)+(x.hasLogin?'':'<br><span class="text-2">アカウントなし</span>')+(last&&last.proxy?'<br><span class="text-2">代理登録</span>':'')+'</td>'+
+          '<td>'+(last?esc(fmtStamp(last.at)):'')+'</td>'+
+          '<td>'+(ops.length?ops.join('<br>'):'-')+'</td></tr>';
+      }).join(''):'<tr><td colspan="5">この条件に合う人はいません（0名）</td></tr>')+
+    '</tbody></table></div>'+
+    (!submitted?'':isReviewer?'<div class="row"><span>'+sel.length+'名を選んでいます</span><button type="button" id="btn-bulk" class="btn'+(sel.length&&!(ui.panel&&ui.panel.requestId===r.id)?' btn-primary':'')+'" data-action="bulk-approve" data-id="'+r.id+'"'+(sel.length?'':' aria-describedby="bulk-hint"')+'>選んだ'+sel.length+'名を承認する</button><span class="text-2" id="bulk-hint">'+(sel.length?'まとめて承認するときだけ、件数の確認が出ます':'確認待ちの人を選ぶと、まとめて承認できます')+'</span></div>':'<p class="text-2">承認できるのは確認する人（'+esc(staffName(r.reviewerId))+'さん）です。</p>')+
+  '</div><div class="side-col">'+panelHtml+'</div></div>';
+}
+function lastSubmission(x){var subs=data.submissions.filter(function(s){return s.targetId===x.id;});return subs.length?subs[subs.length-1]:null;}
+function submissionContent(x){
+  var r=reqOf(x);var s=lastSubmission(x);
+  if(!s)return '<p class="text-2">まだ提出はありません</p>';
+  var body='';
+  if(r.fileMode==='no_file'){var a=s.answer||{};var q=qOf(r);body='<dl class="dl"><dt>回答</dt><dd>'+esc(a.examined==='yes'?q.yes:q.no)+'</dd>'+(a.date?'<dt>'+esc(q.date)+'</dt><dd>'+esc(fmtDate(a.date))+'</dd>':'')+'</dl>';}
+  else body='<div class="thumb" role="img" aria-label="提出されたファイル（見本の表示）">'+I.doc+'<span>'+esc(s.fileName||'ファイル')+'</span></div>';
+  return '<p class="text-2">'+esc(fmtStamp(s.at))+'　'+s.version+'回目の提出'+(s.proxy?'（代理登録：'+esc(staffName(s.byId))+'）':'')+'</p>'+body+(s.comment?'<div><p class="text-2">本人のコメント</p><p>'+esc(s.comment)+'</p></div>':'')+(s.proxyReason?'<p class="text-2">代理登録の理由：'+esc(s.proxyReason)+'</p>':'');
+}
+function targetPanel(u,x,mode,scope){
+  if(!x)return '';
+  var r=reqOf(x);var s=staff(x.staffId);
+  if(mode==='proxy'){
+    return '<section class="card stack" aria-labelledby="h-panel"><h2 id="h-panel" style="font-size:18px">'+esc(s.name)+'さんの代理登録</h2><p>紙で受け取った場合などに、本人に代わって「提出した」ことを記録します。記録には代理で登録した人の名前が残ります。</p>'+
+      '<form data-form="proxy" data-id="'+x.id+'" class="stack" novalidate><div class="field"><label class="lbl" for="px">理由 <span class="req">※必須</span></label><input id="px" name="reason" type="text" value="紙で受け取ったため"'+(ui.formErr&&ui.formErr.px?' class="input-error"':'')+'>'+fieldErr('px')+'</div><div class="row-between"><button type="button" class="btn-text" data-action="close-panel">キャンセル</button><button type="submit" class="btn btn-primary">代理で登録する</button></div></form></section>';
+  }
+  if(mode==='exclude'){
+    return '<section class="card stack" aria-labelledby="h-panel"><h2 id="h-panel" style="font-size:18px">'+esc(s.name)+'さんを対象外にする</h2>'+
+      '<form data-form="exclude" data-id="'+x.id+'" class="stack" novalidate><div class="field"><label class="lbl" for="ex">理由 <span class="req">※必須</span></label><input id="ex" name="reason" type="text"'+(ui.formErr&&ui.formErr.ex?' class="input-error"':'')+'>'+fieldErr('ex')+'</div><div class="row-between"><button type="button" class="btn-text" data-action="close-panel">キャンセル</button><button type="submit" class="btn btn-primary">対象外にする</button></div></form></section>';
+  }
+  var canDecide=x.status==='submitted'&&r.reviewerId===u.id;
+  var next='';
+  if(scope==='approvals'){next=approvalNextButton(u,x.id);}
+  else if(r.reviewerId===u.id){var others=targetsOf(r).filter(function(y){return y.status==='submitted'&&y.id!==x.id;});if(others.length)next='<button type="button" class="btn-text" style="align-self:flex-start;text-align:left" data-action="open-panel" data-mode="review" data-req="'+r.id+'" data-id="'+others[0].id+'">次の人（'+esc(staffName(others[0].staffId))+'さん）へ</button>';}
+  return '<section class="card stack" aria-labelledby="h-panel"><h2 id="h-panel" style="font-size:18px">'+esc(s.name)+'さんの提出</h2>'+submissionContent(x)+
+    (x.status==='returned'?'<p class="quote">差し戻しの理由：「'+esc(x.returnReason)+'」</p>':'')+
+    (canDecide?'<div class="row"><button type="button" class="btn btn-primary" data-action="approve-target" data-id="'+x.id+'">承認する</button></div>'+
+      '<form data-form="return-target" data-id="'+x.id+'" class="stack" novalidate><div class="field"><label class="lbl" for="rx-'+x.id+'">差し戻す理由 <span class="req">※差し戻す場合は必須</span></label><span class="hint">本人の画面にそのまま表示されます</span><textarea id="rx-'+x.id+'" name="reason" rows="2"'+(ui.formErr&&ui.formErr['rx-'+x.id]?' class="input-error"':'')+'></textarea>'+fieldErr('rx-'+x.id)+'</div><div><button type="submit" class="btn">差し戻す</button></div></form>':
+      (x.status==='submitted'?'<p class="text-2">承認できるのは確認する人（'+esc(staffName(r.reviewerId))+'さん）です。</p>':''))+
+    next+'</section>';
+}
+function viewPrint(u,id){
+  var r=reqById(id);if(!r||!canManageRequest(u,r))return notFound();
+  var list=targetsOf(r).filter(function(x){return x.status==='not_submitted'||x.status==='returned';});
+  return '<p class="no-print"><a href="#/requests/'+r.id+'">'+I.back+'提出状況へ戻る</a></p>'+pageTitle('未提出者一覧：'+r.title)+'<p>期限 '+esc(fmtDate(r.dueOn))+'　'+esc(fmtDate(today()))+' 時点</p>'+
+  '<div class="table-wrap"><table><thead><tr><th scope="col">氏名</th><th scope="col">部署</th><th scope="col">状態</th></tr></thead><tbody>'+
+  (list.length?list.map(function(x){return '<tr><td>'+esc(staffName(x.staffId))+'</td><td>'+esc(deptName(x.departmentId))+'</td><td>'+(x.status==='returned'?'差し戻し（再提出をお願いします）':'未提出')+'</td></tr>';}).join(''):'<tr><td colspan="3">未提出の人はいません</td></tr>')+
+  '</tbody></table></div><p class="no-print"><button type="button" class="btn btn-primary" data-action="print">印刷する</button></p>';
+}
+
+/* ---------------- 画面：承認待ち ---------------- */
+function approvalItems(u){
+  var a=myApprovals(u);
+  var items=a.tasks.map(function(t){return {kind:'task',id:t.id,title:t.title,who:staffName(t.approval.requestedById),at:t.approval.requestedAt,label:'業務'};})
+    .concat(a.targets.map(function(x){var s=lastSubmission(x);return {kind:'target',id:x.id,title:reqOf(x).title,who:staffName(x.staffId),at:s?s.at:'',label:'提出物'};}));
+  items.sort(function(p,q){return p.at<q.at?-1:p.at>q.at?1:0;});
+  return items;
+}
+function approvalIndex(u,id){return approvalItems(u).map(function(it){return it.id;}).indexOf(id);}
+function approvalPanelAt(u,idx){var its=approvalItems(u);if(!its.length)return null;var it=its[Math.min(Math.max(idx,0),its.length-1)];return {scope:'approvals',kind:it.kind,id:it.id};}
+function approvalNextButton(u,id){
+  var its=approvalItems(u);var i=its.map(function(it){return it.id;}).indexOf(id);var nx=i>=0?its[i+1]:null;
+  if(!nx)return '';
+  return '<button type="button" class="btn-text" style="align-self:flex-start;text-align:left" data-action="open-panel" data-scope="approvals" data-kind="'+nx.kind+'" data-id="'+nx.id+'">次の件へ（'+esc(nx.who)+'さん・'+esc(nx.title)+'）</button>';
+}
+function otherApprovals(u){
+  var list=[];
+  data.tasks.forEach(function(t){if(t.status==='awaiting_approval'&&t.approval&&t.approval.status==='pending'&&t.approval.approverId!==u.id&&taskVisible(u,t))list.push({label:'業務',title:t.title,who:staffName(t.approval.requestedById),at:t.approval.requestedAt,approver:staffName(t.approval.approverId),link:'#/tasks/'+t.id});});
+  visibleRequests(u).forEach(function(r){if(r.status!=='open'||r.reviewerId===u.id)return;targetsOf(r).forEach(function(x){if(x.status!=='submitted')return;var s=lastSubmission(x);list.push({label:'提出物',title:r.title,who:staffName(x.staffId),at:s?s.at:'',approver:staffName(r.reviewerId),link:'#/requests/'+r.id});});});
+  list.sort(function(p,q){return p.at<q.at?-1:p.at>q.at?1:0;});
+  return list;
+}
+function othersHtml(others){
+  if(!others.length)return '';
+  return '<section class="stack" aria-labelledby="h-others"><h2 id="h-others" style="font-size:18px">ほかの人が確認する件（'+others.length+'件）</h2><p class="text-2">止まっている件がないかを見るための一覧です。承認は、指定された人が行います。</p><ul class="list card">'+
+    others.map(function(o){return '<li class="row"><span class="tag-outline">'+esc(o.label)+'</span><span style="flex:1 1 200px"><a href="'+o.link+'" style="font-weight:500">'+esc(o.title)+'</a><br><span class="text-2">'+esc(o.who)+'　'+esc(fmtStamp(o.at))+'</span></span><span class="text-2">確認する人：'+esc(o.approver)+'さん</span></li>';}).join('')+'</ul></section>';
+}
+function viewApprovals(u){
+  var items=approvalItems(u);
+  var targetIds=items.filter(function(it){return it.kind==='target';}).map(function(it){return it.id;});
+  var sel=(ui.selected.approvals||[]).filter(function(tid){return targetIds.indexOf(tid)>=0;});
+  ui.selected.approvals=sel;
+  var panel='';
+  if(ui.panel&&ui.panel.scope==='approvals'){
+    if(ui.panel.kind==='task'){var t=taskById(ui.panel.id);if(t&&t.status==='awaiting_approval'&&t.approval&&t.approval.approverId===u.id)panel='<section class="card stack"><h2 style="font-size:18px">'+esc(t.title)+'</h2><p><a href="#/tasks/'+t.id+'">業務の詳細を開く</a></p></section>'+reviewTaskPanel(t,'approvals');}
+    else{var x=byId(data.targets,ui.panel.id);if(x)panel=targetPanel(u,x,'review','approvals');}
+  }
+  var panelOpen=!!panel;
+  var others=otherApprovals(u);
+  if(!panel)panel='<section class="card stack"><h2 style="font-size:18px">内容の確認</h2><p class="text-2">一覧の「確認する」を選ぶと、ここに内容が表示されます。一覧に戻らずに次の件へ進めます。</p></section>';
+  return pageTitle('承認待ち（'+items.length+'件）')+
+  '<div class="split"><div class="main-col">'+
+    (items.length?'<ul class="list card">'+items.map(function(it){
+      var cur=ui.panel&&ui.panel.scope==='approvals'&&ui.panel.id===it.id;
+      return '<li class="row'+(cur?' is-current':'')+'">'+(it.kind==='target'?'<input type="checkbox" id="sel-'+it.id+'" data-select="approvals" value="'+it.id+'"'+(sel.indexOf(it.id)>=0?' checked':'')+' aria-label="'+esc(it.who)+'さんの提出物を選ぶ">':'<span style="width:24px"></span>')+
+        '<span class="tag-outline">'+esc(it.label)+'</span><span style="flex:1 1 200px"><strong>'+esc(it.title)+'</strong><br><span class="text-2">'+esc(it.who)+'　'+esc(fmtStamp(it.at))+'</span></span>'+
+        '<button type="button" class="btn btn-sm" data-action="open-panel" data-scope="approvals" data-kind="'+it.kind+'" data-id="'+it.id+'">確認する</button></li>';}).join('')+'</ul>'+
+      (targetIds.length?'<div class="row"><span>'+sel.length+'件を選んでいます</span><button type="button" id="btn-bulk" class="btn'+(sel.length&&!panelOpen?' btn-primary':'')+'" data-action="bulk-approve" data-id="approvals">選んだ'+sel.length+'件を承認する</button><span class="text-2">まとめて承認できるのは提出物だけです</span></div>':'')
+    :'<p class="card">あなたの承認待ちはありません（0件）</p>')+
+    othersHtml(others)+
+  '</div><div class="side-col">'+panel+'</div></div>';
+}
+
+/* ---------------- 画面：通知 ---------------- */
+function viewNotifications(u){
+  var tab=ui.filter.notif||'urgent';
+  var mine=data.notifications.filter(function(n){return n.toId===u.id;}).slice().sort(function(a,b){return a.at<b.at?1:-1;});
+  var list=mine.filter(function(n){return tab==='urgent'?n.urgent:!n.urgent;});
+  var unread=mine.filter(function(n){return !n.readAt;}).length;
+  return '<div class="row-between">'+pageTitle('通知')+(unread?'<button type="button" class="btn btn-sm" data-action="read-all">すべて既読にする</button>':'')+'</div>'+
+  '<div class="chips" role="group" aria-label="通知の種類"><button type="button" class="chip" data-action="filter" data-scope="notif" data-value="urgent" aria-pressed="'+(tab==='urgent')+'">要対応 '+mine.filter(function(n){return n.urgent;}).length+'</button><button type="button" class="chip" data-action="filter" data-scope="notif" data-value="info" aria-pressed="'+(tab!=='urgent')+'">お知らせ '+mine.filter(function(n){return !n.urgent;}).length+'</button></div>'+
+  (list.length?'<ul class="list card">'+list.map(function(n){return '<li class="row"><span style="flex:1 1 220px">'+(n.readAt?'':'<span class="tag tag-info">未読</span> ')+'<strong>'+esc(n.title)+'</strong><br>'+(n.body?'<span>'+esc(n.body)+'</span><br>':'')+'<span class="text-2">'+esc(fmtStamp(n.at))+'</span></span><button type="button" class="btn btn-sm" data-action="open-notif" data-id="'+n.id+'">開く</button></li>';}).join('')+'</ul>':'<p class="card">通知はありません</p>')+
+  '<p class="text-2">試作品では、通知はこの画面にだけ届きます（メールやスマホへの通知は送りません）。</p>';
+}
+
+/* ---------------- 画面：操作履歴・この試作品について ---------------- */
+function viewAudit(u){
+  var list=data.audit.slice().sort(function(a,b){return a.at<b.at?1:-1;}).slice(0,200);
+  return pageTitle('操作履歴')+'<p class="text-2">だれが・いつ・何をしたかの記録です（新しい順、最大200件）。</p>'+
+  '<div class="table-wrap"><table><thead><tr><th scope="col">日時</th><th scope="col">操作した人</th><th scope="col">内容</th></tr></thead><tbody>'+
+  (list.length?list.map(function(a){return '<tr><td>'+esc(fmtStamp(a.at))+'</td><td>'+esc(staffName(a.actorId))+'</td><td>'+esc(a.action)+'：'+esc(a.target)+'</td></tr>';}).join(''):'<tr><td colspan="3">まだ記録はありません</td></tr>')+
+  '</tbody></table></div>';
+}
+function viewAbout(u){
+  return pageTitle('この試作品について')+
+  '<section class="card stack"><p>使い勝手を確かめるための試作品です。このファイルだけで動き、インターネットやサーバーは使いません。データはこの端末のブラウザの中にだけ保存されます'+(storageOK?'':'（この環境では保存できないため、ページを閉じると元に戻ります）')+'。</p>'+
+  '<p class="notice notice-warn">'+I.alert+'<span>施設名・氏名・業務はすべて架空です。実在の職員・入居者の情報は入力しないでください。</span></p></section>'+
+  '<div class="cols"><section class="card stack"><h2 style="font-size:18px">試せること</h2><ul>'+
+    '<li>施設長・事務長・介護主任・職員の切替（画面上部の「利用者」）</li><li>管理者ダッシュボード（要対応・今日まで・期限が近い・自動チェック）</li><li>職員の「今日のやること」と、1画面に1つの提出</li><li>提出状況表・催促・代理登録・対象外・未提出者一覧の印刷</li><li>承認・差し戻し（その場で・まとめて）</li><li>業務・依頼の作成、完了報告、保留、担当の設定</li><li>行政提出の控えの登録</li><li>毎日のチェックリストの自動作成、日付を進めたときの自動の督促</li><li>通知と操作履歴</li></ul></section>'+
+  '<section class="card stack"><h2 style="font-size:18px">まだ入っていないもの</h2><ul>'+
+    '<li>本物のログイン（ここでは名前を選ぶだけです）</li><li>施設ごとのデータ分離・権限の細かい設定・暗号化などのセキュリティ</li><li>メール・スマホへの通知</li><li>書類管理、委員会・研修、年間業務の登録画面、年度更新、CSV</li><li>AI アシスタント</li><li>ファイルの中身の保存（ファイル名だけを記録します）</li></ul></section></div>'+
+  '<section class="card stack"><h2 style="font-size:18px">データを最初の状態に戻す</h2><p>操作した内容を消して、最初の架空のデータに戻します。</p><div><button type="button" class="btn" data-action="reset-data">最初の状態に戻す</button></div></section>';
+}
+function notFound(){return pageTitle('ページが見つかりません')+'<p class="card">このページは存在しないか、見る権限がありません。<a href="#/">ホームへ戻る</a></p>';}
+function forbidden(){return pageTitle('このページは管理者用です')+'<p class="card">職員の方はホームから操作してください。<a href="#/">ホームへ戻る</a></p>';}
+
+/* ---------------- 画面：職員ホーム「今日のやること」 ---------------- */
+function viewStaffHome(u){
+  var T=today();
+  var cardNo=0;
+  var myTasks=data.tasks.filter(function(t){return isOpenTask(t)&&isAssignee(u,t)&&!t.isChecklist;});
+  var myTargets=data.targets.filter(function(x){return x.staffId===u.id&&reqOf(x).status==='open';});
+  var shown={};
+  function mark(id){shown[id]=1;}
+  var returned=[];
+  myTargets.filter(function(x){return x.status==='returned';}).forEach(function(x){returned.push(targetCard(x,true,cardNo++===0));mark(x.id);});
+  myTasks.filter(function(t){return t.status==='returned';}).forEach(function(t){returned.push(taskCard(t,true,cardNo++===0));mark(t.id);});
+  var overdue=[];
+  myTasks.filter(function(t){return !shown[t.id]&&t.dueOn<T&&t.status!=='awaiting_approval';}).forEach(function(t){overdue.push(taskCard(t,false,cardNo++===0));mark(t.id);});
+  myTargets.filter(function(x){return !shown[x.id]&&x.status==='not_submitted'&&reqOf(x).dueOn<T;}).forEach(function(x){overdue.push(targetCard(x,false,cardNo++===0));mark(x.id);});
+  var todays=[];
+  myTargets.filter(function(x){return !shown[x.id]&&x.status==='not_submitted'&&reqOf(x).dueOn===T;}).forEach(function(x){todays.push(targetCard(x,false,cardNo++===0));mark(x.id);});
+  myTasks.filter(function(t){return !shown[t.id]&&t.dueOn===T&&t.status!=='awaiting_approval';}).forEach(function(t){todays.push(taskCard(t,false,cardNo++===0));mark(t.id);});
+  var news=[];
+  myTargets.filter(function(x){return !shown[x.id]&&x.status==='not_submitted'&&!x.seenAt;}).forEach(function(x){news.push(targetCard(x,false,cardNo++===0));mark(x.id);});
+  myTasks.filter(function(t){return !shown[t.id]&&t.kind==='request'&&!t.acknowledgedAt;}).forEach(function(t){news.push(taskCard(t,false,cardNo++===0));mark(t.id);});
+  var cl=data.tasks.filter(function(t){return t.isChecklist&&t.dueOn===T&&t.assignee&&t.assignee.type==='dept'&&t.assignee.id===u.deptId&&!t.cancelledAt;});
+  var clLeft=cl.filter(function(t){return t.status!=='completed';}).length;
+  var count=returned.length+overdue.length+todays.length+news.length+clLeft;
+  var weekStart=addDays(T,-((parseDate(T).getDay()+6)%7));
+  var days='';
+  for(var i=0;i<7;i++){
+    var d=addDays(weekStart,i);var dt=parseDate(d);
+    var n=myTasks.filter(function(t){return t.dueOn===d;}).length+myTargets.filter(function(x){return (x.status==='not_submitted'||x.status==='returned')&&reqOf(x).dueOn===d;}).length;
+    var isT=d===T;
+    days+='<div class="day'+(isT?' today':'')+'" aria-label="'+(dt.getMonth()+1)+'月'+dt.getDate()+'日 '+WEEK[dt.getDay()]+'曜'+(isT?' 今日':'')+' 予定'+n+'件"><span aria-hidden="true">'+WEEK[dt.getDay()]+'</span><span aria-hidden="true">'+dt.getDate()+'</span>'+(n?'<span class="dot" aria-hidden="true"></span>':'')+'</div>';
+  }
+  function section(id,title,items,warn){if(!items.length)return '';return '<section aria-labelledby="'+id+'" class="stack"><h2 id="'+id+'" class="section-title" style="font-size:18px'+(warn?';color:'+warn:'')+'">'+(warn?I.alert:'')+esc(title)+'（'+items.length+'件）</h2>'+items.slice(0,5).join('')+(items.length>5?'<p class="text-2">ほかに'+(items.length-5)+'件あります。「業務」「提出」のタブで見られます</p>':'')+'</section>';}
+  return pageTitle('今日のやること（'+count+'件）')+
+    section('h-ret','差し戻し',returned,'var(--warn)')+
+    section('h-over','期限を過ぎています',overdue,'var(--danger)')+
+    section('h-today','今日まで',todays)+
+    section('h-new','新しい依頼',news)+
+    (cl.length?'<section aria-labelledby="h-cl" class="stack"><h2 id="h-cl" style="font-size:18px">今日のチェックリスト（'+esc(deptName(u.deptId))+'）</h2><ul class="checklist">'+cl.map(function(t){
+      return '<li><span>'+esc(t.title)+'</span>'+(t.status==='completed'?'<span class="tag-plain">'+I.check+'完了 '+esc((t.completedAt||'').split('T')[1]||'')+'</span>':'<button type="button" class="btn btn-sm" data-action="check-done" data-id="'+t.id+'" aria-label="'+esc(t.title)+'を完了にする">完了</button>')+'</li>';}).join('')+'</ul></section>':'')+
+    (count===0?'<p class="card">今日やることはありません。おつかれさまです。</p>':'')+
+    '<section aria-labelledby="h-week" class="stack"><h2 id="h-week" style="font-size:18px">今週の予定</h2><div class="week">'+days+'</div><a href="#/tasks">これからの業務をすべて見る</a></section>';
+}
+function targetCard(x,showReason,primary){
+  var r=reqOf(x);
+  return '<article class="scard"><h3>'+esc(r.title)+'</h3>'+
+    (showReason&&x.returnReason?'<p class="quote">「'+esc(x.returnReason)+'」<br>'+esc(staffName(r.reviewerId))+'さんより</p>':'')+
+    '<div class="row text-2">'+dueBadge(r.dueOn,true)+(r.dueTime?'<span>'+esc(r.dueTime)+'まで</span>':'')+'<span>依頼：'+esc(staffName(r.requesterId))+'</span></div>'+
+    '<a class="btn '+(primary?'btn-primary ':'')+'btn-lg" href="#/submit/'+x.id+'">'+(x.status==='returned'?'もう一度提出する':'提出する')+'</a></article>';
+}
+function taskCard(t,showReason,primary){
+  return '<article class="scard"><h3>'+esc(t.title)+'</h3>'+
+    (showReason&&t.returnReason?'<p class="quote">「'+esc(t.returnReason)+'」<br>'+esc(staffName(t.approval?t.approval.approverId:''))+'さんより</p>':'')+
+    '<div class="row text-2">'+dueBadge(t.dueOn,true)+(t.requestedById?'<span>依頼：'+esc(staffName(t.requestedById))+'</span>':'')+(t.assignee&&t.assignee.type==='dept'?'<span>'+esc(deptName(t.assignee.id))+'のだれか</span>':'')+'</div>'+
+    (t.kind==='request'&&!t.acknowledgedAt?'<button type="button" class="btn '+(primary?'btn-primary ':'')+'btn-lg" data-action="open-request" data-id="'+t.id+'">内容を見る</button>':'<a class="btn '+(primary?'btn-primary ':'')+'btn-lg" href="#/tasks/'+t.id+'">内容を見る</a>')+'</article>';
+}
+function viewStaffTasks(u){
+  var mine=data.tasks.filter(function(t){return isAssignee(u,t)&&!t.isChecklist&&!t.cancelledAt;});
+  var open=mine.filter(function(t){return isOpenTask(t)&&t.status!=='awaiting_approval';}).sort(byDue);
+  var waiting=mine.filter(function(t){return t.status==='awaiting_approval';}).sort(byDue);
+  var done=mine.filter(function(t){return t.status==='completed';}).sort(function(a,b){return (a.completedAt||'')<(b.completedAt||'')?1:-1;}).slice(0,10);
+  function item(t){return '<li class="row"><a href="#/tasks/'+t.id+'" style="flex:1 1 180px;font-weight:500">'+esc(t.title)+'</a>'+dueBadge(t.dueOn,isOpenTask(t))+taskStatusTag(t)+'</li>';}
+  return pageTitle('自分の業務')+
+    '<section class="stack" aria-labelledby="h-o"><h2 id="h-o" style="font-size:18px">これからの業務（'+open.length+'件）</h2>'+(open.length?'<ul class="list card">'+open.map(item).join('')+'</ul>':'<p class="card">ありません</p>')+'</section>'+
+    '<section class="stack" aria-labelledby="h-w"><h2 id="h-w" style="font-size:18px">確認待ち（'+waiting.length+'件）</h2>'+(waiting.length?'<ul class="list card">'+waiting.map(item).join('')+'</ul>':'<p class="card">ありません</p>')+'</section>'+
+    '<section class="stack" aria-labelledby="h-d"><h2 id="h-d" style="font-size:18px">最近完了した業務</h2>'+(done.length?'<ul class="list card">'+done.map(item).join('')+'</ul>':'<p class="card">ありません</p>')+'</section>';
+}
+function viewStaffSubmissions(u){
+  var mine=data.targets.filter(function(x){return x.staffId===u.id&&reqOf(x).status==='open';});
+  var todo=mine.filter(function(x){return x.status==='not_submitted'||x.status==='returned';});
+  var wait=mine.filter(function(x){return x.status==='submitted';});
+  var ok=mine.filter(function(x){return x.status==='approved';});
+  var btnNo=0;
+  function item(x){var r=reqOf(x);return '<li class="row"><span style="flex:1 1 180px;font-weight:500">'+esc(r.title)+'</span>'+dueBadge(r.dueOn,x.status==='not_submitted'||x.status==='returned')+targetTag(x)+((x.status==='not_submitted'||x.status==='returned')?'<a class="btn btn-sm'+(btnNo++===0?' btn-primary':'')+'" href="#/submit/'+x.id+'">'+(x.status==='returned'?'もう一度提出する':'提出する')+'</a>':'')+'</li>';}
+  return pageTitle('自分の提出')+
+    '<section class="stack" aria-labelledby="h-t"><h2 id="h-t" style="font-size:18px">出すもの（'+todo.length+'件）</h2>'+(todo.length?'<ul class="list card">'+todo.map(item).join('')+'</ul>':'<p class="card">ありません</p>')+'</section>'+
+    '<section class="stack" aria-labelledby="h-wa"><h2 id="h-wa" style="font-size:18px">確認待ち（'+wait.length+'件）</h2>'+(wait.length?'<ul class="list card">'+wait.map(item).join('')+'</ul>':'<p class="card">ありません</p>')+'</section>'+
+    '<section class="stack" aria-labelledby="h-ok" ><h2 id="h-ok" style="font-size:18px">承認済み（'+ok.length+'件）</h2>'+(ok.length?'<ul class="list card">'+ok.map(item).join('')+'</ul>':'<p class="card">ありません</p>')+'</section>';
+}
+
+/* ---------------- 画面：提出の流れ（1画面に1つ） ---------------- */
+function viewSubmitFlow(u,targetId){
+  var x=byId(data.targets,targetId);
+  if(!x||x.staffId!==u.id)return notFound();
+  if(!x.seenAt){x.seenAt=nowStamp();save();}
+  var r=reqOf(x);
+  if(r.status!=='open'||!(x.status==='not_submitted'||x.status==='returned')){
+    var fl=ui.flow[x.id];
+    if(!(fl&&fl.step===4))return pageTitle(r.title)+'<p class="card">この提出は受け付け済みです（'+targetTag(x)+'）。<a href="#/">今日のやることに戻る</a></p>';
+  }
+  var f=ui.flow[x.id]||(ui.flow[x.id]={step:1});
+  var q=qOf(r);
+  var back=(f.step===2||f.step===3||f.step==='later')?'<button type="button" class="btn-text" data-action="flow-back" data-id="'+x.id+'" style="align-self:flex-start;text-decoration:none">'+I.back+'戻る</button>':(f.step===1?'<a href="#/" style="align-self:flex-start;min-height:44px;display:inline-flex;align-items:center">'+I.back+'戻る</a>':'');
+  var body='';
+  if(f.step===1){
+    body=pageTitle(r.title+'を提出する')+
+      (x.status==='returned'&&x.returnReason?'<p class="quote">差し戻しの理由：「'+esc(x.returnReason)+'」</p>':'')+
+      '<dl class="dl"><dt>期限</dt><dd>'+dueBadge(r.dueOn,true)+' '+esc(fmtDate(r.dueOn))+(r.dueTime?' '+esc(r.dueTime)+'まで':'')+'</dd><dt>依頼した人</dt><dd>'+esc(staffName(r.requesterId))+'</dd><dt>出すもの</dt><dd>'+(r.fileMode==='no_file'?esc(q.what):'書類（写真でもファイルでも出せます）')+'</dd></dl>'+
+      (r.instructions?'<p class="notice notice-plain">'+esc(r.instructions)+'</p>':'')+
+      '<div class="bottom"><button type="button" class="btn btn-primary btn-lg" data-action="flow-next" data-id="'+x.id+'">次へ</button></div>';
+  }else if(f.step===2){
+    if(r.fileMode==='no_file'){
+      var ans=f.answer||{};
+      body=pageTitle(q.text)+
+        '<form data-form="flow-answer" data-id="'+x.id+'" class="stack" novalidate style="flex:1">'+
+        '<fieldset><legend class="sr-only">'+esc(q.text)+'</legend>'+
+        '<label class="radio"><input type="radio" name="examined" value="yes"'+(ans.examined==='yes'?' checked':'')+'><span>'+esc(q.yes)+'</span></label>'+
+        '<label class="radio"><input type="radio" name="examined" value="no"'+(ans.examined==='no'?' checked':'')+'><span>'+esc(q.no)+'</span></label>'+fieldErr('examined')+'</fieldset>'+
+        '<div class="field"><label class="lbl" for="ex-date">'+esc(q.date)+' <span class="req">※「'+esc(q.yes)+'」の場合は必須</span></label><input id="ex-date" name="date" type="date" max="'+today()+'" value="'+esc(ans.date||'')+'"'+(ui.formErr&&ui.formErr.date?' class="input-error"':'')+'>'+fieldErr('date')+'</div>'+
+        '<p class="hint">結果などの書類は、この画面では受け取りません。</p>'+
+        '<div class="bottom"><button type="submit" class="btn btn-primary btn-lg">次へ</button></div></form>';
+    }else{
+      body=pageTitle('書類の写真を撮ってください')+
+        '<p class="text-2">紙の全体が写るように撮ってください。ファイルがある場合は選ぶこともできます。</p>'+fieldErr('file')+
+        '<div class="bottom">'+
+        '<label class="btn btn-primary btn-lg file-btn">'+I.camera+'写真を撮る<input type="file" accept="image/*" capture="environment" data-flow="'+x.id+'"></label>'+
+        '<label class="btn btn-lg file-btn">ファイルを選ぶ<input type="file" accept="image/*,application/pdf" data-flow="'+x.id+'"></label></div>';
+    }
+  }else if(f.step===3){
+    var summary=r.fileMode==='no_file'?
+      '<dl class="dl"><dt>回答</dt><dd>'+esc(q.yes)+'</dd><dt>'+esc(q.date)+'</dt><dd>'+esc(fmtDate(f.answer.date))+'</dd></dl>':
+      '<div class="thumb" role="img" aria-label="選んだファイル">'+I.doc+'<span>'+esc(f.fileName)+'</span></div><div class="row-between"><span class="text-2">1件</span><button type="button" class="btn-text" data-action="flow-back" data-id="'+x.id+'">撮り直す</button></div>';
+    body=pageTitle('この内容で提出しますか')+summary+
+      '<form data-form="flow-send" data-id="'+x.id+'" class="stack" novalidate style="flex:1"><div class="field"><label class="lbl" for="memo">コメント <span class="req">※任意</span></label><textarea id="memo" name="comment" rows="3">'+esc(f.comment||'')+'</textarea></div>'+
+      '<div class="bottom"><button type="submit" class="btn btn-primary btn-lg">提出する</button></div></form>';
+  }else if(f.step==='later'){
+    body=pageTitle(q.laterTitle)+'<p>'+esc(q.later)+'</p><dl class="dl"><dt>期限</dt><dd>'+esc(fmtDate(r.dueOn))+'</dd><dt>わからないとき</dt><dd>'+esc(staffName(r.requesterId))+'さんに相談してください</dd></dl>'+
+      '<div class="bottom"><a class="btn btn-primary btn-lg" href="#/" data-action="flow-finish" data-id="'+x.id+'">今日のやることに戻る</a></div>';
+  }else{
+    var left=staffTodoCount(u);
+    body='<div class="stack" style="align-items:center;text-align:center;margin-top:48px"><span class="done-mark">'+I.bigcheck+'</span>'+pageTitle('提出しました')+'<p>'+esc(staffName(r.reviewerId))+'さんが確認します。<br>結果は「通知」でお知らせします。</p></div>'+
+      '<p class="notice notice-plain" style="justify-content:center">今日のやることは、あと'+left+'件です</p>'+
+      '<div class="bottom"><a class="btn btn-primary btn-lg" href="#/" data-action="flow-finish" data-id="'+x.id+'">今日のやることに戻る</a></div>';
+  }
+  return '<div class="flow">'+back+body+'</div>';
+}
+function staffTodoCount(u){
+  var T=today();
+  var t1=data.tasks.filter(function(t){return isOpenTask(t)&&isAssignee(u,t)&&!t.isChecklist&&t.status!=='awaiting_approval'&&(t.dueOn<=T||t.status==='returned'||(t.kind==='request'&&!t.acknowledgedAt));}).length;
+  var t2=data.targets.filter(function(x){var r=reqOf(x);return x.staffId===u.id&&r.status==='open'&&(x.status==='returned'||(x.status==='not_submitted'&&(r.dueOn<=T||!x.seenAt)));}).length;
+  var t3=data.tasks.filter(function(t){return t.isChecklist&&t.dueOn===T&&t.status!=='completed'&&t.assignee&&t.assignee.type==='dept'&&t.assignee.id===u.deptId;}).length;
+  return t1+t2+t3;
+}
+
+/* ---------------- 操作（データの変更） ---------------- */
+function hist(t,from,to,action,reason){t.history.push({at:nowStamp(),byId:data.currentUserId,from:from,to:to,action:action,reason:reason||''});}
+function resolveApprover(t,completerId){
+  var a=t.approverId||data.settings.defaultApproverId;var isSelf=false;
+  if(a===completerId){a=data.settings.fallbackApproverId;if(a===completerId)isSelf=true;}
+  return {approverId:a,isSelf:isSelf};
+}
+function reportCompletion(t,comment,copyName){
+  var u=me();
+  if(!canWork(u,t))return {copy:'この業務は完了を報告できません'};
+  var isGov=t.category==='行政提出';
+  if(isGov&&!copyName&&!(t.gov&&t.gov.copyFile))return {copy:'提出した書類の控えを選んでください。運営指導で「提出した証拠」として使います'};
+  if(copyName){t.gov=t.gov||{};t.gov.copyFile=copyName;}
+  if(comment)t.comments.push({at:nowStamp(),byId:u.id,kind:'completion_report',text:comment});
+  var from=t.status;
+  if(t.requiresApproval){
+    var res=resolveApprover(t,u.id);
+    t.status='awaiting_approval';t.returnReason='';
+    t.approval={approverId:res.approverId,status:'pending',requestedAt:nowStamp(),isSelf:res.isSelf,requestedById:u.id,actions:(t.approval&&t.approval.actions)||[]};
+    hist(t,from,'awaiting_approval','完了を報告（'+staffName(res.approverId)+'さんの承認待ち）');
+    if(!res.isSelf)notify(res.approverId,'承認の依頼：'+t.title,u.name+'さんが完了を報告しました','#/approvals',true);
+    toast('完了を報告しました。'+staffName(res.approverId)+'さんが確認します。');
+  }else{
+    t.status='completed';t.completedAt=nowStamp();t.completedById=u.id;
+    hist(t,from,'completed','完了を報告');
+    if(t.requestedById&&t.requestedById!==u.id)notify(t.requestedById,'完了しました：'+t.title,u.name+'さんが完了を報告しました','#/tasks/'+t.id,false);
+    toast('完了を報告しました。');
+  }
+  log('完了報告',t.title);
+  return null;
+}
+function approveTask(t){
+  var u=me();
+  if(!(t.status==='awaiting_approval'&&t.approval&&t.approval.approverId===u.id&&isManager(u))){toast('この業務を承認できるのは、指定された承認者です','error');return;}
+  t.status='completed';t.completedAt=nowStamp();t.completedById=t.approval.requestedById;
+  t.approval.status='approved';t.approval.actions.push({at:nowStamp(),byId:u.id,action:'承認'});
+  hist(t,'awaiting_approval','completed',t.approval.isSelf?'承認（自己承認）':'承認');
+  notify(t.approval.requestedById,'承認されました：'+t.title,u.name+'さんが承認しました','#/tasks/'+t.id,false);
+  log('承認',t.title);
+  toast('承認しました：'+t.title);
+}
+function returnTask(t,reason){
+  var u=me();
+  if(!(t.status==='awaiting_approval'&&t.approval&&t.approval.approverId===u.id)){toast('この業務を差し戻せるのは、指定された承認者です','error');return;}
+  t.status='returned';t.returnReason=reason;
+  t.approval.status='returned';t.approval.actions.push({at:nowStamp(),byId:u.id,action:'差し戻し',reason:reason});
+  hist(t,'awaiting_approval','returned','差し戻し',reason);
+  notify(t.approval.requestedById,'差し戻し：'+t.title,reason,'#/tasks/'+t.id,true);
+  log('差し戻し',t.title);
+  toast('差し戻しました：'+t.title);
+}
+function doSubmit(x,payload){
+  var u=me();var r=reqOf(x);
+  var version=data.submissions.filter(function(s){return s.targetId===x.id;}).length+1;
+  data.submissions.push({id:nid('sub'),targetId:x.id,version:version,at:nowStamp(),byId:u.id,proxy:false,fileName:payload.fileName||'',fileSize:payload.fileSize||0,answer:payload.answer||null,comment:payload.comment||''});
+  x.status='submitted';x.returnReason='';
+  notify(r.reviewerId,'確認の依頼：'+r.title,u.name+'さんが提出しました','#/approvals',true);
+  log('提出',r.title+'（'+u.name+'）');
+}
+function approveTargets(ids){
+  var u=me();var n=0;
+  ids.forEach(function(id){
+    var x=byId(data.targets,id);if(!x||x.status!=='submitted')return;
+    var r=reqOf(x);if(r.reviewerId!==u.id)return;
+    x.status='approved';x.actions.push({at:nowStamp(),byId:u.id,action:'承認'});
+    notify(x.staffId,'承認されました：'+r.title,u.name+'さんが確認しました','#/requests',false);
+    log('承認',r.title+'（'+staffName(x.staffId)+'）');n++;
+  });
+  return n;
+}
+function returnTarget(x,reason){
+  var u=me();var r=reqOf(x);
+  if(!(x.status==='submitted'&&r.reviewerId===u.id)){toast('差し戻せるのは確認する人です','error');return;}
+  x.status='returned';x.returnReason=reason;x.actions.push({at:nowStamp(),byId:u.id,action:'差し戻し',reason:reason});
+  notify(x.staffId,'差し戻し：'+r.title,reason,'#/submit/'+x.id,true);
+  log('差し戻し',r.title+'（'+staffName(x.staffId)+'）');
+  toast(staffName(x.staffId)+'さんの提出を差し戻しました');
+}
+function remind(r){
+  var sent=0,noLogin=0;
+  targetsOf(r).forEach(function(x){
+    if(!(x.status==='not_submitted'||x.status==='returned'))return;
+    if(!x.hasLogin){noLogin++;return;}
+    if(notify(x.staffId,'提出のお願い：'+r.title,'期限は'+fmtDate(r.dueOn)+'です','#/submit/'+x.id,true)){x.reminders=(x.reminders||0)+1;sent++;}
+  });
+  r.rounds=(r.rounds||0)+1;
+  log('催促を送信',r.title+'（'+sent+'名）');
+  checkEscalation(r);
+  toast(sent+'名に催促を送りました。'+(noLogin?'アカウントのない'+noLogin+'名には届きません（未提出者一覧を印刷して渡してください）。':''));
+}
+function createTask(v){
+  var errs={};
+  if(!v.title.trim())errs.title='業務名を入力してください';
+  if(!v.dueOn)errs.dueOn='期限を入力してください';else if(v.dueOn<today())errs.dueOn='今日以降の日付を選んでください';
+  if(v.kind==='request'&&!v.assignee)errs.assignee='依頼する相手を選んでください';
+  if(Object.keys(errs).length)return errs;
+  var u=me();var asg=null;
+  if(v.assignee){var p=v.assignee.split(':');asg={type:p[0],id:p[1]};}
+  var t=mkTask({title:v.title.trim(),category:v.category,kind:v.kind,assignee:asg,dueOn:v.dueOn,description:v.description.trim(),requiresApproval:v.requiresApproval||v.category==='行政提出',requestedById:v.kind==='request'?u.id:null,departmentId:asg?null:u.deptId});
+  if(t.category==='行政提出')t.gov={destination:'',method:'',receiptNumber:'',copyFile:''};
+  hist(t,null,'not_started','作成');
+  data.tasks.push(t);
+  if(asg){
+    var targets=asg.type==='staff'?[asg.id]:data.staff.filter(function(s){return s.deptId===asg.id;}).map(function(s){return s.id;});
+    targets.forEach(function(sid){if(sid!==u.id)notify(sid,(v.kind==='request'?'依頼：':'業務：')+t.title,u.name+'さんから','#/tasks/'+t.id,v.kind==='request');});
+  }
+  log(v.kind==='request'?'依頼を作成':'業務を作成',t.title);
+  toast((v.kind==='request'?'依頼を送りました：':'業務を作成しました：')+t.title);
+  return {_id:t.id};
+}
+function createRequest(v){
+  var errs={};
+  if(!v.title.trim())errs.title='提出依頼の名前を入力してください';
+  if(!v.dueOn)errs.dueOn='期限を入力してください';else if(v.dueOn<today())errs.dueOn='今日以降の日付を選んでください';
+  if(!v.dataClass)errs.dataClass='書類の区分を選んでください';
+  if(Object.keys(errs).length)return errs;
+  var u=me();
+  var r={id:nid('r'),title:v.title.trim(),instructions:v.instructions.trim(),dueOn:v.dueOn,dueTime:'',dataClass:v.dataClass,fileMode:v.dataClass==='c4'?'no_file':'file_required',target:v.target==='all'?{type:'all'}:{type:'depts',ids:[v.target]},reviewerId:v.reviewerId,requesterId:u.id,reminder:v.reminder,rounds:0,escalatedOn:null,status:'open',createdAt:nowStamp()};
+  data.requests.push(r);
+  var people=data.staff.filter(function(s){return s.status!=='left'&&(v.target==='all'||s.deptId===v.target);});
+  var sent=0;
+  people.forEach(function(s){
+    var excluded=s.status==='on_leave';
+    data.targets.push({id:nid('x'),requestId:r.id,staffId:s.id,departmentId:s.deptId,hasLogin:s.hasLogin,status:excluded?'excluded':'not_submitted',reminders:0,sentKeys:[],returnReason:'',excludedReason:excluded?'休職中':'',actions:[],seenAt:null});
+    if(!excluded&&notify(s.id,'提出の依頼：'+r.title,'期限は'+fmtDate(r.dueOn)+'です','#/submit/'+data.targets[data.targets.length-1].id,false))sent++;
+  });
+  log('提出依頼を作成',r.title+'（対象 '+people.length+'名）');
+  toast('提出依頼を送りました（'+sent+'名にお知らせ）');
+  return {_id:r.id};
+}
+
+/* ---------------- 操作の受け付け ---------------- */
+function openDialog(d){ui.dialog=d;render();}
+function dialogHtml(){
+  var d=ui.dialog;if(!d)return '';
+  return '<div class="backdrop"><div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dlg-title" aria-describedby="dlg-body"><h2 id="dlg-title">'+esc(d.title)+'</h2><p id="dlg-body">'+esc(d.body)+'</p><div class="dialog-actions"><button type="button" class="btn-text" data-action="dialog-cancel">キャンセル</button><button type="button" class="btn '+(d.danger?'btn-danger':'btn-primary')+'" data-action="dialog-ok" data-autofocus>'+esc(d.confirm)+'</button></div></div></div>';
+}
+function perform(kind,payload){
+  if(kind==='bulk-approve'){var n=approveTargets(payload.ids);ui.selected[payload.scope]=[];ui.panel=null;toast(n+'件を承認しました');save();render();}
+  else if(kind==='remind'){var r=reqById(payload.id);remind(r);save();render();}
+  else if(kind==='reset-data'){seed();runDailyJobs();ui={toast:null,flow:{},filter:{},selected:{},panel:null,formErr:null,form:null,dialog:null,lastPath:null};toast('最初の状態に戻しました');save();go('/');}
+}
+function handleAction(a,el){
+  var id=el.getAttribute('data-id');
+  var u=me();
+  switch(a){
+    case 'advance-day':
+      data.todayOffset=(data.todayOffset||0)+1;runDailyJobs();toast('日付を1日進めました（今日：'+fmtDate(today())+'）');render();break;
+    case 'reset-day':
+      data.todayOffset=0;runDailyJobs();toast('日付を今日に戻しました');render();break;
+    case 'goto-filter':
+      ui.filter.tasks=el.getAttribute('data-value');break; /* リンクの移動はそのまま */
+    case 'filter':
+      ui.filter[el.getAttribute('data-scope')]=el.getAttribute('data-value');ui.panel=null;render();break;
+    case 'open-request':
+      var tr=taskById(id);if(tr&&!tr.acknowledgedAt){tr.acknowledgedAt=nowStamp();hist(tr,tr.status,tr.status,'依頼を確認（既読）');log('依頼を確認',tr.title);save();}go('/tasks/'+id);break;
+    case 'start-task':
+      var ts=taskById(id);if(ts&&canWork(u,ts)&&ts.status==='not_started'){ts.status='in_progress';hist(ts,'not_started','in_progress','着手');log('着手',ts.title);save();toast('着手しました');}render();break;
+    case 'check-done':
+      var tc=taskById(id);if(tc&&tc.isChecklist&&isAssignee(u,tc)&&tc.status!=='completed'){tc.status='completed';tc.completedAt=nowStamp();tc.completedById=u.id;hist(tc,'not_started','completed','完了');log('チェックリストを完了',tc.title);save();toast(tc.title+'を完了にしました');}render();break;
+    case 'approve-task':
+      var ta=taskById(id);var inA=!!(ui.panel&&ui.panel.scope==='approvals');var ia=inA?approvalIndex(u,id):-1;if(ta){approveTask(ta);save();}ui.panel=inA?approvalPanelAt(u,ia):null;render();if(ui.panel)focusPanel();break;
+    case 'approve-target':
+      var xa=byId(data.targets,id);var inB=!!(ui.panel&&ui.panel.scope==='approvals');var ib=inB?approvalIndex(u,id):-1;
+      var n=approveTargets([id]);if(n){toast(staffName(xa.staffId)+'さんの提出を承認しました');}else{toast('承認できるのは確認する人です','error');}
+      save();
+      if(inB){ui.panel=approvalPanelAt(u,ib);}
+      else if(xa){var nx=targetsOf(reqOf(xa)).filter(function(y){return y.status==='submitted'&&reqOf(y).reviewerId===u.id;})[0];ui.panel=nx?{requestId:xa.requestId,targetId:nx.id,mode:'review'}:null;}
+      else ui.panel=null;
+      render();if(ui.panel)focusPanel();break;
+    case 'bulk-approve':
+      var scope=id;var ids=(ui.selected[scope]||[]).slice();
+      if(!ids.length){toast('承認する提出物を選んでください','error');render();break;}
+      openDialog({title:'まとめて承認します',body:ids.length+'件の提出物を承認します。承認すると、本人に「承認されました」と通知されます。',confirm:ids.length+'件を承認する',action:'bulk-approve',payload:{ids:ids,scope:scope},returnFocus:'btn-bulk'});break;
+    case 'remind':
+      var rr=reqById(id);var cnt=0,nl=0;targetsOf(rr).forEach(function(x){if(x.status==='not_submitted'||x.status==='returned'){if(x.hasLogin)cnt++;else nl++;}});
+      if(!cnt){toast(nl?'通知が届く未提出の人はいません。アカウントのない'+nl+'名には、未提出者一覧を印刷して渡してください':'未提出の人はいません');render();break;}
+      openDialog({title:'催促を送ります',body:'未提出・差し戻しの'+cnt+'名に送ります。すでに提出した人には届きません。'+(nl?'アカウントのない'+nl+'名には届かないため、未提出者一覧を印刷して渡してください。':''),confirm:'催促を送る',action:'remind',payload:{id:id},returnFocus:'btn-remind'});break;
+    case 'open-panel':
+      if(el.getAttribute('data-scope')==='approvals'){ui.panel={scope:'approvals',kind:el.getAttribute('data-kind'),id:id};}
+      else ui.panel={requestId:el.getAttribute('data-req'),targetId:id,mode:el.getAttribute('data-mode')};
+      ui.formErr=null;render();focusPanel();break;
+    case 'close-panel':
+      ui.panel=null;ui.formErr=null;render();break;
+    case 'resume-task':
+      var th=taskById(id);if(th&&th.status==='on_hold'&&canManageTask(u,th)){var back=th.statusBefore||'in_progress';th.status=back;th.holdReason='';hist(th,'on_hold',back,'保留を解除');log('保留を解除',th.title);save();toast('保留を解除しました');}render();break;
+    case 'flow-next':
+      var f1=ui.flow[id]||(ui.flow[id]={step:1});f1.step=2;ui.formErr=null;render();focusTitle();break;
+    case 'flow-back':
+      var f2=ui.flow[id];if(f2){f2.step=(f2.step==='later')?2:Math.max(1,f2.step-1);}ui.formErr=null;render();focusTitle();break;
+    case 'flow-finish':
+      delete ui.flow[id];break;
+    case 'open-notif':
+      var nn=byId(data.notifications,id);if(nn){if(!nn.readAt){nn.readAt=nowStamp();save();}var lk=nn.link.replace(/^#/,'');if(location.hash==='#'+lk){render();}else{location.hash=lk;}}break;
+    case 'read-all':
+      data.notifications.forEach(function(x){if(x.toId===u.id&&!x.readAt)x.readAt=nowStamp();});save();toast('すべて既読にしました');render();break;
+    case 'reset-data':
+      openDialog({title:'最初の状態に戻します',body:'操作した内容をすべて消して、最初の架空のデータに戻します。元には戻せません。',confirm:'最初の状態に戻す',danger:true,action:'reset-data',payload:{},returnFocus:'btn-reset'});break;
+    case 'dialog-ok':
+      var d=ui.dialog;ui.dialog=null;if(d){perform(d.action,d.payload);if(d.returnFocus&&!ui.dialog){var rf=document.getElementById(d.returnFocus);if(rf)rf.focus();}}else render();break;
+    case 'dialog-cancel':
+      closeDialog();break;
+    case 'skip':
+      var mn=document.getElementById('main');if(mn){mn.setAttribute('tabindex','-1');mn.focus();}break;
+    case 'print':
+      window.print();break;
+  }
+}
+function focusTitle(){window.scrollTo(0,0);var h=document.getElementById('page-title');if(h)h.focus({preventScroll:true});}
+function focusPanel(){var h=document.getElementById('h-panel')||document.getElementById('h-review');if(h){h.setAttribute('tabindex','-1');h.focus();}}
+function closeDialog(){var d=ui.dialog;ui.dialog=null;render();if(d&&d.returnFocus){var rf=document.getElementById(d.returnFocus);if(rf)rf.focus();}}
+function handleForm(name,form,fd){
+  var id=form.getAttribute('data-id');
+  var u=me();
+  ui.formErr=null;
+  function str(k){var v=fd.get(k);return v==null?'':String(v);}
+  if(name==='complete-task'){
+    var t=taskById(id);var file=fd.get('copy');var fname=(file&&file.name)?file.name:'';
+    var err=reportCompletion(t,str('comment').trim(),fname);
+    if(err){ui.formErr=err;render();var c=document.getElementById('copy');if(c)c.focus();return;}
+    save();render();focusTitle();
+  }else if(name==='return-task'){
+    var tr=taskById(id);var reason=str('reason').trim();
+    if(!reason){ui.formErr={};ui.formErr['rt-'+id]='差し戻す理由を入力してください。本人が直すときに使います';render();var e1=document.getElementById('rt-'+id);if(e1)e1.focus();return;}
+    var inC=!!(ui.panel&&ui.panel.scope==='approvals');var ic=inC?approvalIndex(u,id):-1;
+    returnTask(tr,reason);save();ui.panel=inC?approvalPanelAt(u,ic):null;render();if(ui.panel)focusPanel();
+  }else if(name==='hold-task'){
+    var th=taskById(id);var rs=str('reason').trim();
+    if(!rs){ui.formErr={hold:'保留にする理由を入力してください'};render();var e2=document.getElementById('hold');if(e2)e2.focus();return;}
+    if(th&&canManageTask(u,th)){var from=th.status;if(from==='awaiting_approval'&&th.approval){th.approval.status='cancelled';}th.statusBefore=(from==='awaiting_approval'?'in_progress':from);th.status='on_hold';th.holdReason=rs;hist(th,from,'on_hold','保留',rs);log('保留',th.title);save();toast('保留にしました');}
+    render();
+  }else if(name==='assign-task'){
+    var ta=taskById(id);var v=str('assignee');
+    if(!v){toast('担当を選んでください','error');render();return;}
+    if(ta&&canManageTask(u,ta)){var p=v.split(':');ta.assignee={type:p[0],id:p[1]};if(p[0]==='dept')ta.departmentId=p[1];else ta.departmentId=staff(p[1]).deptId;hist(ta,ta.status,ta.status,'担当を設定：'+(p[0]==='dept'?deptName(p[1]):staffName(p[1])));log('担当を設定',ta.title);
+      if(p[0]==='staff')notify(p[1],'業務：'+ta.title,u.name+'さんが担当に設定しました','#/tasks/'+ta.id,false);save();toast('担当を設定しました');}
+    render();
+  }else if(name==='return-target'){
+    var x=byId(data.targets,id);var rsn=str('reason').trim();
+    if(!rsn){ui.formErr={};ui.formErr['rx-'+id]='差し戻す理由を入力してください。本人の画面に表示されます';render();var e3=document.getElementById('rx-'+id);if(e3)e3.focus();return;}
+    var inD=!!(ui.panel&&ui.panel.scope==='approvals');var idD=inD?approvalIndex(u,id):-1;
+    returnTarget(x,rsn);save();ui.panel=inD?approvalPanelAt(u,idD):{requestId:x.requestId,targetId:x.id,mode:'review'};render();if(ui.panel)focusPanel();
+  }else if(name==='proxy'){
+    var xp=byId(data.targets,id);var pr=str('reason').trim();
+    if(!pr){ui.formErr={px:'理由を入力してください'};render();return;}
+    var r=reqOf(xp);
+    if(!canManageRequest(u,r)){toast('代理で登録できるのは、依頼した人・確認する人・施設長・事務長です','error');render();return;}
+    var version=data.submissions.filter(function(s){return s.targetId===xp.id;}).length+1;
+    data.submissions.push({id:nid('sub'),targetId:xp.id,version:version,at:nowStamp(),byId:u.id,proxy:true,proxyReason:pr,fileName:r.fileMode==='no_file'?'':'（紙で受け取り）',fileSize:0,answer:r.fileMode==='no_file'?{examined:'yes',date:''}:null,comment:''});
+    xp.status='submitted';xp.returnReason='';
+    if(r.reviewerId!==u.id)notify(r.reviewerId,'確認の依頼：'+r.title,u.name+'さんが'+staffName(xp.staffId)+'さんの分を代理で登録しました','#/approvals',true);
+    log('代理登録',r.title+'（'+staffName(xp.staffId)+'）');
+    ui.panel={requestId:r.id,targetId:xp.id,mode:'review'};save();toast(staffName(xp.staffId)+'さんの分を代理で登録しました');render();
+  }else if(name==='exclude'){
+    var xe=byId(data.targets,id);var er=str('reason').trim();
+    if(!er){ui.formErr={ex:'理由を入力してください'};render();return;}
+    if(!canManageRequest(u,reqOf(xe))){toast('この操作はできません','error');render();return;}
+    xe.status='excluded';xe.excludedReason=er;log('対象外に設定',reqOf(xe).title+'（'+staffName(xe.staffId)+'）');ui.panel=null;save();toast(staffName(xe.staffId)+'さんを対象外にしました');render();
+  }else if(name==='flow-answer'){
+    var fa=ui.flow[id]||(ui.flow[id]={step:2});var xq=byId(data.targets,id);var q2=qOf(reqOf(xq));var ex=str('examined');var dt=str('date');var errs={};
+    if(!ex)errs.examined='「'+q2.yes+'」か「'+q2.no+'」を選んでください';
+    else if(ex==='yes'&&!dt)errs.date=q2.date+'を入力してください';
+    else if(ex==='yes'&&dt>today())errs.date=q2.date+'は今日までの日付にしてください';
+    fa.answer={examined:ex,date:ex==='yes'?dt:''};
+    if(Object.keys(errs).length){ui.formErr=errs;render();var fe=document.querySelector('.input-error')||document.querySelector('input[name=examined]');if(fe)fe.focus();return;}
+    fa.step=(ex==='no')?'later':3;render();focusTitle();
+  }else if(name==='flow-send'){
+    var fs=ui.flow[id];var xs=byId(data.targets,id);
+    if(!xs||xs.staffId!==u.id){render();return;}
+    fs.comment=str('comment').trim();
+    doSubmit(xs,{fileName:fs.fileName,fileSize:fs.fileSize,answer:fs.answer,comment:fs.comment});
+    fs.step=4;save();render();focusTitle();
+  }else if(name==='new-task'){
+    var vals={kind:str('kind')||'task',title:str('title'),category:str('category'),assignee:str('assignee'),dueOn:str('dueOn'),requiresApproval:!!fd.get('requiresApproval'),description:str('description')};
+    var res=createTask(vals);
+    if(res&&!res._id){ui.formErr=res;ui.form=vals;render();var first=document.querySelector('.input-error');if(first)first.focus();return;}
+    save();go('/tasks/'+res._id);
+  }else if(name==='new-request'){
+    var vr={title:str('title'),instructions:str('instructions'),dueOn:str('dueOn'),dataClass:str('dataClass'),target:str('target')||'all',reviewerId:str('reviewerId'),reminder:str('reminder')||'default'};
+    var rq=createRequest(vr);
+    if(rq&&!rq._id){ui.formErr=rq;ui.form=vr;render();var f0=document.querySelector('.input-error')||document.querySelector('input[name=dataClass]');if(f0)f0.focus();return;}
+    save();go('/requests/'+rq._id);
+  }
+}
+
+/* ---------------- 画面の組み立て ---------------- */
+function parseRoute(){var h=location.hash.replace(/^#/,'')||'/';var parts=h.split('/').filter(Boolean);return {path:'/'+parts.join('/'),parts:parts};}
+function isActive(r,p){if(p==='/')return r.path==='/';return r.path===p||r.path.indexOf(p+'/')===0;}
+function protoBarHtml(){
+  var opts=data.staff.filter(function(s){return s.hasLogin&&s.status==='active';}).map(function(s){return '<option value="'+s.id+'"'+(s.id===data.currentUserId?' selected':'')+'>'+esc(s.name)+'（'+esc(s.title)+'）</option>';}).join('');
+  return '<span class="proto-label">試作品</span><span>架空のデータです</span>'+
+    '<label>利用者 <select data-change="switch-user" aria-label="操作する人を切り替える">'+opts+'</select></label>'+
+    '<span>今日：'+esc(fmtDate(today()))+(data.todayOffset?'（'+data.todayOffset+'日進めています）':'')+'</span>'+
+    '<button type="button" class="pbtn" data-action="advance-day">1日進める</button>'+
+    (data.todayOffset?'<button type="button" class="pbtn" data-action="reset-day">今日に戻す</button>':'')+
+    (storageOK?'':'<span>この画面では保存されません</span>')+
+    '<a href="#/about">この試作品について</a>';
+}
+function adminLayout(content,r){
+  var u=me();var pend=myApprovals(u).count;var unread=unreadCount(u);
+  var nav=[['/','ホーム'],['/tasks','業務'],['/requests','提出'],['/approvals','承認待ち（'+pend+'）'],['/notifications','通知（'+unread+'）'],['/audit','操作履歴']];
+  return '<header class="site-header"><div class="wrap header-row"><div class="brand"><span class="brand-name">'+esc(data.facility.name)+'</span><span class="text-2">'+esc(u.name)+'（'+esc(u.title)+'）</span></div>'+
+    '<nav aria-label="メインメニュー" class="main-nav">'+nav.map(function(n){return '<a href="#'+n[0]+'"'+(isActive(r,n[0])?' aria-current="page"':'')+'>'+esc(n[1])+'</a>';}).join('')+'</nav></div></header>'+
+    '<main id="main" class="wrap main">'+toastHtml()+content+'</main>';
+}
+function staffLayout(content,r){
+  var u=me();var unread=unreadCount(u);
+  var tabs=[['/','ホーム',I.home],['/tasks','業務',I.list],['/requests','提出',I.upload],['/notifications','通知（'+unread+'）',I.bell]];
+  return '<div class="staff-shell"><header class="staff-header"><div class="row-between text-2"><span>'+esc(u.name)+'さん</span><span>'+esc(fmtDate(today()))+'</span></div></header>'+
+    '<main id="main" class="staff-main">'+toastHtml()+content+'</main>'+
+    '<nav class="tabbar no-print" aria-label="下部メニュー">'+tabs.map(function(t){return '<a href="#'+t[0]+'"'+(isActive(r,t[0])?' aria-current="page"':'')+'>'+t[2]+'<span>'+esc(t[1])+'</span></a>';}).join('')+'</nav></div>';
+}
+function buildContent(r){
+  var p=r.parts;var u=me();var isStaff=u.role==='STAFF';
+  if(p.length===0)return isStaff?viewStaffHome(u):viewDashboard(u);
+  if(p[0]==='tasks'&&p.length===1)return isStaff?viewStaffTasks(u):viewTasks(u);
+  if(p[0]==='tasks'&&p[1]==='new')return isStaff?forbidden():viewTaskForm(u);
+  if(p[0]==='tasks')return viewTaskDetail(u,p[1]);
+  if(p[0]==='requests'&&p.length===1)return isStaff?viewStaffSubmissions(u):viewRequests(u);
+  if(p[0]==='requests'&&p[1]==='new')return isStaff?forbidden():viewRequestForm(u);
+  if(p[0]==='requests'&&p[2]==='print')return isStaff?forbidden():viewPrint(u,p[1]);
+  if(p[0]==='requests')return isStaff?forbidden():viewStatusTable(u,p[1]);
+  if(p[0]==='submit')return viewSubmitFlow(u,p[1]);
+  if(p[0]==='approvals')return isStaff?forbidden():viewApprovals(u);
+  if(p[0]==='notifications')return viewNotifications(u);
+  if(p[0]==='audit')return isStaff?forbidden():viewAudit(u);
+  if(p[0]==='about')return viewAbout(u);
+  return notFound();
+}
+function render(){
+  if(!me()){var first=data.staff.filter(function(s){return s.hasLogin&&s.status==='active';})[0];data.currentUserId=first.id;}
+  var activeId=document.activeElement&&document.activeElement.id;
+  var r=parseRoute();
+  var navChanged=r.path!==ui.lastPath;
+  if(navChanged){
+    if(ui.toast&&ui.toast.path!==null&&ui.toast.path!==r.path)ui.toast=null;
+    if(ui.lastPath!==null){ui.panel=null;ui.formErr=null;ui.form=null;}
+  }
+  var content=buildContent(r);
+  protoBar.innerHTML=protoBarHtml();
+  var u=me();
+  app.innerHTML=u.role==='STAFF'?staffLayout(content,r):adminLayout(content,r);
+  dialogRoot.innerHTML=dialogHtml();
+  app.inert=!!ui.dialog;protoBar.inert=!!ui.dialog;
+  if(ui.toast){live.textContent=ui.toast.text;if(ui.toast.path===null)ui.toast.path=r.path;}
+  ui.lastPath=r.path;
+  if(ui.dialog){var b=dialogRoot.querySelector('[data-autofocus]');if(b)b.focus();}
+  else if(navChanged){window.scrollTo(0,0);focusTitle();}
+  else if(activeId){var el=document.getElementById(activeId);if(el)el.focus();}
+}
+
+/* ---------------- イベント ---------------- */
+document.addEventListener('click',function(e){
+  var el=e.target.closest('[data-action]');
+  if(!el)return;
+  var a=el.getAttribute('data-action');
+  if(a!=='goto-filter'&&a!=='flow-finish'&&el.tagName==='A')e.preventDefault();
+  handleAction(a,el);
+});
+document.addEventListener('submit',function(e){
+  var f=e.target.closest('form[data-form]');if(!f)return;
+  e.preventDefault();
+  handleForm(f.getAttribute('data-form'),f,new FormData(f));
+});
+document.addEventListener('change',function(e){
+  var el=e.target;
+  if(el.matches('[data-change="switch-user"]')){
+    data.currentUserId=el.value;save();
+    ui={toast:null,flow:{},filter:{},selected:{},panel:null,formErr:null,form:null,dialog:null,lastPath:null};
+    toast(staffName(el.value)+'さんに切り替えました');
+    if(location.hash==='#/'||location.hash===''){render();}else{location.hash='/';}
+  }else if(el.matches('input[type=file][data-flow]')){
+    var id=el.getAttribute('data-flow');var file=el.files&&el.files[0];
+    var f=ui.flow[id]||(ui.flow[id]={step:2});
+    if(!file){ui.formErr={file:'写真またはファイルを選んでください'};render();return;}
+    if(file.size>25*1024*1024){ui.formErr={file:'ファイルを送れません。大きさが 25MB を超えています。写真を撮り直すか、小さいファイルを選んでください'};render();return;}
+    f.fileName=file.name;f.fileSize=file.size;f.step=3;ui.formErr=null;render();focusTitle();
+  }else if(el.matches('input[data-select]')){
+    var scope=el.getAttribute('data-select');var list=ui.selected[scope]||(ui.selected[scope]=[]);
+    var i=list.indexOf(el.value);
+    if(el.checked&&i<0)list.push(el.value);
+    if(!el.checked&&i>=0)list.splice(i,1);
+    render();
+  }
+});
+document.addEventListener('keydown',function(e){
+  if(!ui.dialog)return;
+  if(e.key==='Escape'){e.preventDefault();closeDialog();return;}
+  if(e.key==='Tab'){
+    var f=dialogRoot.querySelectorAll('button');if(!f.length)return;
+    var first=f[0],last=f[f.length-1];
+    if(!dialogRoot.contains(document.activeElement)){e.preventDefault();first.focus();}
+    else if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}
+    else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}
+  }
+});
+window.addEventListener('hashchange',render);
+
+load();
+runDailyJobs();
+render();
+})();
+</script>
+</body>
+</html>
