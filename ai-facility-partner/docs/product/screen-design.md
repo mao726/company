@@ -277,4 +277,4 @@ flowchart TD
 - 施設のロゴ・色の設定は PHASE 6 以降（MVP は共通デザイン）
 - 共用タブレットの画面（S05）は D-2 の決定後に設計
 - ダークモードは PHASE 5 以降に検討（夜勤者の声で判断）
-- 見た目の確定は、デザイン見本（動かない画面の見本）を施設に見ていただいてから行う。見本 v1：https://claude.ai/artifact/8eohqFYSGNpd4iDZBn6Mk2 （ソースの控えは `../../design/mockup-v1/`）
+- 見た目の確定は、デザイン見本（動かない画面の見本）を施設に見ていただいてから行う。見本 v1：https://claude.ai/artifact/8eohqFYSGNpd4iDZBn6Mk2 （ソースの控えは `../../design/mockup-v1/`）。最新の見た目（デザイン v2：引き算のデザイン）は試作品（`../../prototype/index.html`）で確認できる

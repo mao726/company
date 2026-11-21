@@ -28,7 +28,7 @@ function section(name) { console.log('\n■ ' + name); }
 
 (async () => {
   const browser = await chromium.launch();
-  const context = await browser.newContext({ viewport: { width: 1280, height: 900 }, deviceScaleFactor: 1 });
+  const context = await browser.newContext({ viewport: { width: 1280, height: 900 }, deviceScaleFactor: 1, reducedMotion: 'reduce' });
   const page = await context.newPage();
 
   const errors = [];
@@ -83,6 +83,28 @@ function section(name) { console.log('\n■ ' + name); }
     check(r.lowButtons.length === 0, label + '：高さ44px未満のボタンがない', r.lowButtons.slice(0, 5));
   }
 
+  // 画面に見えている文字すべてについて、背景とのコントラストが4.5:1以上かを確かめる
+  async function checkContrast(label) {
+    const bad = await page.evaluate(() => {
+      const parse = (c) => { const m = c.match(/rgba?\(([^)]+)\)/); if (!m) return null; const p = m[1].split(/[ ,\/]+/).filter(Boolean).map(Number); return { r: p[0], g: p[1], b: p[2], a: p.length > 3 ? p[3] : 1 }; };
+      const lum = (c) => { const f = (v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }; return 0.2126 * f(c.r) + 0.7152 * f(c.g) + 0.0722 * f(c.b); };
+      const blend = (top, bot) => ({ r: top.r * top.a + bot.r * (1 - top.a), g: top.g * top.a + bot.g * (1 - top.a), b: top.b * top.a + bot.b * (1 - top.a), a: 1 });
+      const bgOf = (el) => { const layers = []; for (let n = el; n && n.nodeType === 1; n = n.parentElement) { const c = parse(getComputedStyle(n).backgroundColor); if (c && c.a > 0) { layers.push(c); if (c.a >= 1) break; } } let base = { r: 255, g: 255, b: 255, a: 1 }; for (let i = layers.length - 1; i >= 0; i--) base = blend(layers[i], base); return base; };
+      const out = [];
+      document.querySelectorAll('body *').forEach((el) => {
+        if (el.closest('.sr-only') || ['OPTION', 'SCRIPT', 'STYLE'].includes(el.tagName)) return;
+        const rect = el.getBoundingClientRect(); if (!rect.width || !rect.height) return;
+        if (!Array.from(el.childNodes).some((n) => n.nodeType === 3 && n.textContent.trim())) return;
+        const cs = getComputedStyle(el); if (cs.visibility === 'hidden') return;
+        const bg = bgOf(el); let fg = parse(cs.color); if (fg.a < 1) fg = blend(fg, bg);
+        const l1 = lum(fg), l2 = lum(bg); const ratio = (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05);
+        if (ratio < 4.5) out.push(el.tagName + ' ' + ratio.toFixed(2) + ' ' + el.textContent.trim().slice(0, 16));
+      });
+      return out;
+    });
+    check(bad.length === 0, label + '：文字のコントラストが4.5:1以上', bad.slice(0, 6));
+  }
+
   // 1. 施設長のダッシュボード ------------------------------------------
   section('1. 施設長（高木）のダッシュボード');
   await page.goto(FILE_URL);
@@ -104,6 +126,7 @@ function section(name) { console.log('\n■ ' + name); }
   check((await mainText()).includes('あなたのやること'), '施設長にも「あなたのやること」がある');
   await shot('01-dashboard-1280.png', true);
   await checkSizes('ダッシュボード');
+  await checkContrast('ダッシュボード');
 
   await page.locator('.main-nav a[href="#/approvals"]').click();
   await expectTitle('承認待ち（0件）', '施設長あての承認待ちは0件');
@@ -122,10 +145,17 @@ function section(name) { console.log('\n■ ' + name); }
   check(!(await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth)), '390px幅で横にはみ出さない');
   await shot('02-staff-home-390.png', true);
   await checkSizes('職員ホーム');
+  await checkContrast('職員ホーム');
 
   await page.getByRole('button', { name: '居室の温度・湿度の確認を完了にする' }).click();
   check((await toastText()).includes('居室の温度・湿度の確認を完了にしました'), 'チェックリストは1タップで完了');
   await expectTitle('今日のやること（6件）', '残りの件数が減る');
+  await page.getByRole('button', { name: '元に戻す' }).click();
+  await expectTitle('今日のやること（7件）', '押し間違えても「元に戻す」で戻せる');
+  await page.getByRole('button', { name: '居室の温度・湿度の確認を完了にする' }).click();
+  await page.getByRole('button', { name: 'このお知らせを閉じる' }).click();
+  check((await page.locator('.toast').count()) === 0, 'お知らせは自分で閉じられる（時間では消えない）');
+  await expectTitle('今日のやること（6件）', 'もう一度完了にできる');
 
   // 3. 書類の提出（1画面に1つ） ----------------------------------------
   section('3. 研修レポートの提出（写真・ファイル）');
@@ -134,6 +164,7 @@ function section(name) { console.log('\n■ ' + name); }
   await page.getByRole('button', { name: '次へ' }).click();
   await expectTitle('書類の写真を撮ってください', '2画面目：写真を撮る・ファイルを選ぶ');
   await shot('03-submit-step2-390.png');
+  await checkContrast('提出の流れ');
   await page.locator('input[type=file][data-flow]').nth(1).setInputFiles({ name: 'kenshu-report.jpg', mimeType: 'image/jpeg', buffer: Buffer.from([0xff, 0xd8, 0xff, 0xd9]) });
   await expectTitle('この内容で提出しますか', '3画面目：確認');
   check((await mainText()).includes('kenshu-report.jpg'), '選んだファイル名が見える');
@@ -183,6 +214,8 @@ function section(name) { console.log('\n■ ' + name); }
   await page.getByRole('button', { name: '確認する' }).first().click();
   check((await page.locator('#h-panel').innerText()) === '鈴木 一郎さんの提出', '古い順に1件目が開く', await page.locator('#h-panel').innerText());
   await shot('05-approvals-panel-1280.png', true);
+  await checkSizes('承認待ち');
+  await checkContrast('承認待ち');
   await page.getByRole('button', { name: '承認する', exact: true }).click();
   check((await page.locator('#h-panel').innerText()) === '吉田 恵さんの提出', '承認すると一覧に戻らず次の件が開く', await page.locator('#h-panel').innerText());
   await page.getByRole('button', { name: '差し戻す' }).click();
@@ -230,6 +263,7 @@ function section(name) { console.log('\n■ ' + name); }
   check((await page.locator('tr', { hasText: '加藤 大輔' }).innerText()).includes('対象外'), '対象外にできる');
   await shot('06-status-table-1280.png', true);
   await checkSizes('提出状況表');
+  await checkContrast('提出状況表');
 
   // 8. 事務長（田中）：まとめて承認・行政提出 ---------------------------
   section('8. 事務長（田中）のまとめて承認');
@@ -274,6 +308,7 @@ function section(name) { console.log('\n■ ' + name); }
   await expectTitle('業務・依頼を作成', '業務・依頼の作成画面が開く');
   await page.getByRole('button', { name: '作成する' }).click();
   check((await mainText()).includes('入力内容を確認してください（1か所）'), '入力漏れの件数が出る');
+  await checkContrast('入力エラー');
   await page.locator('#f-title').fill('試作：消耗品の発注（架空）');
   await page.locator('input[name=kind][value=request]').check();
   await page.getByRole('button', { name: '作成する' }).click();

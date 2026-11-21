@@ -5,159 +5,339 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>AI施設運営パートナー 試作品</title>
 <style>
+/* ============================================================
+   デザイン v2「引き算のデザイン」
+   - 線と枠を減らし、余白と文字の大きさで整理する
+   - 色は意味のあるところだけ（主色1色＋期限超過・エラーの赤＋要注意の茶）
+   - 文字16px以上・文字のコントラスト4.5:1以上・押せる範囲44px以上は v1 から変えない
+   ============================================================ */
 :root{
-  --text:#1A1A1A; --text-2:#4D4D4D; --muted:#5C5C5C;
-  --primary:#0B5E8A; --primary-dark:#084A6D;
-  --bg:#F5F6F7; --surface:#FFFFFF; --line:#DADADA; --input:#767676;
+  --text:#1B1B1F; --text-2:#5F6068; --muted:#66666E;
+  --accent:#1A5CD0; --accent-press:#144BAE; --accent-tint:#EAF1FD; --accent-tint-2:#DCE8FC;
+  --primary:#1A5CD0;
+  --bg:#F4F5F7; --surface:#FFFFFF; --fill:#ECEDF1; --sep:#E4E5EA; --line:#E4E5EA; --input:#86868F; --icon:#8E8F97;
   --danger:#B42318; --danger-bg:#FDECEA;
-  --warn:#7A4100; --warn-bg:#FFF3D6;
-  --info:#1849A9; --info-bg:#E8F0FE;
-  --focus:#FFD43B;
+  --warn:#8A4B00; --warn-bg:#FFF4DC;
+  --info:#1A5CD0; --info-bg:#EAF1FD;
+  --r-card:16px; --r-ctl:12px;
+  --shadow-1:0 1px 2px rgba(17,24,39,.05),0 2px 6px rgba(17,24,39,.04);
+  --shadow-2:0 20px 48px rgba(17,24,39,.18),0 4px 12px rgba(17,24,39,.08);
+  --ease:cubic-bezier(.2,.8,.2,1);
+  --font:-apple-system,BlinkMacSystemFont,"Segoe UI","Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic UI","Noto Sans JP","Meiryo",system-ui,sans-serif;
 }
 *{box-sizing:border-box}
 html,body{margin:0}
-body{background:var(--bg);color:var(--text);font-family:"Noto Sans JP","Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic UI","Meiryo",sans-serif;font-size:16px;line-height:1.7}
-a{color:var(--primary)}a:hover{color:var(--primary-dark)}
-h1{font-size:24px;line-height:1.4;margin:0}
-h2{font-size:20px;line-height:1.5;margin:0}
-h3{font-size:18px;line-height:1.5;margin:0}
+html{-webkit-text-size-adjust:100%}
+body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:16px;line-height:1.7;letter-spacing:.01em}
+a{color:var(--accent);text-decoration:underline;text-underline-offset:.22em;text-decoration-thickness:1px}
+a:hover{color:var(--accent-press)}
+h1,h2,h3{margin:0;font-feature-settings:"palt";letter-spacing:.03em}
+h1{font-size:30px;line-height:1.3;font-weight:700}
+h2{font-size:20px;line-height:1.45;font-weight:600}
+h3{font-size:18px;line-height:1.5;font-weight:600}
 p{margin:0}
-:focus-visible{outline:2px solid #000;outline-offset:2px;box-shadow:0 0 0 6px var(--focus)}
-h1[tabindex="-1"]:focus,h2[tabindex="-1"]:focus,main[tabindex="-1"]:focus{outline:none;box-shadow:none}
+svg{flex:none}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+h1[tabindex="-1"]:focus,h2[tabindex="-1"]:focus,main[tabindex="-1"]:focus{outline:none}
 .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 .skip{position:absolute;left:-9999px;top:8px}
-.skip:focus{left:16px;background:#fff;padding:8px 12px;z-index:20}
+.skip:focus{left:16px;background:#fff;padding:10px 16px;border-radius:10px;box-shadow:var(--shadow-2);z-index:60}
 .text-2{color:var(--text-2)} .text-muted{color:var(--muted)}
-.due-soon{color:var(--warn);font-weight:700}
+.num{font-variant-numeric:tabular-nums}
+.due-soon{color:var(--warn);font-weight:600;white-space:nowrap}
+.warn-text{color:var(--warn);display:inline-flex;align-items:center;gap:4px}
+.sep-dot{color:var(--text-2);margin:0 2px}
 .row{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px}
-.row-between{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px 16px}
-.stack{display:flex;flex-direction:column;gap:12px}
-.stack-sm{display:flex;flex-direction:column;gap:4px}
+.row-between{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px 16px}
+.stack{display:flex;flex-direction:column;gap:14px}
+.stack-sm{display:flex;flex-direction:column;gap:6px}
 
-/* 試作品の操作バー */
-.proto-bar{background:#1A1A1A;color:#fff;padding:8px 16px;display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center}
-.proto-bar a{color:#fff}
-.proto-bar label{display:inline-flex;align-items:center;gap:8px}
-.proto-bar select{font:inherit;min-height:44px;padding:0 8px;border-radius:6px;border:1px solid #fff;background:#1A1A1A;color:#fff}
-.pbtn{min-height:44px;padding:0 12px;border:1px solid #fff;border-radius:6px;background:transparent;color:#fff;font:inherit;cursor:pointer}
-.proto-label{font-weight:700;border:1px solid #fff;border-radius:4px;padding:0 8px}
+/* 試作品の操作（静かな帯） */
+.proto-bar{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;padding:8px 24px;background:#E7E8EC;color:var(--text);border-bottom:1px solid rgba(17,24,39,.05)}
+.proto-label{display:inline-flex;align-items:center;padding:2px 12px;border-radius:999px;background:var(--warn-bg);color:var(--warn);font-weight:600}
+.proto-note{color:var(--text-2)}
+.proto-spacer{flex:1 1 auto}
+.proto-bar label{display:inline-flex;align-items:center;gap:8px;color:var(--text-2)}
+.proto-bar select{min-height:44px;background-color:#fff;border-color:#C9CAD1}
+.proto-date{font-weight:600}
+.pbtn{min-height:44px;padding:0 14px;border-radius:10px;border:1px solid #C9CAD1;background:#fff;color:var(--text);font:inherit;font-weight:600;cursor:pointer}
+.pbtn:hover{background:#F8F8FA}
+.proto-bar a{color:var(--text-2)}
 
-/* 管理者の画面 */
-.wrap{max-width:1200px;margin:0 auto;padding:0 32px}
-.site-header{background:var(--surface);border-bottom:1px solid var(--line)}
-.header-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px 24px;padding-top:12px;padding-bottom:12px}
-.brand{display:flex;align-items:baseline;gap:12px;flex:1 1 auto}
-.brand-name{font-size:20px;font-weight:700}
-.main-nav{display:flex;flex-wrap:wrap;gap:4px}
-.main-nav a{padding:10px 14px;border-radius:6px;color:var(--text);text-decoration:none;min-height:44px;display:inline-flex;align-items:center}
-.main-nav a[aria-current="page"]{background:var(--info-bg);color:var(--info);font-weight:700}
-.main{padding-top:24px;padding-bottom:48px;display:flex;flex-direction:column;gap:24px}
-.card{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:16px 20px}
-.grid-cards{display:flex;flex-wrap:wrap;gap:16px}
-.grid-cards>*{flex:1 1 240px;min-width:0}
-.cols{display:flex;flex-wrap:wrap;gap:16px}
-.cols>*{flex:1 1 420px;min-width:0}
-.stat-card{display:flex;flex-direction:column;gap:4px;text-decoration:none;color:var(--text)}
-.stat-card:hover{border-color:var(--primary);color:var(--text)}
-.stat-card.alert{border:2px solid var(--danger)}
-.stat-num{font-size:32px;font-weight:700;line-height:1.3}
+/* 管理者の画面：上部 */
+.wrap{max-width:1160px;margin:0 auto;padding:0 40px}
+.site-header{position:sticky;top:0;z-index:20;background:rgba(255,255,255,.86);-webkit-backdrop-filter:saturate(180%) blur(18px);backdrop-filter:saturate(180%) blur(18px);border-bottom:1px solid rgba(17,24,39,.07)}
+.header-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px 24px;min-height:68px;padding-top:8px;padding-bottom:8px}
+.brand{display:inline-flex;align-items:center;gap:10px;color:var(--text);text-decoration:none;min-height:44px}
+.brand:hover{color:var(--text)}
+.brand-mark{width:30px;height:30px;border-radius:9px;background:var(--accent);color:#fff;display:inline-flex;align-items:center;justify-content:center}
+.brand-name{font-size:17px;font-weight:700;letter-spacing:.03em;font-feature-settings:"palt"}
+.main-nav{display:flex;flex-wrap:wrap;gap:2px;margin:0 auto}
+.main-nav a{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 14px;border-radius:10px;color:var(--text-2);text-decoration:none;font-weight:500}
+.main-nav a:hover{background:rgba(17,24,39,.04);color:var(--text)}
+.main-nav a[aria-current="page"]{background:var(--fill);color:var(--text);font-weight:600}
+.badge{display:inline-flex;align-items:center;justify-content:center;min-width:26px;height:26px;padding:0 8px;border-radius:13px;background:var(--accent);color:#fff;font-size:16px;font-weight:600;line-height:1}
+.user-chip{display:inline-flex;align-items:center;gap:10px}
+.avatar{width:38px;height:38px;border-radius:50%;background:var(--fill);color:var(--text);display:inline-flex;align-items:center;justify-content:center;font-weight:600;flex:none}
+.user-name{font-weight:600}
+.user-title{color:var(--text-2);margin-left:6px}
+
+/* 管理者の画面：本文 */
+.main{padding-top:36px;padding-bottom:96px;display:flex;flex-direction:column;gap:28px}
+.page-bar{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px 24px}
+.page-head{display:flex;flex-direction:column;gap:6px;min-width:0}
+.page-head .sub{color:var(--text-2)}
+.page-actions{display:flex;flex-wrap:wrap;gap:10px}
+.meta-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px}
+.back-link{display:inline-flex;align-items:center;gap:2px;min-height:44px;align-self:flex-start;color:var(--accent);text-decoration:none;font-weight:500;margin:-8px 0 -12px -6px;padding:0 6px}
+.back-link:hover{text-decoration:underline}
+.section-label{font-size:16px;font-weight:600;color:var(--text-2);letter-spacing:.04em}
+.card{background:var(--surface);border-radius:var(--r-card);padding:22px 24px;box-shadow:var(--shadow-1)}
+.card-title{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+.card h2{font-size:18px}
+.count{color:var(--text-2);font-weight:500;font-variant-numeric:tabular-nums;letter-spacing:.01em}
+.card-foot{color:var(--text-2);padding-top:12px;border-top:1px solid var(--sep)}
+.empty{display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;color:var(--text-2);padding:36px 24px}
+.empty svg{color:var(--icon)}
+.foot-note{color:var(--text-2)}
+.summary-line{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:6px 10px;color:var(--text-2);padding:4px 0}
+.grid-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(380px,1fr));gap:20px;align-items:start}
+
+/* 数字のカード */
+.stat-card{position:relative;display:flex;flex-direction:column;gap:2px;text-decoration:none;color:var(--text);transition:box-shadow .2s var(--ease),transform .2s var(--ease)}
+.stat-card:hover{color:var(--text);box-shadow:0 8px 24px rgba(17,24,39,.09);transform:translateY(-1px)}
+.stat-label{display:inline-flex;align-items:center;gap:6px;font-weight:600;color:var(--text-2)}
+.stat-value{display:flex;align-items:baseline;gap:4px;margin-top:4px}
+.stat-num{font-size:44px;font-weight:600;line-height:1.15;letter-spacing:-.01em;font-variant-numeric:tabular-nums}
+.stat-unit{font-size:18px;font-weight:600;color:var(--text-2)}
+.stat-note{color:var(--text-2)}
+.stat-card.alert .stat-label,.stat-card.alert .stat-num{color:var(--danger)}
+.stat-card>svg{position:absolute;top:22px;right:18px;color:var(--icon)}
+
+/* 一覧（行全体を押せる） */
 .list{list-style:none;margin:0;padding:0}
-.list>li{padding:10px 0;border-bottom:1px solid var(--line)}
-.list>li:last-child{border-bottom:none}
-.list.card{padding:0 20px}
-.split{display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start}
-.split>.main-col{flex:999 1 560px;min-width:0;display:flex;flex-direction:column;gap:16px}
-.split>.side-col{flex:1 1 340px;min-width:0}
-.table-wrap{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:8px}
-table{width:100%;border-collapse:collapse;min-width:640px}
-th,td{padding:10px 12px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}
-tbody tr:last-child td{border-bottom:none}
-tr.is-current td{background:var(--info-bg)}
-.list>li.is-current{background:var(--info-bg);margin:0 -20px;padding-left:20px;padding-right:20px}
+.list>li{border-bottom:1px solid var(--sep)}
+.list>li:last-child{border-bottom:0}
+.list>li:not(.has-link){padding:14px 0}
+.list.card{padding:4px 24px;overflow:hidden}
+.row-link{display:flex;align-items:center;gap:14px;width:100%;min-height:60px;padding:12px 0;color:var(--text);text-decoration:none;background:none;border:0;font:inherit;text-align:left;cursor:pointer}
+.row-link:hover{color:var(--text)}
+.row-link:hover .row-title{color:var(--accent)}
+.row-link>svg{color:var(--icon)}
+.row-main{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:2px}
+.row-title{font-weight:600;transition:color .15s var(--ease)}
+.row-sub{color:var(--text-2);display:flex;flex-wrap:wrap;align-items:center;gap:2px 6px}
+.row-end{display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-end;gap:8px 10px;flex:none;max-width:50%}
+.check-item{display:flex;gap:10px;align-items:flex-start}
+.check-item svg{color:var(--accent);margin-top:4px}
+.list>li.is-current{background:var(--accent-tint);margin:0 -24px;padding-left:24px;padding-right:24px}
+.appr-row{display:flex;align-items:center;gap:14px}
+.cb-space{width:24px;flex:none}
+.unread-dot{width:10px;height:10px;border-radius:50%;background:var(--accent);flex:none}
+.unread-space{width:10px;flex:none}
+.more-link{display:inline-flex;align-items:center;gap:2px;min-height:44px;align-self:flex-start;text-decoration:none;font-weight:500}
+.more-link:hover{text-decoration:underline}
 
-/* 部品 */
-.btn{min-height:48px;padding:0 20px;border-radius:6px;font:inherit;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid var(--primary);background:var(--surface);color:var(--primary);text-decoration:none}
-.btn:hover{color:var(--primary-dark);border-color:var(--primary-dark)}
-.btn-primary{background:var(--primary);color:#fff}
-.btn-primary:hover{background:var(--primary-dark);color:#fff}
-.btn-danger{background:var(--danger);border-color:var(--danger);color:#fff}
-.btn-danger:hover{background:#8f1b13;color:#fff}
-.btn-text{border:none;background:none;color:var(--primary);text-decoration:underline;padding:0 8px;min-height:44px;display:inline-flex;align-items:center;font:inherit;font-weight:400;cursor:pointer}
-.btn-lg{min-height:56px;width:100%}
-.btn-sm{min-height:44px;padding:0 14px}
-.tag{display:inline-flex;align-items:center;gap:4px;padding:2px 10px;border-radius:999px;line-height:1.5;white-space:nowrap}
-.tag-info{background:var(--info-bg);color:var(--info)}
+/* 2列（左に一覧、右に内容） */
+.split{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:24px;align-items:start}
+.split>.main-col{display:flex;flex-direction:column;gap:20px;min-width:0}
+.side-col{position:sticky;top:92px;display:flex;flex-direction:column;gap:16px}
+
+/* 表 */
+.table-wrap{background:var(--surface);border-radius:var(--r-card);box-shadow:var(--shadow-1);overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:640px}
+th{padding:14px 16px;text-align:left;font-weight:600;color:var(--text-2);border-bottom:1px solid var(--sep);white-space:nowrap}
+td{padding:14px 16px;border-bottom:1px solid var(--sep);vertical-align:middle}
+tbody tr:last-child td{border-bottom:0}
+tbody tr[data-href]{cursor:pointer}
+tbody tr:hover td{background:#FAFAFC}
+tr.is-current td,tr.is-current:hover td{background:var(--accent-tint)}
+td.num,td .row-title,.ops .btn-text{white-space:nowrap}
+th.col-check,td.col-check{width:1%;padding-right:0}
+.title-link{font-weight:600;text-decoration:none}
+.title-link:hover{text-decoration:underline}
+.prog-cell{display:flex;flex-direction:column;gap:6px;min-width:140px}
+.progress{display:block;height:6px;border-radius:3px;background:var(--fill);overflow:hidden}
+.progress>span{display:block;height:100%;border-radius:3px;background:var(--accent)}
+.progress-lg{height:10px;border-radius:5px}
+.summary{display:flex;flex-direction:column;gap:14px}
+.summary-row{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:6px 16px}
+.summary-big{font-size:30px;font-weight:600;letter-spacing:-.01em}
+
+/* ボタン */
+.btn{min-height:48px;padding:0 22px;border-radius:var(--r-ctl);border:0;font:inherit;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;background:var(--accent-tint);color:var(--accent);text-decoration:none;transition:background-color .15s var(--ease),transform .1s var(--ease)}
+.btn:hover{background:var(--accent-tint-2);color:var(--accent-press)}
+.btn:active{transform:scale(.98)}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-primary:hover{background:var(--accent-press);color:#fff}
+.btn-danger{background:var(--danger);color:#fff}
+.btn-danger:hover{background:#8F1B13;color:#fff}
+.btn-text{border:0;background:none;color:var(--accent);padding:0 8px;min-height:44px;display:inline-flex;align-items:center;gap:4px;font:inherit;font-weight:500;cursor:pointer;text-decoration:none;border-radius:8px}
+.btn-text:hover{text-decoration:underline;color:var(--accent-press)}
+.btn-lg{min-height:56px;width:100%;font-size:17px;border-radius:14px}
+.btn-sm{min-height:44px;padding:0 16px;border-radius:10px}
+.icon-btn{width:44px;height:44px;border:0;border-radius:50%;background:none;color:var(--text-2);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;flex:none}
+.icon-btn:hover{background:var(--fill);color:var(--text)}
+
+/* 状態の表示 */
+.tag{display:inline-flex;align-items:center;gap:4px;padding:2px 10px;border-radius:8px;line-height:1.5;white-space:nowrap;font-weight:600}
+.tag-info{background:none;padding:0;color:var(--accent);gap:8px}
+.tag-info::before{content:"";width:8px;height:8px;border-radius:50%;background:currentColor;flex:none}
 .tag-warn{background:var(--warn-bg);color:var(--warn)}
 .tag-danger{background:var(--danger-bg);color:var(--danger)}
-.tag-muted{background:var(--bg);color:var(--muted);border:1px solid var(--input)}
-.tag-outline{border:1px solid var(--input);color:var(--text-2);border-radius:4px;padding:0 8px;white-space:nowrap}
-.tag-plain{display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
-.chips{display:flex;flex-wrap:wrap;gap:8px}
-.chip{min-height:44px;padding:0 14px;border:1px solid var(--input);border-radius:999px;background:var(--surface);color:var(--text);font:inherit;cursor:pointer}
-.chip[aria-pressed="true"]{background:var(--primary);border-color:var(--primary);color:#fff}
-.notice{padding:12px 16px;border-radius:6px;display:flex;gap:8px;align-items:flex-start}
+.tag-muted{background:var(--fill);color:var(--muted)}
+.tag-outline{display:inline-flex;align-items:center;padding:0 8px;border-radius:6px;border:1px solid #C9CAD1;color:var(--text-2);white-space:nowrap}
+.tag-plain{display:inline-flex;align-items:center;gap:6px;white-space:nowrap;color:var(--text-2)}
+.st-plain{color:var(--text-2);white-space:nowrap}
+
+/* 絞り込み（ひとつながりの切り替え） */
+.chips{display:flex;flex-wrap:wrap;gap:4px;padding:4px;background:var(--fill);border-radius:14px;width:fit-content;max-width:100%}
+.chip{min-height:44px;padding:0 14px;border:0;border-radius:10px;background:transparent;color:var(--text-2);font:inherit;font-weight:500;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:background-color .15s var(--ease)}
+.chip:hover{color:var(--text)}
+.chip[aria-pressed="true"]{background:#fff;color:var(--text);font-weight:600;box-shadow:0 1px 3px rgba(17,24,39,.12)}
+.chip-n{font-variant-numeric:tabular-nums}
+
+/* お知らせ・注意 */
+.notice{padding:14px 16px;border-radius:12px;display:flex;gap:10px;align-items:flex-start}
+.notice svg{margin-top:3px}
 .notice-warn{background:var(--warn-bg);color:var(--warn)}
-.notice-info{background:var(--info-bg);color:var(--info)}
+.notice-info{background:var(--accent-tint);color:var(--accent-press)}
 .notice-plain{background:var(--bg)}
-.toast{padding:12px 16px;border-radius:6px;background:var(--info-bg);color:var(--info);font-weight:700}
-.toast-error{background:var(--danger-bg);color:var(--danger)}
-.field{display:flex;flex-direction:column;gap:4px}
-.lbl{font-weight:700}
+.toast{display:flex;align-items:center;gap:10px;padding:8px 8px 8px 16px;border-radius:14px;background:#fff;box-shadow:var(--shadow-1);color:var(--text);font-weight:600}
+.toast-ico{display:inline-flex;color:var(--accent)}
+.toast-error .toast-ico{color:var(--danger)}
+.toast-text{flex:1 1 auto;padding:6px 0}
+.quote{padding:12px 14px;background:var(--warn-bg);border-radius:12px;color:var(--warn)}
+.quote-by{display:block}
+
+/* 入力 */
+.field{display:flex;flex-direction:column;gap:6px}
+.lbl{font-weight:600}
 .req{font-weight:400;color:var(--text-2)}
 .hint{color:var(--text-2)}
-.err{color:var(--danger)}
-input[type=text],input[type=date],select,textarea{font:inherit;min-height:48px;padding:8px 12px;border:1px solid var(--input);border-radius:6px;background:var(--surface);color:var(--text);max-width:100%}
-textarea{min-height:96px;resize:vertical;width:100%}
-input[type=file]{font:inherit;min-height:48px;max-width:100%}
-input[type=file]::file-selector-button{font:inherit;font-weight:700;min-height:44px;padding:0 16px;margin-right:12px;border:1px solid var(--primary);border-radius:6px;background:var(--surface);color:var(--primary);cursor:pointer}
+.err{color:var(--danger);font-weight:500;display:inline-flex;align-items:flex-start;gap:6px}
+.err svg{margin-top:4px}
+input[type=text],input[type=date],select,textarea{font:inherit;color:var(--text);background-color:#fff;min-height:50px;padding:10px 14px;border:1px solid var(--input);border-radius:12px;max-width:100%;transition:border-color .15s var(--ease)}
+input[type=text]:hover,input[type=date]:hover,select:hover,textarea:hover{border-color:#6E6E76}
+select{-webkit-appearance:none;appearance:none;padding-right:42px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%235F6068' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 16px center}
+textarea{min-height:104px;resize:vertical;width:100%}
 input[type=text]{width:100%}
-.input-error{border:2px solid var(--danger) !important}
-fieldset{border:none;margin:0;padding:0}
-legend{font-weight:700;padding:0;margin-bottom:4px}
-.radio{display:flex;align-items:flex-start;gap:10px;min-height:44px;padding:6px 0}
-.radio input{width:22px;height:22px;margin-top:3px;flex:none}
-input[type=checkbox]{width:24px;height:24px}
+input[type=file]{font:inherit;min-height:48px;max-width:100%;color:var(--text-2)}
+input[type=file]::file-selector-button{font:inherit;font-weight:600;min-height:44px;padding:0 16px;margin-right:12px;border:0;border-radius:10px;background:var(--accent-tint);color:var(--accent);cursor:pointer}
+.input-error{border-color:var(--danger) !important;box-shadow:0 0 0 1px var(--danger)}
+fieldset{border:0;margin:0;padding:0;display:flex;flex-direction:column;gap:8px;min-width:0}
+legend{font-weight:600;padding:0;margin-bottom:8px}
+input[type=radio],input[type=checkbox]{accent-color:var(--accent)}
+.radio{display:flex;align-items:flex-start;gap:12px;min-height:52px;padding:12px 16px;border:1px solid var(--sep);border-radius:12px;background:#fff;cursor:pointer;transition:border-color .15s var(--ease),background-color .15s var(--ease)}
+.radio:hover{border-color:#C9CAD1}
+.radio:has(input:checked){border-color:var(--accent);background:var(--accent-tint)}
+.radio input{width:22px;height:22px;margin:2px 0 0;flex:none}
+input[type=checkbox]{width:22px;height:22px;margin:0}
+.form-actions{display:flex;flex-wrap:wrap;justify-content:flex-end;align-items:center;gap:12px;padding-top:4px}
 .file-btn{position:relative}
-.file-btn:focus-within{outline:2px solid #000;outline-offset:2px;box-shadow:0 0 0 6px var(--focus)}
+.file-btn:focus-within{outline:3px solid var(--accent);outline-offset:2px}
 .file-btn input{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden}
-.dl{display:grid;grid-template-columns:max-content 1fr;gap:8px 16px;margin:0}
+.dl{display:grid;grid-template-columns:max-content 1fr;gap:10px 20px;margin:0}
 .dl dt{color:var(--text-2)}
 .dl dd{margin:0}
 .history{list-style:none;margin:0;padding:0}
-.history li{padding:6px 0;border-bottom:1px solid var(--line)}
-.history li:last-child{border-bottom:none}
-.card ul:not(.list):not(.history){margin:0;padding-left:1.5em}
+.history li{padding:10px 0;border-bottom:1px solid var(--sep)}
+.history li:last-child{border-bottom:0}
+.card ul:not(.list):not(.history):not(.checklist){margin:0;padding-left:1.4em;display:flex;flex-direction:column;gap:6px}
 
 /* 職員の画面（スマホ） */
-.staff-shell{max-width:480px;margin:0 auto;min-height:calc(100vh - 60px);display:flex;flex-direction:column;font-size:17px;background:var(--bg)}
-.staff-header{background:var(--surface);border-bottom:1px solid var(--line);padding:12px 16px}
-.staff-main{flex:1;padding:16px;display:flex;flex-direction:column;gap:20px}
-.tabbar{position:sticky;bottom:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));background:var(--surface);border-top:1px solid var(--line)}
-.tabbar a{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:64px;color:var(--text-2);text-decoration:none;font-size:16px}
-.tabbar a[aria-current="page"]{color:var(--primary);font-weight:700}
-.scard{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:16px;display:flex;flex-direction:column;gap:8px}
-.section-title{display:inline-flex;align-items:center;gap:6px}
-.quote{padding:8px 12px;background:var(--warn-bg);border-radius:6px;color:var(--warn)}
-.week{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:8px}
-.day{display:flex;flex-direction:column;align-items:center;min-height:64px;padding:4px 0;border-radius:6px}
-.day.today{background:var(--primary);color:#fff;font-weight:700}
-.dot{width:6px;height:6px;border-radius:3px;background:var(--text-2)}
-.day.today .dot{background:#fff}
-.checklist{list-style:none;margin:0;padding:0;background:var(--surface);border:1px solid var(--line);border-radius:8px}
-.checklist li{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 16px;border-bottom:1px solid var(--line);min-height:60px}
-.checklist li:last-child{border-bottom:none}
-.flow{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:16px;min-height:560px;width:100%;max-width:480px;margin:0 auto}
-.flow .bottom{margin-top:auto;display:flex;flex-direction:column;gap:12px}
-.thumb{height:180px;border:1px solid var(--line);border-radius:8px;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:var(--text-2);padding:8px;text-align:center;word-break:break-all}
-.done-mark{width:72px;height:72px;border-radius:36px;border:2px solid var(--text);display:inline-flex;align-items:center;justify-content:center}
+.staff-shell{max-width:560px;margin:0 auto;min-height:calc(100vh - 60px);display:flex;flex-direction:column;font-size:17px}
+.staff-header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 20px 0}
+.staff-date{color:var(--text-2);font-weight:600}
+.staff-main{flex:1;padding:12px 20px 40px;display:flex;flex-direction:column;gap:28px}
+.staff-shell h1{font-size:28px}
+.eyebrow{color:var(--text-2);font-weight:600}
+.tabbar{position:sticky;bottom:0;z-index:10;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));background:rgba(255,255,255,.9);-webkit-backdrop-filter:saturate(180%) blur(18px);backdrop-filter:saturate(180%) blur(18px);border-top:1px solid rgba(17,24,39,.08);padding-bottom:env(safe-area-inset-bottom)}
+.tabbar a{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-height:64px;color:var(--text-2);text-decoration:none;font-size:16px;font-weight:500}
+.tabbar a[aria-current="page"]{color:var(--accent);font-weight:600}
+.tab-ico{position:relative;display:inline-flex}
+.tab-badge{position:absolute;top:-8px;left:16px;min-width:24px;height:24px;padding:0 7px;border-radius:12px;background:var(--accent);color:#fff;font-size:16px;font-weight:600;line-height:24px;text-align:center}
+.section-title{display:flex;align-items:baseline;gap:8px;font-size:16px;font-weight:600;color:var(--text-2);letter-spacing:.04em}
+.section-title svg{align-self:center}
+.section-title.warn{color:var(--warn)}
+.section-title.danger{color:var(--danger)}
+.scard{background:var(--surface);border-radius:20px;padding:20px;display:flex;flex-direction:column;gap:10px;box-shadow:var(--shadow-1)}
+.scard-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.kind{color:var(--text-2);font-weight:600}
+.meta{display:flex;flex-wrap:wrap;gap:2px 14px;color:var(--text-2)}
+.scard .btn-lg{margin-top:6px}
+.checklist{list-style:none;margin:0;padding:2px 20px;background:var(--surface);border-radius:20px;box-shadow:var(--shadow-1)}
+.checklist li{display:flex;align-items:center;gap:10px;min-height:62px;border-bottom:1px solid var(--sep)}
+.checklist li:last-child{border-bottom:0}
+.check-btn{width:44px;height:44px;margin-left:-9px;border:0;background:none;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;flex:none}
+.ring{width:26px;height:26px;border-radius:50%;border:2px solid var(--input);transition:border-color .15s var(--ease),background-color .15s var(--ease)}
+.check-btn:hover .ring{border-color:var(--accent);background:var(--accent-tint)}
+.check-mark{width:26px;height:26px;margin:0 9px 0 0;border-radius:50%;background:var(--accent);color:#fff;display:inline-flex;align-items:center;justify-content:center;flex:none}
+.cl-label{flex:1 1 auto}
+.cl-done .cl-label{color:var(--text-2)}
+.cl-time{color:var(--text-2)}
+.week{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:2px;background:var(--surface);border-radius:20px;padding:12px 6px;box-shadow:var(--shadow-1)}
+.day{display:flex;flex-direction:column;align-items:center;gap:4px}
+.dw{color:var(--text-2)}
+.dn{width:40px;height:40px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-weight:600}
+.day.today .dn{background:var(--accent);color:#fff}
+.dot-slot{height:6px;display:flex;align-items:center}
+.dot{width:6px;height:6px;border-radius:3px;background:var(--accent)}
+.flow{background:var(--surface);border-radius:24px;padding:24px;display:flex;flex-direction:column;gap:20px;min-height:min(560px,calc(100vh - 330px));width:100%;max-width:560px;margin:0 auto;box-shadow:var(--shadow-1)}
+.flow .bottom{margin-top:auto;display:flex;flex-direction:column;gap:12px;padding-top:12px}
+.flow .back-link{margin:-10px 0 -6px -8px}
+.thumb{height:200px;border-radius:16px;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--text-2);padding:12px;text-align:center;word-break:break-all}
+.done-mark{width:92px;height:92px;border-radius:50%;background:var(--accent-tint);color:var(--accent);display:inline-flex;align-items:center;justify-content:center}
+.done-wrap{display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center;margin-top:40px}
 
-/* 確認ダイアログ */
-.backdrop{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;padding:16px;z-index:30}
-.dialog{background:var(--surface);border-radius:8px;max-width:520px;width:100%;padding:24px;display:flex;flex-direction:column;gap:16px}
-.dialog-actions{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px}
+/* 確認の画面 */
+.backdrop{position:fixed;inset:0;background:rgba(20,20,24,.36);display:flex;align-items:center;justify-content:center;padding:16px;z-index:50}
+.dialog{background:var(--surface);border-radius:22px;max-width:460px;width:100%;padding:28px;display:flex;flex-direction:column;gap:14px;box-shadow:var(--shadow-2)}
+.dialog-actions{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:10px;padding-top:8px}
 
-@media (max-width:640px){.wrap{padding:0 16px}.dl{grid-template-columns:1fr}}
-@media print{.proto-bar,.site-header,.tabbar,.no-print{display:none !important}body{background:#fff}.card{border:none}}
+/* 動き（「動きを減らす」設定では止める） */
+@media (prefers-reduced-motion:no-preference){
+  .enter{animation:enter .28s var(--ease) both}
+  .toast-new{animation:toast-in .32s var(--ease) both}
+  .backdrop{animation:fade .2s ease both}
+  .dialog{animation:dlg-in .24s var(--ease) both}
+  .draw-check polyline{stroke-dasharray:32;stroke-dashoffset:32;animation:draw .5s .15s var(--ease) forwards}
+}
+@keyframes enter{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes toast-in{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+@keyframes dlg-in{from{opacity:0;transform:scale(.97)}to{opacity:1;transform:none}}
+@keyframes draw{to{stroke-dashoffset:0}}
+
+@media (max-width:960px){.split{grid-template-columns:minmax(0,1fr)}.side-col{position:static}.main-nav{margin:0}}
+@media (max-width:640px){
+  .wrap{padding:0 20px}
+  .main{padding-top:24px;gap:22px}
+  h1{font-size:26px}
+  .proto-bar{padding:8px 16px}
+  .proto-spacer{display:none}
+  .proto-bar{gap:6px 10px}
+  .proto-about{order:1;margin-left:auto}
+  .proto-user{order:2;flex:1 1 100%}
+  .proto-user select{flex:1 1 auto;min-width:0}
+  .proto-date{order:3}
+  .pbtn{order:4}
+  .dl{grid-template-columns:1fr;gap:2px 0}
+  .dl dd{margin-bottom:8px}
+  .cols{grid-template-columns:minmax(0,1fr)}
+  .list.card{padding:4px 20px}
+  .list>li.is-current{margin:0 -20px;padding-left:20px;padding-right:20px}
+}
+@media print{.proto-bar,.site-header,.tabbar,.no-print{display:none !important}body{background:#fff}.card,.table-wrap{box-shadow:none}}
+.next-btn{align-self:flex-start;text-align:left;padding-left:0}
+button.back-link{border:0;background:none;font:inherit;cursor:pointer}
+.sub-row{display:flex;flex-wrap:wrap;align-items:center;gap:10px 12px}
+.sub-row .row-main{flex:1 1 200px}
+.sub-row .btn{white-space:nowrap;margin-left:auto}
+.sub-row .row-sub{gap:6px 10px}
+.ops{display:flex;flex-direction:column;align-items:flex-start}
+.ops .btn-text{padding:0}
 </style>
 </head>
 <body>
@@ -170,7 +350,7 @@ input[type=checkbox]{width:24px;height:24px}
 'use strict';
 (function(){
 /* ============================================================
-   AI施設運営パートナー 試作品 v0
+   AI施設運営パートナー 試作品 v0（デザイン v2：引き算のデザイン）
    - このファイルだけで動きます（サーバー・インターネット不要）
    - データはこの端末のブラウザの中（localStorage）にだけ保存します
    - すべて架空のデータです。実在の人の情報は入力しないでください
@@ -433,7 +613,7 @@ function allApprovalsCount(u){return myApprovals(u).count+otherApprovals(u).leng
 function taskStatusTag(t){
   var s=t.status;
   if(s==='completed')return '<span class="tag-plain">'+I.check+'完了</span>';
-  if(s==='not_started')return '<span>未着手</span>';
+  if(s==='not_started')return '<span class="st-plain">未着手</span>';
   if(s==='returned')return '<span class="tag tag-warn">'+I.excl+'差し戻し</span>';
   if(s==='on_hold')return '<span class="tag tag-muted">保留</span>';
   return '<span class="tag tag-info">'+esc(STATUS_LABEL[s])+'</span>';
@@ -460,12 +640,38 @@ function assigneeLabel(t){
   if(s&&s.status!=='active')extra=' <span class="tag tag-muted">'+(s.status==='on_leave'?'休職中':'退職')+'</span>';
   return esc(staffName(t.assignee.id))+extra;
 }
-function toastHtml(){if(!ui.toast)return '';return '<div class="toast'+(ui.toast.kind==='error'?' toast-error':'')+'" role="status">'+esc(ui.toast.text)+'</div>';}
-function toast(text,kind){ui.toast={text:text,kind:kind||'ok',path:null};}
+function toastHtml(){
+  if(!ui.toast)return '';
+  var t=ui.toast;
+  return '<div class="toast'+(t.kind==='error'?' toast-error':'')+(t.fresh?' toast-new':'')+'"><span class="toast-ico">'+(t.kind==='error'?I.alert:I.checkCircle)+'</span><span class="toast-text">'+esc(t.text)+'</span>'+
+    (t.undo?'<button type="button" class="btn-text" data-action="undo">元に戻す</button>':'')+
+    '<button type="button" class="icon-btn" data-action="dismiss-toast" aria-label="このお知らせを閉じる">'+I.close+'</button></div>';
+}
+function toast(text,kind,undo){ui.toast={text:text,kind:kind||'ok',path:null,fresh:true,undo:undo||null};}
 function go(path){ui.panel=null;ui.formErr=null;ui.form=null;if(ui.toast)ui.toast.path=path;if(location.hash==='#'+path){render();}else{location.hash=path;}}
 function pageTitle(text){return '<h1 id="page-title" tabindex="-1">'+esc(text)+'</h1>';}
-function fieldErr(name){if(ui.formErr&&ui.formErr[name])return '<span class="err" id="err-'+name+'">＊'+esc(ui.formErr[name])+'</span>';return '';}
+function fieldErr(name){if(ui.formErr&&ui.formErr[name])return '<span class="err" id="err-'+name+'">'+I.alertSm+'<span>'+esc(ui.formErr[name])+'</span></span>';return '';}
 function formVal(name,def){if(ui.form&&ui.form[name]!=null)return ui.form[name];return def==null?'':def;}
+
+/* ---------------- デザイン v2 の部品 ---------------- */
+I.chev='<svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>';
+I.alertSm='<svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.5"/><line x1="12" y1="7.5" x2="12" y2="12.5"/><line x1="12" y1="16.3" x2="12.01" y2="16.3"/></svg>';
+I.warnSm='<svg aria-hidden="true" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>';
+I.checkCircle='<svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="7.5 12.5 10.5 15.5 16.5 9"/></svg>';
+I.close='<svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg>';
+I.info='<svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.5"/><line x1="12" y1="11" x2="12" y2="16.5"/><line x1="12" y1="7.5" x2="12.01" y2="7.5"/></svg>';
+I.plus='<svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>';
+I.mark='<svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="5 12.5 10 17 19 7.5"/></svg>';
+I.checkSm='<svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="5 12.5 10 17 19 7.5"/></svg>';
+I.drawCheck='<svg class="draw-check" aria-hidden="true" width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="5 12.5 10 17 19 7.5"/></svg>';
+function pageHead(title,sub,actions){return '<div class="page-bar"><div class="page-head">'+pageTitle(title)+(sub?'<p class="sub">'+sub+'</p>':'')+'</div>'+(actions?'<div class="page-actions no-print">'+actions+'</div>':'')+'</div>';}
+function backLink(href,label){return '<a class="back-link no-print" href="'+href+'">'+I.back+esc(label||'戻る')+'</a>';}
+function rowLink(href,title,sub,end,lead){return '<li class="has-link"><a class="row-link" href="'+href+'">'+(lead||'')+'<span class="row-main"><span class="row-title">'+title+'</span>'+(sub?'<span class="row-sub">'+sub+'</span>':'')+'</span>'+(end?'<span class="row-end">'+end+'</span>':'')+I.chev+'</a></li>';}
+function statCard(href,filter,alert,label,num,unit,note){return '<a href="'+href+'"'+(filter?' data-action="goto-filter" data-value="'+filter+'"':'')+' class="card stat-card'+(alert?' alert':'')+'"><span class="stat-label">'+label+'</span><span class="stat-value"><span class="stat-num">'+num+'</span><span class="stat-unit">'+unit+'</span></span><span class="stat-note">'+note+'</span>'+I.chev+'</a>';}
+function segmented(defs,items,cur,scope,label){return '<div class="chips" role="group" aria-label="'+esc(label||'状態で絞り込む')+'">'+defs.map(function(d){return '<button type="button" class="chip" data-action="filter" data-scope="'+scope+'" data-value="'+d[0]+'" aria-pressed="'+(d[0]===cur[0])+'">'+esc(d[1])+' <span class="chip-n">'+items.filter(d[2]).length+'</span></button>';}).join('')+'</div>';}
+function progressBar(done,total,big){var pct=total?Math.round(done*100/total):0;return '<span class="progress'+(big?' progress-lg':'')+'" aria-hidden="true"><span style="width:'+pct+'%"></span></span>';}
+function greeting(){var h=new Date().getHours();return (h>=5&&h<11)?'おはようございます':(h>=11&&h<17)?'こんにちは':'おつかれさまです';}
+function initial(name){return esc(String(name||'').charAt(0));}
 
 /* ---------------- 画面：管理者ダッシュボード ---------------- */
 function autoChecks(u,open,reqs){
@@ -486,10 +692,10 @@ function myTodoHtml(u){
   var subs=data.targets.filter(function(x){var r=reqOf(x);return x.staffId===u.id&&r.status==='open'&&(x.status==='not_submitted'||x.status==='returned');});
   var appr=myApprovals(u).count;
   var items=[];
-  if(appr)items.push('<li class="row"><a href="#/approvals" style="flex:1 1 200px;font-weight:500">あなたの承認待ち</a><span>'+appr+'件</span></li>');
-  subs.forEach(function(x){var r=reqOf(x);items.push('<li class="row"><a href="#/submit/'+x.id+'" style="flex:1 1 200px;font-weight:500">'+esc(r.title)+'（提出）</a>'+(x.status==='returned'?'<span class="tag tag-warn">'+I.excl+'差し戻し</span>':'')+dueBadge(r.dueOn,true)+'</li>');});
-  tasks.forEach(function(t){items.push('<li class="row"><a href="#/tasks/'+t.id+'" style="flex:1 1 200px;font-weight:500">'+esc(t.title)+'</a>'+(t.status==='returned'?'<span class="tag tag-warn">'+I.excl+'差し戻し</span>':'')+dueBadge(t.dueOn,true)+'</li>');});
-  return '<section aria-labelledby="h-mine" class="card stack"><h2 id="h-mine" style="font-size:18px">あなたのやること（3日以内・'+items.length+'件）</h2>'+(items.length?'<ul class="list">'+items.join('')+'</ul>':'<p class="text-2">3日以内にあなたがやることはありません</p>')+'</section>';
+  if(appr)items.push(rowLink('#/approvals','あなたの承認待ち','その場で確認できます','<span class="badge">'+appr+'<span class="sr-only">件</span></span>'));
+  subs.forEach(function(x){var r=reqOf(x);items.push(rowLink('#/submit/'+x.id,esc(r.title),'提出',(x.status==='returned'?'<span class="tag tag-warn">'+I.excl+'差し戻し</span>':'')+dueBadge(r.dueOn,true)));});
+  tasks.forEach(function(t){items.push(rowLink('#/tasks/'+t.id,esc(t.title),esc(t.category),(t.status==='returned'?'<span class="tag tag-warn">'+I.excl+'差し戻し</span>':'')+dueBadge(t.dueOn,true)));});
+  return '<section aria-labelledby="h-mine" class="card stack"><div class="card-title"><h2 id="h-mine">あなたのやること</h2><span class="count">3日以内・'+items.length+'件</span></div>'+(items.length?'<ul class="list">'+items.join('')+'</ul>':'<p class="text-2">3日以内にあなたがやることはありません</p>')+'</section>';
 }
 function viewDashboard(u){
   var T=today();
@@ -514,37 +720,37 @@ function viewDashboard(u){
   var weekStart=addDays(T,-((parseDate(T).getDay()+6)%7));var weekEnd=addDays(weekStart,6);
   var weekOpen=open.filter(function(t){return !t.isChecklist&&t.dueOn>=weekStart&&t.dueOn<=weekEnd;}).length;
   var monthOpen=open.filter(function(t){return !t.isChecklist&&t.dueOn.slice(0,7)===ym;}).length;
-
-  function row(t){return '<li class="row"><a href="#/tasks/'+t.id+'" style="flex:1 1 200px;font-weight:500">'+esc(t.title)+'</a><span class="text-2">'+assigneeLabel(t)+'</span>'+taskStatusTag(t)+'</li>';}
+  function row(t){return rowLink('#/tasks/'+t.id,esc(t.title),assigneeLabel(t),taskStatusTag(t));}
   function soonRow(t){
-    var gov=t.category==='行政提出'?'<span class="tag-outline">行政提出</span>':'';
-    var sub='';
-    if(t.category==='行政提出'){sub='<div class="row text-2">'+(t.basisType==='unverified'?'<span class="tag-plain" style="color:var(--warn)">'+I.warn+'根拠：未確認</span>':'<span>根拠：'+esc(BASIS_LABEL[t.basisType])+'</span>')+'<span>控え：'+(t.gov&&t.gov.copyFile?'登録済み':'未登録')+'</span></div>';}
-    return '<li class="stack-sm"><div class="row">'+gov+'<a href="#/tasks/'+t.id+'" style="flex:1 1 200px;font-weight:500">'+esc(t.title)+'</a>'+dueBadge(t.dueOn,true)+'</div>'+sub+'</li>';
+    var sub=esc(t.category);
+    if(t.category==='行政提出')sub='<span class="tag-outline">行政提出</span>'+(t.basisType==='unverified'?'<span class="warn-text">'+I.warnSm+'根拠：未確認</span>':'<span>根拠：'+esc(BASIS_LABEL[t.basisType])+'</span>')+'<span>控え：'+(t.gov&&t.gov.copyFile?'登録済み':'未登録')+'</span>';
+    return rowLink('#/tasks/'+t.id,esc(t.title),sub,dueBadge(t.dueOn,true));
   }
-  var scope=u.role==='DEPARTMENT_MANAGER'?'<p class="text-2">'+esc(deptName(u.deptId))+'に関係する業務を表示しています</p>':'';
-  return pageTitle('施設の状況')+scope+
-  '<section aria-labelledby="h-urgent" class="stack"><h2 id="h-urgent">要対応</h2><div class="grid-cards">'+
-    '<a href="#/tasks" data-action="goto-filter" data-value="overdue" class="card stat-card'+(overdue.length?' alert':'')+'">'+
-      '<span class="tag-plain" style="font-weight:700;'+(overdue.length?'color:var(--danger)':'')+'">'+(overdue.length?I.alert:'')+'期限超過</span>'+
-      '<span><span class="stat-num">'+overdue.length+'</span> 件</span><span class="text-2">'+(hold?'うち保留中 '+hold+'件':'保留中はありません')+'</span></a>'+
-    '<a href="#/approvals" class="card stat-card"><span style="font-weight:700">承認待ち</span><span><span class="stat-num">'+pendAll+'</span> 件</span><span class="text-2">あなた宛て '+mine+'件</span></a>'+
-    '<a href="#/requests" class="card stat-card"><span style="font-weight:700">未提出</span><span><span class="stat-num">'+unsub+'</span> 名</span><span class="text-2">'+unsubReq+'件の提出依頼（延べ人数）</span></a>'+
-    '<a href="#/tasks" data-action="goto-filter" data-value="unassigned" class="card stat-card"><span style="font-weight:700">担当者未設定</span><span><span class="stat-num">'+unassigned.length+'</span> 件</span><span class="text-2">'+(unassigned.length?'担当を決めてください':'ありません')+'</span></a>'+
+  var sub='<span class="num">'+esc(fmtDate(T))+'</span>'+(u.role==='DEPARTMENT_MANAGER'?'　'+esc(deptName(u.deptId))+'に関係する業務を表示しています':'');
+  return pageHead('施設の状況',sub)+
+  '<section aria-labelledby="h-urgent" class="stack"><h2 id="h-urgent" class="section-label">要対応</h2><div class="grid-cards">'+
+    statCard('#/tasks','overdue',overdue.length>0,(overdue.length?I.alertSm:'')+'期限超過',overdue.length,'件',hold?'うち保留中 '+hold+'件':'保留中はありません')+
+    statCard('#/approvals','',false,'承認待ち',pendAll,'件','あなた宛て '+mine+'件')+
+    statCard('#/requests','',false,'未提出',unsub,'名',unsubReq+'件の提出依頼（延べ人数）')+
+    statCard('#/tasks','unassigned',false,'担当者未設定',unassigned.length,'件',unassigned.length?'担当を決めてください':'ありません')+
   '</div></section>'+
   myTodoHtml(u)+
   '<div class="cols">'+
-    '<section aria-labelledby="h-today" class="card stack"><h2 id="h-today" style="font-size:18px">今日まで（'+todayList.length+'件）</h2>'+(todayList.length?'<ul class="list">'+todayList.slice(0,5).map(row).join('')+'</ul>':'<p class="text-2">今日が期限の業務はありません（0件）</p>')+(todayList.length>5?'<a href="#/tasks">すべて見る（'+todayList.length+'件）</a>':'')+
-      (cl.length?'<p class="text-2">今日のチェックリスト（介護部）：'+cl.length+'件中 '+clDone+'件完了</p>':'')+'</section>'+
-    '<section aria-labelledby="h-soon" class="card stack"><h2 id="h-soon" style="font-size:18px">期限が近い（3日以内・'+soon.length+'件）</h2>'+(soon.length?'<ul class="list">'+soon.slice(0,5).map(soonRow).join('')+'</ul>':'<p class="text-2">3日以内が期限の業務はありません（0件）</p>')+'</section>'+
+    '<section aria-labelledby="h-today" class="card stack"><div class="card-title"><h2 id="h-today">今日まで</h2><span class="count">'+todayList.length+'件</span></div>'+
+      (todayList.length?'<ul class="list">'+todayList.slice(0,5).map(row).join('')+'</ul>':'<p class="text-2">今日が期限の業務はありません</p>')+
+      (todayList.length>5?'<a class="more-link" href="#/tasks">すべて見る（'+todayList.length+'件）'+I.chev+'</a>':'')+
+      (cl.length?'<p class="card-foot">今日のチェックリスト（介護部）　<span class="num">'+clDone+' / '+cl.length+'</span> 件完了</p>':'')+'</section>'+
+    '<section aria-labelledby="h-soon" class="card stack"><div class="card-title"><h2 id="h-soon">期限が近い</h2><span class="count">3日以内・'+soon.length+'件</span></div>'+
+      (soon.length?'<ul class="list">'+soon.slice(0,5).map(soonRow).join('')+'</ul>':'<p class="text-2">3日以内が期限の業務はありません</p>')+'</section>'+
   '</div>'+
   '<div class="cols">'+
-    '<section aria-labelledby="h-events" class="card stack"><h2 id="h-events" style="font-size:18px">今後30日の委員会・研修</h2>'+(events.length?'<ul class="list">'+events.map(function(t){return '<li class="row"><span class="text-2" style="min-width:120px">'+esc(fmtDate(t.dueOn))+'</span><a href="#/tasks/'+t.id+'">'+esc(t.title)+'</a></li>';}).join('')+'</ul>':'<p class="text-2">予定はありません</p>')+'</section>'+
-    '<section aria-labelledby="h-checks" class="card stack"><h2 id="h-checks" style="font-size:18px">自動チェック</h2><p class="text-2">決まったルールで見つけた確認事項です（AI ではありません）</p>'+(checks.length?'<ul class="list">'+checks.map(function(c){return '<li>'+esc(c)+'</li>';}).join('')+'</ul>':'<p>確認事項はありません</p>')+'</section>'+
+    '<section aria-labelledby="h-events" class="card stack"><div class="card-title"><h2 id="h-events">委員会・研修</h2><span class="count">今後30日</span></div>'+
+      (events.length?'<ul class="list">'+events.map(function(t){return rowLink('#/tasks/'+t.id,esc(t.title),'<span class="num">'+esc(fmtDate(t.dueOn))+'</span><span>'+esc(t.category)+'</span>',dueBadge(t.dueOn,true));}).join('')+'</ul>':'<p class="text-2">予定はありません</p>')+'</section>'+
+    '<section aria-labelledby="h-checks" class="card stack"><h2 id="h-checks">自動チェック</h2><p class="text-2">決まったルールで見つけた確認事項です（AI ではありません）</p>'+
+      (checks.length?'<ul class="list">'+checks.map(function(c){return '<li class="check-item">'+I.info+'<span>'+esc(c)+'</span></li>';}).join('')+'</ul>':'<p>確認事項はありません</p>')+'</section>'+
   '</div>'+
-  '<section aria-label="完了と件数のまとめ" class="card row-between"><span class="tag-plain">'+I.check+'今月完了した業務 '+doneMonth+'件</span><span class="text-2">未完了：今週 '+weekOpen+'件 ／ 今月 '+monthOpen+'件</span></section>';
+  '<p class="summary-line">'+I.check+'<span>今月完了した業務 <span class="num">'+doneMonth+'</span>件</span><span class="sep-dot" aria-hidden="true">・</span><span>未完了：今週 <span class="num">'+weekOpen+'</span>件 ／ 今月 <span class="num">'+monthOpen+'</span>件</span></p>';
 }
-
 /* ---------------- 画面：業務一覧（管理者） ---------------- */
 function viewTasks(u){
   var T=today();
@@ -561,14 +767,13 @@ function viewTasks(u){
   ];
   var cur=defs.filter(function(d){return d[0]===f;})[0]||defs[0];
   var rows=vis.filter(cur[2]).sort(byDue);
-  return '<div class="row-between">'+pageTitle('業務')+'<a class="btn btn-primary" href="#/tasks/new">業務・依頼を作成</a></div>'+
-  '<div class="chips" role="group" aria-label="状態で絞り込む">'+defs.map(function(d){var n=vis.filter(d[2]).length;return '<button type="button" class="chip" data-action="filter" data-scope="tasks" data-value="'+d[0]+'" aria-pressed="'+(d[0]===cur[0])+'">'+esc(d[1])+' '+n+'</button>';}).join('')+'</div>'+
-  '<p class="text-2">毎日のチェックリストは、この一覧に含めていません。</p>'+
+  return pageHead('業務',null,'<a class="btn btn-primary" href="#/tasks/new">'+I.plus+'業務・依頼を作成</a>')+
+  segmented(defs,vis,cur,'tasks')+
   (rows.length?'<div class="table-wrap"><table><thead><tr><th scope="col">業務</th><th scope="col">担当</th><th scope="col">期限</th><th scope="col">状態</th></tr></thead><tbody>'+
-    rows.map(function(t){return '<tr><td><a href="#/tasks/'+t.id+'" style="font-weight:500">'+esc(t.title)+'</a><br><span class="text-2">'+esc(t.category)+(t.kind==='request'?'・依頼':'')+'</span></td><td>'+assigneeLabel(t)+'</td><td>'+esc(fmtDate(t.dueOn))+'<br>'+dueBadge(t.dueOn,isOpenTask(t))+'</td><td>'+taskStatusTag(t)+'</td></tr>';}).join('')+
-  '</tbody></table></div>':'<p class="card">この条件に合う業務はありません（0件）</p>');
+    rows.map(function(t){return '<tr data-href="#/tasks/'+t.id+'"><td><a class="title-link" href="#/tasks/'+t.id+'">'+esc(t.title)+'</a><div class="text-2">'+esc(t.category)+(t.kind==='request'?'・依頼':'')+'</div></td><td>'+assigneeLabel(t)+'</td><td><div class="num">'+esc(fmtDate(t.dueOn))+'</div>'+dueBadge(t.dueOn,isOpenTask(t))+'</td><td>'+taskStatusTag(t)+'</td></tr>';}).join('')+
+  '</tbody></table></div>':'<div class="card empty">'+I.checkCircle+'<p>この条件に合う業務はありません</p></div>')+
+  '<p class="foot-note">毎日のチェックリストは、この一覧に含めていません。</p>';
 }
-
 /* ---------------- 画面：業務詳細 ---------------- */
 function viewTaskDetail(u,id){
   var t=taskById(id);
@@ -579,43 +784,43 @@ function viewTaskDetail(u,id){
   if(canWork(u,t)){
     var isGov=t.category==='行政提出';
     var needCopy=isGov&&!(t.gov&&t.gov.copyFile);
-    actions+='<form data-form="complete-task" data-id="'+t.id+'" class="card stack" novalidate><h2 style="font-size:18px">完了を報告する</h2>'+
+    actions+='<form data-form="complete-task" data-id="'+t.id+'" class="card stack" novalidate><h2>完了を報告する</h2>'+
       (t.requiresApproval?'<p class="text-2">報告すると、承認者が確認します。</p>':'')+
       (needCopy?'<div class="field"><label class="lbl" for="copy">提出した書類の控え <span class="req">※必須</span></label><span class="hint" id="copy-hint">運営指導で「提出した証拠」として使います。写真でも構いません</span><input id="copy" name="copy" type="file" accept="image/*,application/pdf" aria-describedby="copy-hint'+(ui.formErr&&ui.formErr.copy?' err-copy':'')+'"'+(ui.formErr&&ui.formErr.copy?' class="input-error"':'')+'>'+fieldErr('copy')+'</div>':'')+
       '<div class="field"><label class="lbl" for="comment">コメント <span class="req">※任意</span></label><textarea id="comment" name="comment" rows="3"></textarea></div>'+
-      '<div class="row"><button type="submit" class="btn btn-primary">完了を報告する</button>'+(t.status==='not_started'?'<button type="button" class="btn" data-action="start-task" data-id="'+t.id+'">着手する</button>':'')+'</div></form>';
+      '<div class="form-actions">'+(t.status==='not_started'?'<button type="button" class="btn" data-action="start-task" data-id="'+t.id+'">着手する</button>':'')+'<button type="submit" class="btn btn-primary">完了を報告する</button></div></form>';
   }
   if(t.status==='awaiting_approval'&&t.approval){
     if(t.approval.approverId===u.id){actions+=reviewTaskPanel(t);}
-    else actions+='<p class="notice notice-info">'+esc(staffName(t.approval.approverId))+'さんの承認待ちです</p>';
+    else actions+='<p class="notice notice-info">'+I.info+'<span>'+esc(staffName(t.approval.approverId))+'さんの承認待ちです</span></p>';
   }
   if(canManageTask(u,t)&&open){
     var mgr='';
     if(!t.assignee){mgr+='<form data-form="assign-task" data-id="'+t.id+'" class="stack"><div class="field"><label class="lbl" for="assignee">担当を決める</label><select id="assignee" name="assignee">'+assigneeOptions('')+'</select></div><div><button type="submit" class="btn">担当を設定する</button></div></form>';}
-    if(t.status==='on_hold'){mgr+='<div class="row"><span>保留の理由：'+esc(t.holdReason)+'</span><button type="button" class="btn" data-action="resume-task" data-id="'+t.id+'">保留を解除する</button></div>';}
+    if(t.status==='on_hold'){mgr+='<div class="row-between"><span>保留の理由：'+esc(t.holdReason)+'</span><button type="button" class="btn" data-action="resume-task" data-id="'+t.id+'">保留を解除する</button></div>';}
     else{mgr+='<form data-form="hold-task" data-id="'+t.id+'" class="stack"><div class="field"><label class="lbl" for="hold">保留にする理由</label><input id="hold" name="reason" type="text"'+(ui.formErr&&ui.formErr.hold?' class="input-error"':'')+'>'+fieldErr('hold')+'</div><div><button type="submit" class="btn">保留にする</button></div></form>';}
-    actions+='<section class="card stack" aria-labelledby="h-mgr"><h2 id="h-mgr" style="font-size:18px">管理者の操作</h2>'+mgr+'</section>';
+    actions+='<section class="card stack" aria-labelledby="h-mgr"><h2 id="h-mgr">管理者の操作</h2>'+mgr+'</section>';
   }
   var gov='';
-  if(t.category==='行政提出'){var g=t.gov||{};gov='<section class="card stack" aria-labelledby="h-gov"><h2 id="h-gov" style="font-size:18px">行政提出</h2><dl class="dl"><dt>提出先</dt><dd>'+esc(g.destination||'未入力')+'</dd><dt>提出方法</dt><dd>'+esc(g.method||'未入力')+'</dd><dt>控え</dt><dd>'+(g.copyFile?esc(g.copyFile):'未登録')+'</dd></dl></section>';}
+  if(t.category==='行政提出'){var g=t.gov||{};gov='<section class="card stack" aria-labelledby="h-gov"><h2 id="h-gov">行政提出</h2><dl class="dl"><dt>提出先</dt><dd>'+esc(g.destination||'未入力')+'</dd><dt>提出方法</dt><dd>'+esc(g.method||'未入力')+'</dd><dt>控え</dt><dd>'+(g.copyFile?esc(g.copyFile):'未登録')+'</dd></dl></section>';}
   var hist=t.history.slice().reverse();
   var comments=t.comments.slice().reverse();
-  return '<p class="no-print"><a href="'+(isManager(u)?'#/tasks':'#/')+'">'+I.back+'戻る</a></p>'+
-  '<div class="stack-sm">'+pageTitle(t.title)+'<div class="row">'+taskStatusTag(t)+dueBadge(t.dueOn,open)+'<span class="text-2">期限 '+esc(fmtDate(t.dueOn))+(t.dueTime?' '+esc(t.dueTime):'')+'</span><span class="tag-outline">'+esc(t.category)+'</span></div></div>'+
+  return backLink(isManager(u)?'#/tasks':'#/','戻る')+
+  '<div class="page-head">'+pageTitle(t.title)+'<div class="meta-row">'+taskStatusTag(t)+dueBadge(t.dueOn,open)+'<span class="text-2 num">期限 '+esc(fmtDate(t.dueOn))+(t.dueTime?' '+esc(t.dueTime):'')+'</span><span class="tag-outline">'+esc(t.category)+'</span></div></div>'+
   '<div class="split"><div class="main-col">'+
     (t.description?'<section class="card"><p>'+esc(t.description)+'</p></section>':'')+
     gov+actions+
-    '<section class="card stack" aria-labelledby="h-hist"><h2 id="h-hist" style="font-size:18px">コメントと履歴</h2>'+
-      (comments.length?'<ul class="history">'+comments.map(function(c){return '<li><span class="text-2">'+esc(fmtStamp(c.at))+' '+esc(staffName(c.byId))+'</span><br>'+esc(c.text)+'</li>';}).join('')+'</ul>':'')+
-      (hist.length?'<ul class="history">'+hist.map(function(h){return '<li><span class="text-2">'+esc(fmtStamp(h.at))+' '+esc(staffName(h.byId))+'</span>　'+esc(h.action)+(h.reason?'（'+esc(h.reason)+'）':'')+'</li>';}).join('')+'</ul>':'<p class="text-2">まだ履歴はありません</p>')+
+    '<section class="card stack" aria-labelledby="h-hist"><h2 id="h-hist">コメントと履歴</h2>'+
+      (comments.length?'<ul class="history">'+comments.map(function(c){return '<li><span class="text-2 num">'+esc(fmtStamp(c.at))+'　'+esc(staffName(c.byId))+'</span><br>'+esc(c.text)+'</li>';}).join('')+'</ul>':'')+
+      (hist.length?'<ul class="history">'+hist.map(function(h){return '<li><span class="text-2 num">'+esc(fmtStamp(h.at))+'　'+esc(staffName(h.byId))+'</span><br>'+esc(h.action)+(h.reason?'（'+esc(h.reason)+'）':'')+'</li>';}).join('')+'</ul>':'<p class="text-2">まだ履歴はありません</p>')+
     '</section>'+
-  '</div><div class="side-col"><section class="card stack" aria-label="業務の情報"><dl class="dl">'+
+  '</div><div class="side-col"><section class="card" aria-label="業務の情報"><dl class="dl">'+
     '<dt>担当</dt><dd>'+assigneeLabel(t)+'</dd>'+
     (t.departmentId?'<dt>部署</dt><dd>'+esc(deptName(t.departmentId))+'</dd>':'')+
     (t.requestedById?'<dt>依頼した人</dt><dd>'+esc(staffName(t.requestedById))+'</dd>':'')+
     '<dt>承認</dt><dd>'+(t.requiresApproval?'必要（'+esc(staffName(expectedApprover(t)))+'さん）':'不要')+'</dd>'+
-    '<dt>根拠</dt><dd>'+(t.basisType==='unverified'?'<span class="tag-plain" style="color:var(--warn)">'+I.warn+'未確認</span>':esc(BASIS_LABEL[t.basisType]))+'</dd>'+
-    (t.completedAt?'<dt>完了</dt><dd>'+esc(fmtStamp(t.completedAt))+'（'+esc(staffName(t.completedById))+'）</dd>':'')+
+    '<dt>根拠</dt><dd>'+(t.basisType==='unverified'?'<span class="warn-text">'+I.warnSm+'未確認</span>':esc(BASIS_LABEL[t.basisType]))+'</dd>'+
+    (t.completedAt?'<dt>完了</dt><dd class="num">'+esc(fmtStamp(t.completedAt))+'（'+esc(staffName(t.completedById))+'）</dd>':'')+
     (t.approval&&t.approval.isSelf?'<dt>注記</dt><dd>自己承認</dd>':'')+
   '</dl></section></div></div>';
 }
@@ -632,20 +837,20 @@ function expectedApprover(t){
 }
 function reviewTaskPanel(t,scope){
   var report=t.comments.filter(function(c){return c.kind==='completion_report';}).slice(-1)[0];
-  return '<section class="card stack" aria-labelledby="h-review"><h2 id="h-review" style="font-size:18px">承認する</h2>'+
-    '<p>'+esc(staffName(t.approval.requestedById))+'さんが完了を報告しました（'+esc(fmtStamp(t.approval.requestedAt))+'）</p>'+
+  return '<section class="card stack" aria-labelledby="h-review"><h2 id="h-review">承認する</h2>'+
+    '<p>'+esc(staffName(t.approval.requestedById))+'さんが完了を報告しました<br><span class="text-2 num">'+esc(fmtStamp(t.approval.requestedAt))+'</span></p>'+
     (report?'<p class="notice notice-plain">「'+esc(report.text)+'」</p>':'')+
     (t.gov&&t.gov.copyFile?'<p>控え：'+esc(t.gov.copyFile)+'</p>':'')+
-    (t.approval.isSelf?'<p class="notice notice-warn">ほかに承認できる人がいないため、自己承認として記録されます</p>':'')+
-    '<div class="row"><button type="button" class="btn btn-primary" data-action="approve-task" data-id="'+t.id+'">承認する</button></div>'+
-    '<form data-form="return-task" data-id="'+t.id+'" class="stack" novalidate><div class="field"><label class="lbl" for="rt-'+t.id+'">差し戻す理由 <span class="req">※差し戻す場合は必須</span></label><span class="hint">担当者の画面にそのまま表示されます</span><textarea id="rt-'+t.id+'" name="reason" rows="2"'+(ui.formErr&&ui.formErr['rt-'+t.id]?' class="input-error"':'')+'></textarea>'+fieldErr('rt-'+t.id)+'</div><div><button type="submit" class="btn">差し戻す</button></div></form>'+(scope==='approvals'?approvalNextButton(me(),t.id):'')+'</section>';
+    (t.approval.isSelf?'<p class="notice notice-warn">'+I.alertSm+'<span>ほかに承認できる人がいないため、自己承認として記録されます</span></p>':'')+
+    '<button type="button" class="btn btn-primary" data-action="approve-task" data-id="'+t.id+'">承認する</button>'+
+    '<form data-form="return-task" data-id="'+t.id+'" class="stack" novalidate><div class="field"><label class="lbl" for="rt-'+t.id+'">差し戻す理由 <span class="req">※差し戻す場合は必須</span></label><span class="hint">担当者の画面にそのまま表示されます</span><textarea id="rt-'+t.id+'" name="reason" rows="2"'+(ui.formErr&&ui.formErr['rt-'+t.id]?' class="input-error"':'')+'></textarea>'+fieldErr('rt-'+t.id)+'</div><div><button type="submit" class="btn">差し戻す</button></div></form>'+
+    (scope==='approvals'?approvalNextButton(me(),t.id):'')+'</section>';
 }
-
 /* ---------------- 画面：業務・依頼の作成 ---------------- */
 function viewTaskForm(u){
   var kind=formVal('kind','task');
   var errs=ui.formErr?Object.keys(ui.formErr).length:0;
-  return '<p class="no-print"><a href="#/tasks">'+I.back+'戻る</a></p>'+pageTitle('業務・依頼を作成')+
+  return backLink('#/tasks','業務の一覧へ')+pageHead('業務・依頼を作成')+
   (errs?'<div class="notice notice-warn" role="alert">'+I.alert+'<span>入力内容を確認してください（'+errs+'か所）</span></div>':'')+
   '<form data-form="new-task" class="card stack" novalidate style="max-width:720px">'+
     '<fieldset><legend>種類 <span class="req">※必須</span></legend>'+
@@ -657,28 +862,27 @@ function viewTaskForm(u){
     '<div class="field"><label class="lbl" for="f-due">期限 <span class="req">※必須</span></label><span class="hint">今日以降の日付を選べます</span><input id="f-due" name="dueOn" type="date" value="'+esc(formVal('dueOn',addDays(today(),7)))+'"'+(ui.formErr&&ui.formErr.dueOn?' class="input-error"':'')+'>'+fieldErr('dueOn')+'</div>'+
     '<label class="radio"><input type="checkbox" name="requiresApproval" value="1"'+(formVal('requiresApproval')?' checked':'')+'><span>完了に承認が必要<br><span class="hint">承認する人：'+esc(nameTitle(data.settings.defaultApproverId))+'。'+esc(staffName(data.settings.defaultApproverId))+'さん本人が担当の業務は '+esc(nameTitle(data.settings.fallbackApproverId))+'</span></span></label>'+
     '<div class="field"><label class="lbl" for="f-desc">説明 <span class="req">※任意</span></label><textarea id="f-desc" name="description" rows="3">'+esc(formVal('description'))+'</textarea></div>'+
-    '<div class="row-between"><a class="btn-text" href="#/tasks">キャンセル</a><button type="submit" class="btn btn-primary">作成する</button></div>'+
+    '<div class="form-actions"><a class="btn-text" href="#/tasks">キャンセル</a><button type="submit" class="btn btn-primary">作成する</button></div>'+
   '</form>';
 }
-
 /* ---------------- 画面：提出依頼（管理者） ---------------- */
 function viewRequests(u){
   var reqs=visibleRequests(u).slice().sort(byDue);
-  return '<div class="row-between">'+pageTitle('提出')+'<a class="btn btn-primary" href="#/requests/new">提出依頼を作成</a></div>'+
+  return pageHead('提出',null,'<a class="btn btn-primary" href="#/requests/new">'+I.plus+'提出依頼を作成</a>')+
   (reqs.length?'<div class="table-wrap"><table><thead><tr><th scope="col">提出依頼</th><th scope="col">期限</th><th scope="col">提出の状況</th><th scope="col">確認待ち</th></tr></thead><tbody>'+
     reqs.map(function(r){var ts=targetsOf(r).filter(function(x){return x.status!=='excluded';});var done=ts.filter(function(x){return x.status==='submitted'||x.status==='approved';}).length;var wait=ts.filter(function(x){return x.status==='submitted';}).length;
-      return '<tr><td><a href="#/requests/'+r.id+'" style="font-weight:500">'+esc(r.title)+'</a><br><span class="text-2">確認する人：'+esc(staffName(r.reviewerId))+'</span></td><td>'+esc(fmtDate(r.dueOn))+'<br>'+dueBadge(r.dueOn,r.status==='open')+'</td><td>'+ts.length+'名中 '+done+'名が提出</td><td>'+wait+'名</td></tr>';}).join('')+
-  '</tbody></table></div>':'<p class="card">まだ提出依頼はありません。「提出依頼を作成」から始めてください。</p>')+myOwnSubmissionsHtml(u);
+      return '<tr data-href="#/requests/'+r.id+'"><td><a class="title-link" href="#/requests/'+r.id+'">'+esc(r.title)+'</a><div class="text-2">確認する人：'+esc(staffName(r.reviewerId))+'</div></td><td><div class="num">'+esc(fmtDate(r.dueOn))+'</div>'+dueBadge(r.dueOn,r.status==='open')+'</td><td><div class="prog-cell"><span class="num">'+ts.length+'名中 '+done+'名が提出</span>'+progressBar(done,ts.length)+'</div></td><td class="num">'+wait+'名</td></tr>';}).join('')+
+  '</tbody></table></div>':'<div class="card empty">'+I.info+'<p>まだ提出依頼はありません。「提出依頼を作成」から始めてください。</p></div>')+myOwnSubmissionsHtml(u);
 }
 function myOwnSubmissionsHtml(u){
   var mine=data.targets.filter(function(x){return x.staffId===u.id&&reqOf(x).status==='open'&&(x.status==='not_submitted'||x.status==='returned');});
   if(!mine.length)return '';
-  return '<section class="stack" aria-labelledby="h-own"><h2 id="h-own" style="font-size:18px">あなたが出すもの（'+mine.length+'件）</h2><ul class="list card">'+mine.map(function(x){var r=reqOf(x);return '<li class="row"><span style="flex:1 1 200px;font-weight:500">'+esc(r.title)+'</span>'+dueBadge(r.dueOn,true)+targetTag(x)+'<a class="btn btn-sm" href="#/submit/'+x.id+'">'+(x.status==='returned'?'もう一度提出する':'提出する')+'</a></li>';}).join('')+'</ul></section>';
+  return '<section class="stack" aria-labelledby="h-own"><h2 id="h-own" class="section-label">あなたが出すもの（'+mine.length+'件）</h2><ul class="list card">'+mine.map(function(x){var r=reqOf(x);return '<li class="sub-row"><span class="row-main"><span class="row-title">'+esc(r.title)+'</span><span class="row-sub">'+dueBadge(r.dueOn,true)+targetTag(x)+'</span></span><a class="btn btn-sm" href="#/submit/'+x.id+'">'+(x.status==='returned'?'もう一度提出する':'提出する')+'</a></li>';}).join('')+'</ul></section>';
 }
 function viewRequestForm(u){
   var errs=ui.formErr?Object.keys(ui.formErr).length:0;
   var dc=formVal('dataClass','');
-  return '<p class="no-print"><a href="#/requests">'+I.back+'戻る</a></p>'+pageTitle('提出依頼を作成')+
+  return backLink('#/requests','提出の一覧へ')+pageHead('提出依頼を作成')+
   (errs?'<div class="notice notice-warn" role="alert">'+I.alert+'<span>入力内容を確認してください（'+errs+'か所）</span></div>':'')+
   '<form data-form="new-request" class="card stack" novalidate style="max-width:720px">'+
     '<div class="field"><label class="lbl" for="q-title">提出依頼の名前 <span class="req">※必須</span></label><input id="q-title" name="title" type="text" value="'+esc(formVal('title'))+'"'+(ui.formErr&&ui.formErr.title?' class="input-error"':'')+'>'+fieldErr('title')+'</div>'+
@@ -692,10 +896,9 @@ function viewRequestForm(u){
     '<fieldset><legend>督促</legend>'+
       '<label class="radio"><input type="radio" name="reminder" value="default"'+(formVal('reminder','default')==='default'?' checked':'')+'><span>既定<br><span class="hint">期限の3日前・前日・当日・翌日に、未提出の人にだけ送ります</span></span></label>'+
       '<label class="radio"><input type="radio" name="reminder" value="none"'+(formVal('reminder')==='none'?' checked':'')+'><span>督促なし<br><span class="hint">最初のお知らせだけ送ります</span></span></label></fieldset>'+
-    '<div class="row-between"><a class="btn-text" href="#/requests">キャンセル</a><button type="submit" class="btn btn-primary">依頼を送る</button></div>'+
+    '<div class="form-actions"><a class="btn-text" href="#/requests">キャンセル</a><button type="submit" class="btn btn-primary">依頼を送る</button></div>'+
   '</form>';
 }
-
 /* ---------------- 画面：提出状況表 ---------------- */
 function viewStatusTable(u,id){
   var r=reqById(id);
@@ -714,16 +917,17 @@ function viewStatusTable(u,id){
   var isReviewer=r.reviewerId===u.id;
   var panelHtml='';
   if(ui.panel&&ui.panel.requestId===r.id){panelHtml=targetPanel(u,byId(data.targets,ui.panel.targetId),ui.panel.mode);}
-  if(!panelHtml)panelHtml='<section class="card stack"><h2 style="font-size:18px">提出物の確認</h2><p class="text-2">一覧の「確認する」を選ぶと、ここに内容が表示されます。</p></section>';
-  return '<p class="no-print"><a href="#/requests">'+I.back+'提出の一覧へ</a></p>'+
+  if(!panelHtml)panelHtml='<section class="card stack"><h2>提出物の確認</h2><p class="text-2">一覧の「確認する」を選ぶと、ここに内容が表示されます。</p></section>';
+  var done=approved+submitted;
+  return backLink('#/requests','提出の一覧へ')+
   '<div class="split"><div class="main-col">'+
-    '<div class="row-between"><div class="stack-sm">'+pageTitle('提出状況：'+r.title)+'<p class="text-2">期限 '+esc(fmtDate(r.dueOn))+(r.dueTime?' '+esc(r.dueTime):'')+'　依頼 '+esc(staffName(r.requesterId))+'　確認 '+esc(staffName(r.reviewerId))+'　区分 '+esc(DATA_CLASS[r.dataClass].label)+'</p></div>'+
-    '<div class="row no-print"><button type="button" id="btn-remind" class="btn" data-action="remind" data-id="'+r.id+'">催促を送る</button><a class="btn" href="#/requests/'+r.id+'/print">未提出者一覧を印刷</a></div></div>'+
-    '<div class="card stack-sm"><p style="font-size:18px"><strong style="font-size:24px">'+counted.length+'名中 '+(approved+submitted)+'名</strong> が提出（承認済み '+approved+'名・確認待ち '+submitted+'名）</p>'+
+    pageHead('提出状況：'+r.title,'期限 <span class="num">'+esc(fmtDate(r.dueOn))+(r.dueTime?' '+esc(r.dueTime):'')+'</span>　依頼 '+esc(staffName(r.requesterId))+'　確認 '+esc(staffName(r.reviewerId))+'　区分 '+esc(DATA_CLASS[r.dataClass].label),
+      '<button type="button" id="btn-remind" class="btn" data-action="remind" data-id="'+r.id+'">催促を送る</button><a class="btn" href="#/requests/'+r.id+'/print">未提出者一覧を印刷</a>')+
+    '<div class="card summary"><div class="summary-row"><p><span class="summary-big num">'+counted.length+'名中 '+done+'名</span> が提出</p><p class="text-2">承認済み '+approved+'名・確認待ち '+submitted+'名</p></div>'+progressBar(done,counted.length,true)+
       (r.fileMode==='no_file'?'<p class="text-2">この依頼はファイルを受け取らず、回答と'+esc(qOf(r).date)+'だけを記録します。</p>':'')+'</div>'+
     (esc2.length?'<p class="notice notice-warn">'+I.alert+'<span>督促しても未提出の人、通知が届かない人が'+esc2.length+'名います（'+esc2.map(function(x){return staffName(x.staffId);}).join('、')+'）。直接声をかけてください。</span></p>':'')+
-    '<div class="chips" role="group" aria-label="状態で絞り込む">'+defs.map(function(d){return '<button type="button" class="chip" data-action="filter" data-scope="req-'+r.id+'" data-value="'+d[0]+'" aria-pressed="'+(d[0]===cur[0])+'">'+esc(d[1])+' '+all.filter(d[2]).length+'</button>';}).join('')+'</div>'+
-    '<div class="table-wrap"><table><thead><tr><th scope="col"><span class="sr-only">選ぶ</span></th><th scope="col">職員</th><th scope="col">状態</th><th scope="col">提出</th><th scope="col">操作</th></tr></thead><tbody>'+
+    segmented(defs,all,cur,'req-'+r.id)+
+    '<div class="table-wrap"><table><thead><tr><th scope="col" class="col-check"><span class="sr-only">選ぶ</span></th><th scope="col">職員</th><th scope="col">状態</th><th scope="col">提出</th><th scope="col">操作</th></tr></thead><tbody>'+
       (rows.length?rows.map(function(x){
         var s=staff(x.staffId);var last=lastSubmission(x);
         var isCur=ui.panel&&ui.panel.targetId===x.id;
@@ -731,14 +935,14 @@ function viewStatusTable(u,id){
         if(x.status==='submitted'||x.status==='approved'||x.status==='returned')ops.push('<button type="button" class="btn-text" data-action="open-panel" data-mode="review" data-req="'+r.id+'" data-id="'+x.id+'">確認する</button>');
         if(x.status==='not_submitted'||x.status==='returned')ops.push('<button type="button" class="btn-text" data-action="open-panel" data-mode="proxy" data-req="'+r.id+'" data-id="'+x.id+'">代理で登録</button>');
         if(x.status==='not_submitted')ops.push('<button type="button" class="btn-text" data-action="open-panel" data-mode="exclude" data-req="'+r.id+'" data-id="'+x.id+'">対象外にする</button>');
-        return '<tr'+(isCur?' class="is-current"':'')+'><td>'+(x.status==='submitted'&&isReviewer?'<input type="checkbox" id="sel-'+x.id+'" data-select="'+r.id+'" value="'+x.id+'"'+(sel.indexOf(x.id)>=0?' checked':'')+' aria-label="'+esc(s.name)+'さんを選ぶ">':'')+'</td>'+
-          '<td>'+esc(s.name)+'<br><span class="text-2">'+esc(deptName(x.departmentId))+'</span></td>'+
-          '<td>'+targetTag(x)+(x.hasLogin?'':'<br><span class="text-2">アカウントなし</span>')+(last&&last.proxy?'<br><span class="text-2">代理登録</span>':'')+'</td>'+
-          '<td>'+(last?esc(fmtStamp(last.at)):'')+'</td>'+
-          '<td>'+(ops.length?ops.join('<br>'):'-')+'</td></tr>';
-      }).join(''):'<tr><td colspan="5">この条件に合う人はいません（0名）</td></tr>')+
+        return '<tr'+(isCur?' class="is-current"':'')+'><td class="col-check">'+(x.status==='submitted'&&isReviewer?'<input type="checkbox" id="sel-'+x.id+'" data-select="'+r.id+'" value="'+x.id+'"'+(sel.indexOf(x.id)>=0?' checked':'')+' aria-label="'+esc(s.name)+'さんを選ぶ">':'')+'</td>'+
+          '<td><span class="row-title">'+esc(s.name)+'</span><div class="text-2">'+esc(deptName(x.departmentId))+'</div></td>'+
+          '<td>'+targetTag(x)+(x.hasLogin?'':'<div class="text-2">アカウントなし</div>')+(last&&last.proxy?'<div class="text-2">代理登録</div>':'')+'</td>'+
+          '<td class="num">'+(last?esc(fmtStamp(last.at)):'')+'</td>'+
+          '<td>'+(ops.length?'<div class="ops">'+ops.join('')+'</div>':'<span class="text-2">-</span>')+'</td></tr>';
+      }).join(''):'<tr><td colspan="5" class="text-2">この条件に合う人はいません</td></tr>')+
     '</tbody></table></div>'+
-    (!submitted?'':isReviewer?'<div class="row"><span>'+sel.length+'名を選んでいます</span><button type="button" id="btn-bulk" class="btn'+(sel.length&&!(ui.panel&&ui.panel.requestId===r.id)?' btn-primary':'')+'" data-action="bulk-approve" data-id="'+r.id+'"'+(sel.length?'':' aria-describedby="bulk-hint"')+'>選んだ'+sel.length+'名を承認する</button><span class="text-2" id="bulk-hint">'+(sel.length?'まとめて承認するときだけ、件数の確認が出ます':'確認待ちの人を選ぶと、まとめて承認できます')+'</span></div>':'<p class="text-2">承認できるのは確認する人（'+esc(staffName(r.reviewerId))+'さん）です。</p>')+
+    (!submitted?'':isReviewer?'<div class="row"><span class="text-2">'+sel.length+'名を選んでいます</span><button type="button" id="btn-bulk" class="btn'+(sel.length&&!(ui.panel&&ui.panel.requestId===r.id)?' btn-primary':'')+'" data-action="bulk-approve" data-id="'+r.id+'"'+(sel.length?'':' aria-describedby="bulk-hint"')+'>選んだ'+sel.length+'名を承認する</button><span class="text-2" id="bulk-hint">'+(sel.length?'まとめて承認するときだけ、件数の確認が出ます':'確認待ちの人を選ぶと、まとめて承認できます')+'</span></div>':'<p class="text-2">承認できるのは確認する人（'+esc(staffName(r.reviewerId))+'さん）です。</p>')+
   '</div><div class="side-col">'+panelHtml+'</div></div>';
 }
 function lastSubmission(x){var subs=data.submissions.filter(function(s){return s.targetId===x.id;});return subs.length?subs[subs.length-1]:null;}
@@ -754,20 +958,20 @@ function targetPanel(u,x,mode,scope){
   if(!x)return '';
   var r=reqOf(x);var s=staff(x.staffId);
   if(mode==='proxy'){
-    return '<section class="card stack" aria-labelledby="h-panel"><h2 id="h-panel" style="font-size:18px">'+esc(s.name)+'さんの代理登録</h2><p>紙で受け取った場合などに、本人に代わって「提出した」ことを記録します。記録には代理で登録した人の名前が残ります。</p>'+
-      '<form data-form="proxy" data-id="'+x.id+'" class="stack" novalidate><div class="field"><label class="lbl" for="px">理由 <span class="req">※必須</span></label><input id="px" name="reason" type="text" value="紙で受け取ったため"'+(ui.formErr&&ui.formErr.px?' class="input-error"':'')+'>'+fieldErr('px')+'</div><div class="row-between"><button type="button" class="btn-text" data-action="close-panel">キャンセル</button><button type="submit" class="btn btn-primary">代理で登録する</button></div></form></section>';
+    return '<section class="card stack" aria-labelledby="h-panel"><h2 id="h-panel">'+esc(s.name)+'さんの代理登録</h2><p class="text-2">紙で受け取った場合などに、本人に代わって「提出した」ことを記録します。記録には代理で登録した人の名前が残ります。</p>'+
+      '<form data-form="proxy" data-id="'+x.id+'" class="stack" novalidate><div class="field"><label class="lbl" for="px">理由 <span class="req">※必須</span></label><input id="px" name="reason" type="text" value="紙で受け取ったため"'+(ui.formErr&&ui.formErr.px?' class="input-error"':'')+'>'+fieldErr('px')+'</div><div class="form-actions"><button type="button" class="btn-text" data-action="close-panel">キャンセル</button><button type="submit" class="btn btn-primary">代理で登録する</button></div></form></section>';
   }
   if(mode==='exclude'){
-    return '<section class="card stack" aria-labelledby="h-panel"><h2 id="h-panel" style="font-size:18px">'+esc(s.name)+'さんを対象外にする</h2>'+
-      '<form data-form="exclude" data-id="'+x.id+'" class="stack" novalidate><div class="field"><label class="lbl" for="ex">理由 <span class="req">※必須</span></label><input id="ex" name="reason" type="text"'+(ui.formErr&&ui.formErr.ex?' class="input-error"':'')+'>'+fieldErr('ex')+'</div><div class="row-between"><button type="button" class="btn-text" data-action="close-panel">キャンセル</button><button type="submit" class="btn btn-primary">対象外にする</button></div></form></section>';
+    return '<section class="card stack" aria-labelledby="h-panel"><h2 id="h-panel">'+esc(s.name)+'さんを対象外にする</h2>'+
+      '<form data-form="exclude" data-id="'+x.id+'" class="stack" novalidate><div class="field"><label class="lbl" for="ex">理由 <span class="req">※必須</span></label><input id="ex" name="reason" type="text"'+(ui.formErr&&ui.formErr.ex?' class="input-error"':'')+'>'+fieldErr('ex')+'</div><div class="form-actions"><button type="button" class="btn-text" data-action="close-panel">キャンセル</button><button type="submit" class="btn btn-primary">対象外にする</button></div></form></section>';
   }
   var canDecide=x.status==='submitted'&&r.reviewerId===u.id;
   var next='';
   if(scope==='approvals'){next=approvalNextButton(u,x.id);}
-  else if(r.reviewerId===u.id){var others=targetsOf(r).filter(function(y){return y.status==='submitted'&&y.id!==x.id;});if(others.length)next='<button type="button" class="btn-text" style="align-self:flex-start;text-align:left" data-action="open-panel" data-mode="review" data-req="'+r.id+'" data-id="'+others[0].id+'">次の人（'+esc(staffName(others[0].staffId))+'さん）へ</button>';}
-  return '<section class="card stack" aria-labelledby="h-panel"><h2 id="h-panel" style="font-size:18px">'+esc(s.name)+'さんの提出</h2>'+submissionContent(x)+
+  else if(r.reviewerId===u.id){var others=targetsOf(r).filter(function(y){return y.status==='submitted'&&y.id!==x.id;});if(others.length)next='<button type="button" class="btn-text next-btn" data-action="open-panel" data-mode="review" data-req="'+r.id+'" data-id="'+others[0].id+'">次の人（'+esc(staffName(others[0].staffId))+'さん）へ'+I.chev+'</button>';}
+  return '<section class="card stack" aria-labelledby="h-panel"><h2 id="h-panel">'+esc(s.name)+'さんの提出</h2>'+submissionContent(x)+
     (x.status==='returned'?'<p class="quote">差し戻しの理由：「'+esc(x.returnReason)+'」</p>':'')+
-    (canDecide?'<div class="row"><button type="button" class="btn btn-primary" data-action="approve-target" data-id="'+x.id+'">承認する</button></div>'+
+    (canDecide?'<button type="button" class="btn btn-primary" data-action="approve-target" data-id="'+x.id+'">承認する</button>'+
       '<form data-form="return-target" data-id="'+x.id+'" class="stack" novalidate><div class="field"><label class="lbl" for="rx-'+x.id+'">差し戻す理由 <span class="req">※差し戻す場合は必須</span></label><span class="hint">本人の画面にそのまま表示されます</span><textarea id="rx-'+x.id+'" name="reason" rows="2"'+(ui.formErr&&ui.formErr['rx-'+x.id]?' class="input-error"':'')+'></textarea>'+fieldErr('rx-'+x.id)+'</div><div><button type="submit" class="btn">差し戻す</button></div></form>':
       (x.status==='submitted'?'<p class="text-2">承認できるのは確認する人（'+esc(staffName(r.reviewerId))+'さん）です。</p>':''))+
     next+'</section>';
@@ -775,12 +979,11 @@ function targetPanel(u,x,mode,scope){
 function viewPrint(u,id){
   var r=reqById(id);if(!r||!canManageRequest(u,r))return notFound();
   var list=targetsOf(r).filter(function(x){return x.status==='not_submitted'||x.status==='returned';});
-  return '<p class="no-print"><a href="#/requests/'+r.id+'">'+I.back+'提出状況へ戻る</a></p>'+pageTitle('未提出者一覧：'+r.title)+'<p>期限 '+esc(fmtDate(r.dueOn))+'　'+esc(fmtDate(today()))+' 時点</p>'+
+  return backLink('#/requests/'+r.id,'提出状況へ戻る')+pageHead('未提出者一覧：'+r.title,'期限 <span class="num">'+esc(fmtDate(r.dueOn))+'</span>　'+esc(fmtDate(today()))+' 時点','<button type="button" class="btn btn-primary" data-action="print">印刷する</button>')+
   '<div class="table-wrap"><table><thead><tr><th scope="col">氏名</th><th scope="col">部署</th><th scope="col">状態</th></tr></thead><tbody>'+
   (list.length?list.map(function(x){return '<tr><td>'+esc(staffName(x.staffId))+'</td><td>'+esc(deptName(x.departmentId))+'</td><td>'+(x.status==='returned'?'差し戻し（再提出をお願いします）':'未提出')+'</td></tr>';}).join(''):'<tr><td colspan="3">未提出の人はいません</td></tr>')+
-  '</tbody></table></div><p class="no-print"><button type="button" class="btn btn-primary" data-action="print">印刷する</button></p>';
+  '</tbody></table></div>';
 }
-
 /* ---------------- 画面：承認待ち ---------------- */
 function approvalItems(u){
   var a=myApprovals(u);
@@ -794,7 +997,7 @@ function approvalPanelAt(u,idx){var its=approvalItems(u);if(!its.length)return n
 function approvalNextButton(u,id){
   var its=approvalItems(u);var i=its.map(function(it){return it.id;}).indexOf(id);var nx=i>=0?its[i+1]:null;
   if(!nx)return '';
-  return '<button type="button" class="btn-text" style="align-self:flex-start;text-align:left" data-action="open-panel" data-scope="approvals" data-kind="'+nx.kind+'" data-id="'+nx.id+'">次の件へ（'+esc(nx.who)+'さん・'+esc(nx.title)+'）</button>';
+  return '<button type="button" class="btn-text next-btn" data-action="open-panel" data-scope="approvals" data-kind="'+nx.kind+'" data-id="'+nx.id+'">次の件へ（'+esc(nx.who)+'さん・'+esc(nx.title)+'）'+I.chev+'</button>';
 }
 function otherApprovals(u){
   var list=[];
@@ -805,8 +1008,8 @@ function otherApprovals(u){
 }
 function othersHtml(others){
   if(!others.length)return '';
-  return '<section class="stack" aria-labelledby="h-others"><h2 id="h-others" style="font-size:18px">ほかの人が確認する件（'+others.length+'件）</h2><p class="text-2">止まっている件がないかを見るための一覧です。承認は、指定された人が行います。</p><ul class="list card">'+
-    others.map(function(o){return '<li class="row"><span class="tag-outline">'+esc(o.label)+'</span><span style="flex:1 1 200px"><a href="'+o.link+'" style="font-weight:500">'+esc(o.title)+'</a><br><span class="text-2">'+esc(o.who)+'　'+esc(fmtStamp(o.at))+'</span></span><span class="text-2">確認する人：'+esc(o.approver)+'さん</span></li>';}).join('')+'</ul></section>';
+  return '<section class="stack" aria-labelledby="h-others"><h2 id="h-others" class="section-label">ほかの人が確認する件（'+others.length+'件）</h2><p class="text-2">止まっている件がないかを見るための一覧です。承認は、指定された人が行います。</p><ul class="list card">'+
+    others.map(function(o){return rowLink(o.link,esc(o.title),'<span>'+esc(o.label)+'</span><span>'+esc(o.who)+'</span><span class="num">'+esc(fmtStamp(o.at))+'</span>','<span class="text-2">確認する人：'+esc(o.approver)+'さん</span>');}).join('')+'</ul></section>';
 }
 function viewApprovals(u){
   var items=approvalItems(u);
@@ -815,58 +1018,57 @@ function viewApprovals(u){
   ui.selected.approvals=sel;
   var panel='';
   if(ui.panel&&ui.panel.scope==='approvals'){
-    if(ui.panel.kind==='task'){var t=taskById(ui.panel.id);if(t&&t.status==='awaiting_approval'&&t.approval&&t.approval.approverId===u.id)panel='<section class="card stack"><h2 style="font-size:18px">'+esc(t.title)+'</h2><p><a href="#/tasks/'+t.id+'">業務の詳細を開く</a></p></section>'+reviewTaskPanel(t,'approvals');}
+    if(ui.panel.kind==='task'){var t=taskById(ui.panel.id);if(t&&t.status==='awaiting_approval'&&t.approval&&t.approval.approverId===u.id)panel='<section class="card stack"><h2>'+esc(t.title)+'</h2><a class="more-link" href="#/tasks/'+t.id+'">業務の詳細を開く'+I.chev+'</a></section>'+reviewTaskPanel(t,'approvals');}
     else{var x=byId(data.targets,ui.panel.id);if(x)panel=targetPanel(u,x,'review','approvals');}
   }
   var panelOpen=!!panel;
   var others=otherApprovals(u);
-  if(!panel)panel='<section class="card stack"><h2 style="font-size:18px">内容の確認</h2><p class="text-2">一覧の「確認する」を選ぶと、ここに内容が表示されます。一覧に戻らずに次の件へ進めます。</p></section>';
-  return pageTitle('承認待ち（'+items.length+'件）')+
+  if(!panel)panel='<section class="card stack"><h2>内容の確認</h2><p class="text-2">一覧の「確認する」を選ぶと、ここに内容が表示されます。一覧に戻らずに次の件へ進めます。</p></section>';
+  return pageHead('承認待ち（'+items.length+'件）')+
   '<div class="split"><div class="main-col">'+
     (items.length?'<ul class="list card">'+items.map(function(it){
       var cur=ui.panel&&ui.panel.scope==='approvals'&&ui.panel.id===it.id;
-      return '<li class="row'+(cur?' is-current':'')+'">'+(it.kind==='target'?'<input type="checkbox" id="sel-'+it.id+'" data-select="approvals" value="'+it.id+'"'+(sel.indexOf(it.id)>=0?' checked':'')+' aria-label="'+esc(it.who)+'さんの提出物を選ぶ">':'<span style="width:24px"></span>')+
-        '<span class="tag-outline">'+esc(it.label)+'</span><span style="flex:1 1 200px"><strong>'+esc(it.title)+'</strong><br><span class="text-2">'+esc(it.who)+'　'+esc(fmtStamp(it.at))+'</span></span>'+
+      return '<li class="appr-row'+(cur?' is-current':'')+'">'+(it.kind==='target'?'<input type="checkbox" id="sel-'+it.id+'" data-select="approvals" value="'+it.id+'"'+(sel.indexOf(it.id)>=0?' checked':'')+' aria-label="'+esc(it.who)+'さんの提出物を選ぶ">':'<span class="cb-space" aria-hidden="true"></span>')+
+        '<span class="row-main"><span class="row-title">'+esc(it.title)+'</span><span class="row-sub"><span>'+esc(it.label)+'</span><span>'+esc(it.who)+'</span><span class="num">'+esc(fmtStamp(it.at))+'</span></span></span>'+
         '<button type="button" class="btn btn-sm" data-action="open-panel" data-scope="approvals" data-kind="'+it.kind+'" data-id="'+it.id+'">確認する</button></li>';}).join('')+'</ul>'+
-      (targetIds.length?'<div class="row"><span>'+sel.length+'件を選んでいます</span><button type="button" id="btn-bulk" class="btn'+(sel.length&&!panelOpen?' btn-primary':'')+'" data-action="bulk-approve" data-id="approvals">選んだ'+sel.length+'件を承認する</button><span class="text-2">まとめて承認できるのは提出物だけです</span></div>':'')
-    :'<p class="card">あなたの承認待ちはありません（0件）</p>')+
+      (targetIds.length?'<div class="row"><span class="text-2">'+sel.length+'件を選んでいます</span><button type="button" id="btn-bulk" class="btn'+(sel.length&&!panelOpen?' btn-primary':'')+'" data-action="bulk-approve" data-id="approvals">選んだ'+sel.length+'件を承認する</button><span class="text-2">まとめて承認できるのは提出物だけです</span></div>':'')
+    :'<div class="card empty">'+I.checkCircle+'<p>あなたの承認待ちはありません</p></div>')+
     othersHtml(others)+
   '</div><div class="side-col">'+panel+'</div></div>';
 }
-
 /* ---------------- 画面：通知 ---------------- */
 function viewNotifications(u){
   var tab=ui.filter.notif||'urgent';
   var mine=data.notifications.filter(function(n){return n.toId===u.id;}).slice().sort(function(a,b){return a.at<b.at?1:-1;});
-  var list=mine.filter(function(n){return tab==='urgent'?n.urgent:!n.urgent;});
+  var defs=[['urgent','要対応',function(n){return n.urgent;}],['info','お知らせ',function(n){return !n.urgent;}]];
+  var cur=defs.filter(function(d){return d[0]===tab;})[0]||defs[0];
+  var list=mine.filter(cur[2]);
   var unread=mine.filter(function(n){return !n.readAt;}).length;
-  return '<div class="row-between">'+pageTitle('通知')+(unread?'<button type="button" class="btn btn-sm" data-action="read-all">すべて既読にする</button>':'')+'</div>'+
-  '<div class="chips" role="group" aria-label="通知の種類"><button type="button" class="chip" data-action="filter" data-scope="notif" data-value="urgent" aria-pressed="'+(tab==='urgent')+'">要対応 '+mine.filter(function(n){return n.urgent;}).length+'</button><button type="button" class="chip" data-action="filter" data-scope="notif" data-value="info" aria-pressed="'+(tab!=='urgent')+'">お知らせ '+mine.filter(function(n){return !n.urgent;}).length+'</button></div>'+
-  (list.length?'<ul class="list card">'+list.map(function(n){return '<li class="row"><span style="flex:1 1 220px">'+(n.readAt?'':'<span class="tag tag-info">未読</span> ')+'<strong>'+esc(n.title)+'</strong><br>'+(n.body?'<span>'+esc(n.body)+'</span><br>':'')+'<span class="text-2">'+esc(fmtStamp(n.at))+'</span></span><button type="button" class="btn btn-sm" data-action="open-notif" data-id="'+n.id+'">開く</button></li>';}).join('')+'</ul>':'<p class="card">通知はありません</p>')+
-  '<p class="text-2">試作品では、通知はこの画面にだけ届きます（メールやスマホへの通知は送りません）。</p>';
+  return pageHead('通知',null,unread?'<button type="button" class="btn btn-sm" data-action="read-all">すべて既読にする</button>':'')+
+  segmented(defs,mine,cur,'notif','通知の種類')+
+  (list.length?'<ul class="list card">'+list.map(function(n){return '<li class="has-link"><button type="button" class="row-link" data-action="open-notif" data-id="'+n.id+'">'+(n.readAt?'<span class="unread-space" aria-hidden="true"></span>':'<span class="unread-dot" aria-hidden="true"></span><span class="sr-only">未読</span>')+'<span class="row-main"><span class="row-title">'+esc(n.title)+'</span>'+(n.body?'<span class="row-sub">'+esc(n.body)+'</span>':'')+'<span class="row-sub num">'+esc(fmtStamp(n.at))+'</span></span>'+I.chev+'</button></li>';}).join('')+'</ul>':'<div class="card empty">'+I.checkCircle+'<p>通知はありません</p></div>')+
+  '<p class="foot-note">試作品では、通知はこの画面にだけ届きます（メールやスマホへの通知は送りません）。</p>';
 }
-
 /* ---------------- 画面：操作履歴・この試作品について ---------------- */
 function viewAudit(u){
   var list=data.audit.slice().sort(function(a,b){return a.at<b.at?1:-1;}).slice(0,200);
-  return pageTitle('操作履歴')+'<p class="text-2">だれが・いつ・何をしたかの記録です（新しい順、最大200件）。</p>'+
+  return pageHead('操作履歴','だれが・いつ・何をしたかの記録です（新しい順、最大200件）')+
   '<div class="table-wrap"><table><thead><tr><th scope="col">日時</th><th scope="col">操作した人</th><th scope="col">内容</th></tr></thead><tbody>'+
-  (list.length?list.map(function(a){return '<tr><td>'+esc(fmtStamp(a.at))+'</td><td>'+esc(staffName(a.actorId))+'</td><td>'+esc(a.action)+'：'+esc(a.target)+'</td></tr>';}).join(''):'<tr><td colspan="3">まだ記録はありません</td></tr>')+
+  (list.length?list.map(function(a){return '<tr><td class="num">'+esc(fmtStamp(a.at))+'</td><td>'+esc(staffName(a.actorId))+'</td><td>'+esc(a.action)+'：'+esc(a.target)+'</td></tr>';}).join(''):'<tr><td colspan="3">まだ記録はありません</td></tr>')+
   '</tbody></table></div>';
 }
 function viewAbout(u){
-  return pageTitle('この試作品について')+
-  '<section class="card stack"><p>使い勝手を確かめるための試作品です。このファイルだけで動き、インターネットやサーバーは使いません。データはこの端末のブラウザの中にだけ保存されます'+(storageOK?'':'（この環境では保存できないため、ページを閉じると元に戻ります）')+'。</p>'+
+  return pageHead('この試作品について','画面と業務の流れを確かめるための試作品です')+
+  '<section class="card stack"><p>このファイルだけで動き、インターネットやサーバーは使いません。データはこの端末のブラウザの中にだけ保存されます'+(storageOK?'':'（この環境では保存できないため、ページを閉じると元に戻ります）')+'。</p>'+
   '<p class="notice notice-warn">'+I.alert+'<span>施設名・氏名・業務はすべて架空です。実在の職員・入居者の情報は入力しないでください。</span></p></section>'+
-  '<div class="cols"><section class="card stack"><h2 style="font-size:18px">試せること</h2><ul>'+
-    '<li>施設長・事務長・介護主任・職員の切替（画面上部の「利用者」）</li><li>管理者ダッシュボード（要対応・今日まで・期限が近い・自動チェック）</li><li>職員の「今日のやること」と、1画面に1つの提出</li><li>提出状況表・催促・代理登録・対象外・未提出者一覧の印刷</li><li>承認・差し戻し（その場で・まとめて）</li><li>業務・依頼の作成、完了報告、保留、担当の設定</li><li>行政提出の控えの登録</li><li>毎日のチェックリストの自動作成、日付を進めたときの自動の督促</li><li>通知と操作履歴</li></ul></section>'+
-  '<section class="card stack"><h2 style="font-size:18px">まだ入っていないもの</h2><ul>'+
+  '<div class="cols"><section class="card stack"><h2>試せること</h2><ul>'+
+    '<li>施設長・事務長・介護主任・職員の切り替え（画面上部の「利用者」）</li><li>管理者のホーム（要対応・あなたのやること・今日まで・期限が近い・自動チェック）</li><li>職員の「今日のやること」と、1画面に1つの提出</li><li>提出状況表・催促・代理登録・対象外・未提出者一覧の印刷</li><li>承認・差し戻し（その場で・まとめて）</li><li>業務・依頼の作成、完了報告、保留、担当の設定</li><li>行政提出の控えの登録</li><li>毎日のチェックリストの自動作成、日付を進めたときの自動の督促</li><li>通知と操作履歴</li></ul></section>'+
+  '<section class="card stack"><h2>まだ入っていないもの</h2><ul>'+
     '<li>本物のログイン（ここでは名前を選ぶだけです）</li><li>施設ごとのデータ分離・権限の細かい設定・暗号化などのセキュリティ</li><li>メール・スマホへの通知</li><li>書類管理、委員会・研修、年間業務の登録画面、年度更新、CSV</li><li>AI アシスタント</li><li>ファイルの中身の保存（ファイル名だけを記録します）</li></ul></section></div>'+
-  '<section class="card stack"><h2 style="font-size:18px">データを最初の状態に戻す</h2><p>操作した内容を消して、最初の架空のデータに戻します。</p><div><button type="button" class="btn" data-action="reset-data">最初の状態に戻す</button></div></section>';
+  '<section class="card stack"><h2>データを最初の状態に戻す</h2><p class="text-2">操作した内容を消して、最初の架空のデータに戻します。</p><div><button type="button" id="btn-reset" class="btn" data-action="reset-data">最初の状態に戻す</button></div></section>';
 }
-function notFound(){return pageTitle('ページが見つかりません')+'<p class="card">このページは存在しないか、見る権限がありません。<a href="#/">ホームへ戻る</a></p>';}
-function forbidden(){return pageTitle('このページは管理者用です')+'<p class="card">職員の方はホームから操作してください。<a href="#/">ホームへ戻る</a></p>';}
-
+function notFound(){return pageHead('ページが見つかりません')+'<div class="card empty">'+I.info+'<p>このページは存在しないか、見る権限がありません。</p><a class="btn" href="#/">ホームへ戻る</a></div>';}
+function forbidden(){return pageHead('このページは管理者用です')+'<div class="card empty">'+I.info+'<p>職員の方はホームから操作してください。</p><a class="btn" href="#/">ホームへ戻る</a></div>';}
 /* ---------------- 画面：職員ホーム「今日のやること」 ---------------- */
 function viewStaffHome(u){
   var T=today();
@@ -896,30 +1098,37 @@ function viewStaffHome(u){
     var d=addDays(weekStart,i);var dt=parseDate(d);
     var n=myTasks.filter(function(t){return t.dueOn===d;}).length+myTargets.filter(function(x){return (x.status==='not_submitted'||x.status==='returned')&&reqOf(x).dueOn===d;}).length;
     var isT=d===T;
-    days+='<div class="day'+(isT?' today':'')+'" aria-label="'+(dt.getMonth()+1)+'月'+dt.getDate()+'日 '+WEEK[dt.getDay()]+'曜'+(isT?' 今日':'')+' 予定'+n+'件"><span aria-hidden="true">'+WEEK[dt.getDay()]+'</span><span aria-hidden="true">'+dt.getDate()+'</span>'+(n?'<span class="dot" aria-hidden="true"></span>':'')+'</div>';
+    days+='<div class="day'+(isT?' today':'')+'" role="img" aria-label="'+(dt.getMonth()+1)+'月'+dt.getDate()+'日 '+WEEK[dt.getDay()]+'曜'+(isT?' 今日':'')+' 予定'+n+'件"><span class="dw" aria-hidden="true">'+WEEK[dt.getDay()]+'</span><span class="dn num" aria-hidden="true">'+dt.getDate()+'</span><span class="dot-slot" aria-hidden="true">'+(n?'<span class="dot"></span>':'')+'</span></div>';
   }
-  function section(id,title,items,warn){if(!items.length)return '';return '<section aria-labelledby="'+id+'" class="stack"><h2 id="'+id+'" class="section-title" style="font-size:18px'+(warn?';color:'+warn:'')+'">'+(warn?I.alert:'')+esc(title)+'（'+items.length+'件）</h2>'+items.slice(0,5).join('')+(items.length>5?'<p class="text-2">ほかに'+(items.length-5)+'件あります。「業務」「提出」のタブで見られます</p>':'')+'</section>';}
-  return pageTitle('今日のやること（'+count+'件）')+
-    section('h-ret','差し戻し',returned,'var(--warn)')+
-    section('h-over','期限を過ぎています',overdue,'var(--danger)')+
+  function section(id,title,items,tone){if(!items.length)return '';return '<section aria-labelledby="'+id+'" class="stack"><h2 id="'+id+'" class="section-title'+(tone?' '+tone:'')+'">'+(tone?I.alertSm:'')+'<span>'+esc(title)+'</span><span class="count">'+items.length+'件</span></h2>'+items.slice(0,5).join('')+(items.length>5?'<p class="text-2">ほかに'+(items.length-5)+'件あります。「業務」「提出」のタブで見られます</p>':'')+'</section>';}
+  var checklist='';
+  if(cl.length){
+    checklist='<section aria-labelledby="h-cl" class="stack"><h2 id="h-cl" class="section-title"><span>今日のチェックリスト</span><span class="count">'+esc(deptName(u.deptId))+'・'+(cl.length-clLeft)+' / '+cl.length+'</span></h2><ul class="checklist">'+cl.map(function(t){
+      if(t.status==='completed')return '<li class="cl-done"><span class="check-mark" aria-hidden="true">'+I.checkSm+'</span><span class="cl-label">'+esc(t.title)+'</span><span class="cl-time num"><span class="sr-only">完了 </span>'+esc((t.completedAt||'').split('T')[1]||'')+'</span></li>';
+      return '<li><button type="button" class="check-btn" data-action="check-done" data-id="'+t.id+'" aria-label="'+esc(t.title)+'を完了にする"><span class="ring" aria-hidden="true"></span></button><span class="cl-label">'+esc(t.title)+'</span></li>';
+    }).join('')+'</ul></section>';
+  }
+  return '<div class="page-head"><p class="eyebrow">'+greeting()+'、'+esc(u.name)+'さん</p>'+pageTitle('今日のやること（'+count+'件）')+'</div>'+
+    section('h-ret','差し戻し',returned,'warn')+
+    section('h-over','期限を過ぎています',overdue,'danger')+
     section('h-today','今日まで',todays)+
     section('h-new','新しい依頼',news)+
-    (cl.length?'<section aria-labelledby="h-cl" class="stack"><h2 id="h-cl" style="font-size:18px">今日のチェックリスト（'+esc(deptName(u.deptId))+'）</h2><ul class="checklist">'+cl.map(function(t){
-      return '<li><span>'+esc(t.title)+'</span>'+(t.status==='completed'?'<span class="tag-plain">'+I.check+'完了 '+esc((t.completedAt||'').split('T')[1]||'')+'</span>':'<button type="button" class="btn btn-sm" data-action="check-done" data-id="'+t.id+'" aria-label="'+esc(t.title)+'を完了にする">完了</button>')+'</li>';}).join('')+'</ul></section>':'')+
-    (count===0?'<p class="card">今日やることはありません。おつかれさまです。</p>':'')+
-    '<section aria-labelledby="h-week" class="stack"><h2 id="h-week" style="font-size:18px">今週の予定</h2><div class="week">'+days+'</div><a href="#/tasks">これからの業務をすべて見る</a></section>';
+    checklist+
+    (count===0?'<div class="card empty">'+I.checkCircle+'<p>今日やることはありません。おつかれさまです。</p></div>':'')+
+    '<section aria-labelledby="h-week" class="stack"><h2 id="h-week" class="section-title"><span>今週の予定</span></h2><div class="week">'+days+'</div><a class="more-link" href="#/tasks">これからの業務をすべて見る'+I.chev+'</a></section>';
 }
 function targetCard(x,showReason,primary){
   var r=reqOf(x);
-  return '<article class="scard"><h3>'+esc(r.title)+'</h3>'+
-    (showReason&&x.returnReason?'<p class="quote">「'+esc(x.returnReason)+'」<br>'+esc(staffName(r.reviewerId))+'さんより</p>':'')+
-    '<div class="row text-2">'+dueBadge(r.dueOn,true)+(r.dueTime?'<span>'+esc(r.dueTime)+'まで</span>':'')+'<span>依頼：'+esc(staffName(r.requesterId))+'</span></div>'+
+  return '<article class="scard"><div class="scard-head"><span class="kind">提出</span>'+dueBadge(r.dueOn,true)+'</div><h3>'+esc(r.title)+'</h3>'+
+    (showReason&&x.returnReason?'<p class="quote">「'+esc(x.returnReason)+'」<span class="quote-by">'+esc(staffName(r.reviewerId))+'さんより</span></p>':'')+
+    '<p class="meta">'+(r.dueTime?'<span class="num">'+esc(r.dueTime)+'まで</span>':'')+'<span>依頼：'+esc(staffName(r.requesterId))+'</span></p>'+
     '<a class="btn '+(primary?'btn-primary ':'')+'btn-lg" href="#/submit/'+x.id+'">'+(x.status==='returned'?'もう一度提出する':'提出する')+'</a></article>';
 }
 function taskCard(t,showReason,primary){
-  return '<article class="scard"><h3>'+esc(t.title)+'</h3>'+
-    (showReason&&t.returnReason?'<p class="quote">「'+esc(t.returnReason)+'」<br>'+esc(staffName(t.approval?t.approval.approverId:''))+'さんより</p>':'')+
-    '<div class="row text-2">'+dueBadge(t.dueOn,true)+(t.requestedById?'<span>依頼：'+esc(staffName(t.requestedById))+'</span>':'')+(t.assignee&&t.assignee.type==='dept'?'<span>'+esc(deptName(t.assignee.id))+'のだれか</span>':'')+'</div>'+
+  var meta=(t.requestedById?'<span>依頼：'+esc(staffName(t.requestedById))+'</span>':'')+(t.assignee&&t.assignee.type==='dept'?'<span>'+esc(deptName(t.assignee.id))+'のだれか</span>':'');
+  return '<article class="scard"><div class="scard-head"><span class="kind">'+(t.kind==='request'?'依頼':'業務')+'</span>'+dueBadge(t.dueOn,true)+'</div><h3>'+esc(t.title)+'</h3>'+
+    (showReason&&t.returnReason?'<p class="quote">「'+esc(t.returnReason)+'」<span class="quote-by">'+esc(staffName(t.approval?t.approval.approverId:''))+'さんより</span></p>':'')+
+    (meta?'<p class="meta">'+meta+'</p>':'')+
     (t.kind==='request'&&!t.acknowledgedAt?'<button type="button" class="btn '+(primary?'btn-primary ':'')+'btn-lg" data-action="open-request" data-id="'+t.id+'">内容を見る</button>':'<a class="btn '+(primary?'btn-primary ':'')+'btn-lg" href="#/tasks/'+t.id+'">内容を見る</a>')+'</article>';
 }
 function viewStaffTasks(u){
@@ -927,11 +1136,9 @@ function viewStaffTasks(u){
   var open=mine.filter(function(t){return isOpenTask(t)&&t.status!=='awaiting_approval';}).sort(byDue);
   var waiting=mine.filter(function(t){return t.status==='awaiting_approval';}).sort(byDue);
   var done=mine.filter(function(t){return t.status==='completed';}).sort(function(a,b){return (a.completedAt||'')<(b.completedAt||'')?1:-1;}).slice(0,10);
-  function item(t){return '<li class="row"><a href="#/tasks/'+t.id+'" style="flex:1 1 180px;font-weight:500">'+esc(t.title)+'</a>'+dueBadge(t.dueOn,isOpenTask(t))+taskStatusTag(t)+'</li>';}
-  return pageTitle('自分の業務')+
-    '<section class="stack" aria-labelledby="h-o"><h2 id="h-o" style="font-size:18px">これからの業務（'+open.length+'件）</h2>'+(open.length?'<ul class="list card">'+open.map(item).join('')+'</ul>':'<p class="card">ありません</p>')+'</section>'+
-    '<section class="stack" aria-labelledby="h-w"><h2 id="h-w" style="font-size:18px">確認待ち（'+waiting.length+'件）</h2>'+(waiting.length?'<ul class="list card">'+waiting.map(item).join('')+'</ul>':'<p class="card">ありません</p>')+'</section>'+
-    '<section class="stack" aria-labelledby="h-d"><h2 id="h-d" style="font-size:18px">最近完了した業務</h2>'+(done.length?'<ul class="list card">'+done.map(item).join('')+'</ul>':'<p class="card">ありません</p>')+'</section>';
+  function item(t){return rowLink('#/tasks/'+t.id,esc(t.title),esc(t.category)+(t.kind==='request'?'・依頼':''),dueBadge(t.dueOn,isOpenTask(t))+taskStatusTag(t));}
+  function block(id,title,list){return '<section class="stack" aria-labelledby="'+id+'"><h2 id="'+id+'" class="section-title"><span>'+esc(title)+'</span><span class="count">'+list.length+'件</span></h2>'+(list.length?'<ul class="list card">'+list.map(item).join('')+'</ul>':'<div class="card empty"><p>ありません</p></div>')+'</section>';}
+  return '<div class="page-head">'+pageTitle('自分の業務')+'</div>'+block('h-o','これからの業務',open)+block('h-w','確認待ち',waiting)+block('h-d','最近完了した業務',done);
 }
 function viewStaffSubmissions(u){
   var mine=data.targets.filter(function(x){return x.staffId===u.id&&reqOf(x).status==='open';});
@@ -939,13 +1146,10 @@ function viewStaffSubmissions(u){
   var wait=mine.filter(function(x){return x.status==='submitted';});
   var ok=mine.filter(function(x){return x.status==='approved';});
   var btnNo=0;
-  function item(x){var r=reqOf(x);return '<li class="row"><span style="flex:1 1 180px;font-weight:500">'+esc(r.title)+'</span>'+dueBadge(r.dueOn,x.status==='not_submitted'||x.status==='returned')+targetTag(x)+((x.status==='not_submitted'||x.status==='returned')?'<a class="btn btn-sm'+(btnNo++===0?' btn-primary':'')+'" href="#/submit/'+x.id+'">'+(x.status==='returned'?'もう一度提出する':'提出する')+'</a>':'')+'</li>';}
-  return pageTitle('自分の提出')+
-    '<section class="stack" aria-labelledby="h-t"><h2 id="h-t" style="font-size:18px">出すもの（'+todo.length+'件）</h2>'+(todo.length?'<ul class="list card">'+todo.map(item).join('')+'</ul>':'<p class="card">ありません</p>')+'</section>'+
-    '<section class="stack" aria-labelledby="h-wa"><h2 id="h-wa" style="font-size:18px">確認待ち（'+wait.length+'件）</h2>'+(wait.length?'<ul class="list card">'+wait.map(item).join('')+'</ul>':'<p class="card">ありません</p>')+'</section>'+
-    '<section class="stack" aria-labelledby="h-ok" ><h2 id="h-ok" style="font-size:18px">承認済み（'+ok.length+'件）</h2>'+(ok.length?'<ul class="list card">'+ok.map(item).join('')+'</ul>':'<p class="card">ありません</p>')+'</section>';
+  function item(x){var r=reqOf(x);var open=x.status==='not_submitted'||x.status==='returned';return '<li class="sub-row"><span class="row-main"><span class="row-title">'+esc(r.title)+'</span><span class="row-sub">'+dueBadge(r.dueOn,open)+targetTag(x)+'</span></span>'+(open?'<a class="btn btn-sm'+(btnNo++===0?' btn-primary':'')+'" href="#/submit/'+x.id+'">'+(x.status==='returned'?'もう一度提出する':'提出する')+'</a>':'')+'</li>';}
+  function block(id,title,list){return '<section class="stack" aria-labelledby="'+id+'"><h2 id="'+id+'" class="section-title"><span>'+esc(title)+'</span><span class="count">'+list.length+'件</span></h2>'+(list.length?'<ul class="list card">'+list.map(item).join('')+'</ul>':'<div class="card empty"><p>ありません</p></div>')+'</section>';}
+  return '<div class="page-head">'+pageTitle('自分の提出')+'</div>'+block('h-t','出すもの',todo)+block('h-wa','確認待ち',wait)+block('h-ok','承認済み',ok);
 }
-
 /* ---------------- 画面：提出の流れ（1画面に1つ） ---------------- */
 function viewSubmitFlow(u,targetId){
   var x=byId(data.targets,targetId);
@@ -954,16 +1158,16 @@ function viewSubmitFlow(u,targetId){
   var r=reqOf(x);
   if(r.status!=='open'||!(x.status==='not_submitted'||x.status==='returned')){
     var fl=ui.flow[x.id];
-    if(!(fl&&fl.step===4))return pageTitle(r.title)+'<p class="card">この提出は受け付け済みです（'+targetTag(x)+'）。<a href="#/">今日のやることに戻る</a></p>';
+    if(!(fl&&fl.step===4))return pageHead(r.title)+'<div class="card empty">'+I.checkCircle+'<p>この提出は受け付け済みです（'+targetTag(x)+'）。</p><a class="btn" href="#/">今日のやることに戻る</a></div>';
   }
   var f=ui.flow[x.id]||(ui.flow[x.id]={step:1});
   var q=qOf(r);
-  var back=(f.step===2||f.step===3||f.step==='later')?'<button type="button" class="btn-text" data-action="flow-back" data-id="'+x.id+'" style="align-self:flex-start;text-decoration:none">'+I.back+'戻る</button>':(f.step===1?'<a href="#/" style="align-self:flex-start;min-height:44px;display:inline-flex;align-items:center">'+I.back+'戻る</a>':'');
+  var back=(f.step===2||f.step===3||f.step==='later')?'<button type="button" class="back-link" data-action="flow-back" data-id="'+x.id+'">'+I.back+'戻る</button>':(f.step===1?'<a class="back-link" href="#/">'+I.back+'戻る</a>':'');
   var body='';
   if(f.step===1){
     body=pageTitle(r.title+'を提出する')+
       (x.status==='returned'&&x.returnReason?'<p class="quote">差し戻しの理由：「'+esc(x.returnReason)+'」</p>':'')+
-      '<dl class="dl"><dt>期限</dt><dd>'+dueBadge(r.dueOn,true)+' '+esc(fmtDate(r.dueOn))+(r.dueTime?' '+esc(r.dueTime)+'まで':'')+'</dd><dt>依頼した人</dt><dd>'+esc(staffName(r.requesterId))+'</dd><dt>出すもの</dt><dd>'+(r.fileMode==='no_file'?esc(q.what):'書類（写真でもファイルでも出せます）')+'</dd></dl>'+
+      '<dl class="dl"><dt>期限</dt><dd>'+dueBadge(r.dueOn,true)+' <span class="num">'+esc(fmtDate(r.dueOn))+(r.dueTime?' '+esc(r.dueTime)+'まで':'')+'</span></dd><dt>依頼した人</dt><dd>'+esc(staffName(r.requesterId))+'</dd><dt>出すもの</dt><dd>'+(r.fileMode==='no_file'?esc(q.what):'書類（写真でもファイルでも出せます）')+'</dd></dl>'+
       (r.instructions?'<p class="notice notice-plain">'+esc(r.instructions)+'</p>':'')+
       '<div class="bottom"><button type="button" class="btn btn-primary btn-lg" data-action="flow-next" data-id="'+x.id+'">次へ</button></div>';
   }else if(f.step===2){
@@ -986,17 +1190,17 @@ function viewSubmitFlow(u,targetId){
     }
   }else if(f.step===3){
     var summary=r.fileMode==='no_file'?
-      '<dl class="dl"><dt>回答</dt><dd>'+esc(q.yes)+'</dd><dt>'+esc(q.date)+'</dt><dd>'+esc(fmtDate(f.answer.date))+'</dd></dl>':
+      '<dl class="dl"><dt>回答</dt><dd>'+esc(q.yes)+'</dd><dt>'+esc(q.date)+'</dt><dd class="num">'+esc(fmtDate(f.answer.date))+'</dd></dl>':
       '<div class="thumb" role="img" aria-label="選んだファイル">'+I.doc+'<span>'+esc(f.fileName)+'</span></div><div class="row-between"><span class="text-2">1件</span><button type="button" class="btn-text" data-action="flow-back" data-id="'+x.id+'">撮り直す</button></div>';
     body=pageTitle('この内容で提出しますか')+summary+
       '<form data-form="flow-send" data-id="'+x.id+'" class="stack" novalidate style="flex:1"><div class="field"><label class="lbl" for="memo">コメント <span class="req">※任意</span></label><textarea id="memo" name="comment" rows="3">'+esc(f.comment||'')+'</textarea></div>'+
       '<div class="bottom"><button type="submit" class="btn btn-primary btn-lg">提出する</button></div></form>';
   }else if(f.step==='later'){
-    body=pageTitle(q.laterTitle)+'<p>'+esc(q.later)+'</p><dl class="dl"><dt>期限</dt><dd>'+esc(fmtDate(r.dueOn))+'</dd><dt>わからないとき</dt><dd>'+esc(staffName(r.requesterId))+'さんに相談してください</dd></dl>'+
+    body=pageTitle(q.laterTitle)+'<p>'+esc(q.later)+'</p><dl class="dl"><dt>期限</dt><dd class="num">'+esc(fmtDate(r.dueOn))+'</dd><dt>わからないとき</dt><dd>'+esc(staffName(r.requesterId))+'さんに相談してください</dd></dl>'+
       '<div class="bottom"><a class="btn btn-primary btn-lg" href="#/" data-action="flow-finish" data-id="'+x.id+'">今日のやることに戻る</a></div>';
   }else{
     var left=staffTodoCount(u);
-    body='<div class="stack" style="align-items:center;text-align:center;margin-top:48px"><span class="done-mark">'+I.bigcheck+'</span>'+pageTitle('提出しました')+'<p>'+esc(staffName(r.reviewerId))+'さんが確認します。<br>結果は「通知」でお知らせします。</p></div>'+
+    body='<div class="done-wrap"><span class="done-mark">'+I.drawCheck+'</span>'+pageTitle('提出しました')+'<p>'+esc(staffName(r.reviewerId))+'さんが確認します。<br>結果は「通知」でお知らせします。</p></div>'+
       '<p class="notice notice-plain" style="justify-content:center">今日のやることは、あと'+left+'件です</p>'+
       '<div class="bottom"><a class="btn btn-primary btn-lg" href="#/" data-action="flow-finish" data-id="'+x.id+'">今日のやることに戻る</a></div>';
   }
@@ -1145,7 +1349,7 @@ function createRequest(v){
 function openDialog(d){ui.dialog=d;render();}
 function dialogHtml(){
   var d=ui.dialog;if(!d)return '';
-  return '<div class="backdrop"><div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dlg-title" aria-describedby="dlg-body"><h2 id="dlg-title">'+esc(d.title)+'</h2><p id="dlg-body">'+esc(d.body)+'</p><div class="dialog-actions"><button type="button" class="btn-text" data-action="dialog-cancel">キャンセル</button><button type="button" class="btn '+(d.danger?'btn-danger':'btn-primary')+'" data-action="dialog-ok" data-autofocus>'+esc(d.confirm)+'</button></div></div></div>';
+  return '<div class="backdrop"><div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dlg-title" aria-describedby="dlg-body"><h2 id="dlg-title">'+esc(d.title)+'</h2><p id="dlg-body" class="text-2">'+esc(d.body)+'</p><div class="dialog-actions"><button type="button" class="btn" data-action="dialog-cancel">キャンセル</button><button type="button" class="btn '+(d.danger?'btn-danger':'btn-primary')+'" data-action="dialog-ok" data-autofocus>'+esc(d.confirm)+'</button></div></div></div>';
 }
 function perform(kind,payload){
   if(kind==='bulk-approve'){var n=approveTargets(payload.ids);ui.selected[payload.scope]=[];ui.panel=null;toast(n+'件を承認しました');save();render();}
@@ -1169,7 +1373,7 @@ function handleAction(a,el){
     case 'start-task':
       var ts=taskById(id);if(ts&&canWork(u,ts)&&ts.status==='not_started'){ts.status='in_progress';hist(ts,'not_started','in_progress','着手');log('着手',ts.title);save();toast('着手しました');}render();break;
     case 'check-done':
-      var tc=taskById(id);if(tc&&tc.isChecklist&&isAssignee(u,tc)&&tc.status!=='completed'){tc.status='completed';tc.completedAt=nowStamp();tc.completedById=u.id;hist(tc,'not_started','completed','完了');log('チェックリストを完了',tc.title);save();toast(tc.title+'を完了にしました');}render();break;
+      var tc=taskById(id);if(tc&&tc.isChecklist&&isAssignee(u,tc)&&tc.status!=='completed'){tc.status='completed';tc.completedAt=nowStamp();tc.completedById=u.id;hist(tc,'not_started','completed','完了');log('チェックリストを完了',tc.title);save();toast(tc.title+'を完了にしました','ok',{type:'check',id:tc.id});}render();break;
     case 'approve-task':
       var ta=taskById(id);var inA=!!(ui.panel&&ui.panel.scope==='approvals');var ia=inA?approvalIndex(u,id):-1;if(ta){approveTask(ta);save();}ui.panel=inA?approvalPanelAt(u,ia):null;render();if(ui.panel)focusPanel();break;
     case 'approve-target':
@@ -1214,6 +1418,12 @@ function handleAction(a,el){
       closeDialog();break;
     case 'skip':
       var mn=document.getElementById('main');if(mn){mn.setAttribute('tabindex','-1');mn.focus();}break;
+    case 'undo':
+      var un=ui.toast&&ui.toast.undo;
+      if(un&&un.type==='check'){var tu=taskById(un.id);if(tu&&tu.status==='completed'&&isAssignee(u,tu)){tu.status='not_started';tu.completedAt=null;tu.completedById=null;hist(tu,'completed','not_started','完了を取り消し');log('チェックリストの完了を取り消し',tu.title);save();toast(tu.title+'を未完了に戻しました');}}
+      render();break;
+    case 'dismiss-toast':
+      ui.toast=null;render();var ph=document.getElementById('page-title');if(ph)ph.focus({preventScroll:true});break;
     case 'print':
       window.print();break;
   }
@@ -1300,27 +1510,30 @@ function parseRoute(){var h=location.hash.replace(/^#/,'')||'/';var parts=h.spli
 function isActive(r,p){if(p==='/')return r.path==='/';return r.path===p||r.path.indexOf(p+'/')===0;}
 function protoBarHtml(){
   var opts=data.staff.filter(function(s){return s.hasLogin&&s.status==='active';}).map(function(s){return '<option value="'+s.id+'"'+(s.id===data.currentUserId?' selected':'')+'>'+esc(s.name)+'（'+esc(s.title)+'）</option>';}).join('');
-  return '<span class="proto-label">試作品</span><span>架空のデータです</span>'+
-    '<label>利用者 <select data-change="switch-user" aria-label="操作する人を切り替える">'+opts+'</select></label>'+
-    '<span>今日：'+esc(fmtDate(today()))+(data.todayOffset?'（'+data.todayOffset+'日進めています）':'')+'</span>'+
+  return '<span class="proto-label">試作品</span><span class="proto-note">架空のデータです</span><span class="proto-spacer" aria-hidden="true"></span>'+
+    '<label class="proto-user">利用者 <select data-change="switch-user" aria-label="操作する人を切り替える">'+opts+'</select></label>'+
+    '<span class="proto-date num">'+esc(fmtDate(today()))+(data.todayOffset?'<span class="text-2">（'+data.todayOffset+'日進めています）</span>':'')+'</span>'+
     '<button type="button" class="pbtn" data-action="advance-day">1日進める</button>'+
     (data.todayOffset?'<button type="button" class="pbtn" data-action="reset-day">今日に戻す</button>':'')+
-    (storageOK?'':'<span>この画面では保存されません</span>')+
-    '<a href="#/about">この試作品について</a>';
+    (storageOK?'':'<span class="text-2">この画面では保存されません</span>')+
+    '<a class="proto-about" href="#/about">この試作品について</a>';
 }
 function adminLayout(content,r){
   var u=me();var pend=myApprovals(u).count;var unread=unreadCount(u);
-  var nav=[['/','ホーム'],['/tasks','業務'],['/requests','提出'],['/approvals','承認待ち（'+pend+'）'],['/notifications','通知（'+unread+'）'],['/audit','操作履歴']];
-  return '<header class="site-header"><div class="wrap header-row"><div class="brand"><span class="brand-name">'+esc(data.facility.name)+'</span><span class="text-2">'+esc(u.name)+'（'+esc(u.title)+'）</span></div>'+
-    '<nav aria-label="メインメニュー" class="main-nav">'+nav.map(function(n){return '<a href="#'+n[0]+'"'+(isActive(r,n[0])?' aria-current="page"':'')+'>'+esc(n[1])+'</a>';}).join('')+'</nav></div></header>'+
-    '<main id="main" class="wrap main">'+toastHtml()+content+'</main>';
+  var nav=[['/','ホーム',0],['/tasks','業務',0],['/requests','提出',0],['/approvals','承認待ち',pend],['/notifications','通知',unread],['/audit','操作履歴',0]];
+  return '<header class="site-header"><div class="wrap header-row">'+
+    '<a class="brand" href="#/"><span class="brand-mark" aria-hidden="true">'+I.mark+'</span><span class="brand-name">'+esc(data.facility.name)+'</span></a>'+
+    '<nav aria-label="メインメニュー" class="main-nav">'+nav.map(function(n){return '<a href="#'+n[0]+'"'+(isActive(r,n[0])?' aria-current="page"':'')+'>'+esc(n[1])+(n[2]?'<span class="badge">'+n[2]+'<span class="sr-only">件</span></span>':'')+'</a>';}).join('')+'</nav>'+
+    '<span class="user-chip"><span class="avatar" aria-hidden="true">'+initial(u.name)+'</span><span><span class="user-name">'+esc(u.name)+'</span><span class="user-title">'+esc(u.title)+'</span></span></span>'+
+  '</div></header>'+
+  '<main id="main" class="wrap main">'+toastHtml()+content+'</main>';
 }
 function staffLayout(content,r){
   var u=me();var unread=unreadCount(u);
-  var tabs=[['/','ホーム',I.home],['/tasks','業務',I.list],['/requests','提出',I.upload],['/notifications','通知（'+unread+'）',I.bell]];
-  return '<div class="staff-shell"><header class="staff-header"><div class="row-between text-2"><span>'+esc(u.name)+'さん</span><span>'+esc(fmtDate(today()))+'</span></div></header>'+
+  var tabs=[['/','ホーム',I.home,0],['/tasks','業務',I.list,0],['/requests','提出',I.upload,0],['/notifications','通知',I.bell,unread]];
+  return '<div class="staff-shell"><header class="staff-header"><span class="staff-date num">'+esc(fmtDate(today()))+'</span><span class="avatar" aria-hidden="true">'+initial(u.name)+'</span></header>'+
     '<main id="main" class="staff-main">'+toastHtml()+content+'</main>'+
-    '<nav class="tabbar no-print" aria-label="下部メニュー">'+tabs.map(function(t){return '<a href="#'+t[0]+'"'+(isActive(r,t[0])?' aria-current="page"':'')+'>'+t[2]+'<span>'+esc(t[1])+'</span></a>';}).join('')+'</nav></div>';
+    (r.parts[0]==='submit'?'':'<nav class="tabbar no-print" aria-label="下部メニュー">'+tabs.map(function(t){return '<a href="#'+t[0]+'"'+(isActive(r,t[0])?' aria-current="page"':'')+'><span class="tab-ico">'+t[2]+(t[3]?'<span class="tab-badge">'+t[3]+'<span class="sr-only">件の未読</span></span>':'')+'</span><span>'+esc(t[1])+'</span></a>';}).join('')+'</nav>')+'</div>';
 }
 function buildContent(r){
   var p=r.parts;var u=me();var isStaff=u.role==='STAFF';
@@ -1352,9 +1565,10 @@ function render(){
   protoBar.innerHTML=protoBarHtml();
   var u=me();
   app.innerHTML=u.role==='STAFF'?staffLayout(content,r):adminLayout(content,r);
+  if(navChanged){var mm=document.getElementById('main');if(mm)mm.classList.add('enter');}
   dialogRoot.innerHTML=dialogHtml();
   app.inert=!!ui.dialog;protoBar.inert=!!ui.dialog;
-  if(ui.toast){live.textContent=ui.toast.text;if(ui.toast.path===null)ui.toast.path=r.path;}
+  if(ui.toast){if(ui.toast.fresh)live.textContent=ui.toast.text;if(ui.toast.path===null)ui.toast.path=r.path;ui.toast.fresh=false;}
   ui.lastPath=r.path;
   if(ui.dialog){var b=dialogRoot.querySelector('[data-autofocus]');if(b)b.focus();}
   else if(navChanged){window.scrollTo(0,0);focusTitle();}
@@ -1364,7 +1578,11 @@ function render(){
 /* ---------------- イベント ---------------- */
 document.addEventListener('click',function(e){
   var el=e.target.closest('[data-action]');
-  if(!el)return;
+  if(!el){
+    var tr=e.target.closest('tr[data-href]');
+    if(tr&&!e.target.closest('a,button,input,label,select,textarea')){location.hash=tr.getAttribute('data-href').replace(/^#/,'');}
+    return;
+  }
   var a=el.getAttribute('data-action');
   if(a!=='goto-filter'&&a!=='flow-finish'&&el.tagName==='A')e.preventDefault();
   handleAction(a,el);

@@ -5,6 +5,7 @@
 - 方法：公開情報（公式のヘルプ・設計資料を優先、販売ページ・記事は「各社の説明」として区別）。調査日は 2026-11-21。製品の仕様は変わるため、実装前に再確認する
 - 取り入れ方の原則：**考え方と一般的なパターンを取り入れ、他社の画面・ブランド・文言をそのまま写さない**（最初の指示書の禁止事項）。デジタル庁デザインシステムは公開・再利用を前提とした資料のため、利用条件（第4章）に従って基礎に採用する
 - 反映先：`design-guidelines.md`（新規）、`screen-design.md`、`module-specifications.md`、`development/technical-decisions.md`（TD-070〜TD-077）
+- 追加調査（2026-11-21）：事業責任者の依頼（「シンプルだけど洗練された、スティーブ・ジョブズが作ったもののようなデザインに」）を受け、ジョブズ時代の Apple の製品と考え方、Apple が公開している設計指針（Human Interface Guidelines）、Apple の工業デザインに影響を与えた Dieter Rams の原則を調べた（第2.15節）。反映先：`design-guidelines.md` v2、試作品、TD-084〜TD-089
 
 ---
 
@@ -26,6 +27,9 @@
 | Notion（Q&A） | 社内文書 | 登録情報への質問 | 回答に参照ページを示す、権限のある情報だけで答える |
 | GOV.UK Design System | 英国政府の行政サービス | 慣れない人が使う手続き | 1画面に1つのこと、作業一覧と状態の最小化 |
 | デジタル庁デザインシステム | 日本の行政サービス | 日本語の画面の基準 | 文字・色・ボタン・入力の具体的な基準 |
+| Apple（スティーブ・ジョブズの製品：Apple II、Macintosh、iPod、iPhone） | パソコン・家電 | （業務は違う。見た目と使い心地の考え方を参考） | 引き算、文字の質、指で使う画面、見えない所の作り込み |
+| Apple Human Interface Guidelines（公開の設計指針） | アプリの設計基準 | 画面の設計の基準 | 階層・一貫性・アクセシビリティの具体的な基準 |
+| Dieter Rams「良いデザインの10原則」（Vitsœ が公開） | 工業デザイン | — | できるだけデザインしない、目立たない、正直 |
 
 ---
 
@@ -153,6 +157,25 @@
 | 入力の項目名と補足は縦に積む。「※必須」「※任意」を全角の「※」で書く。補足の代わりに入力欄内の薄い文字（プレースホルダー）を使わない。エラーは具体的な内容と直し方を書く。入力の途中でエラーを出さず、送信時や確認時に知らせる | 入力の基準に採用 |
 | 目標は JIS X 8341-3:2016 の適合レベル AA。WCAG 2.2 も参照 | 本製品の目標にする |
 
+### 2.15 スティーブ・ジョブズ時代の Apple と、Apple の公開の設計指針（追加調査）
+
+事業責任者の依頼「シンプルだけど洗練された見た目」に合わせて調べた。発言の言い回しは資料によって揺れるため、確認できたものだけを短く引用し、ほかは要約にとどめる。
+
+| 事実（出典） | 取り入れ方 |
+|---|---|
+| Apple II の最初のパンフレット（1977年）の見出しは “Simplicity is the ultimate sophistication.”（単純さは究極の洗練） | デザイン v2 の合言葉にする。足すのではなく、減らして整える |
+| ジョブズは iPod についての取材（2003年）で “Design is not just what it looks like and feels like. Design is how it works.” と述べた | 見た目だけを変えない。押したらすぐ結果が分かる、次の件が自動で開く、押し間違えたら戻せる、まで含めて整える |
+| 1997年の開発者会議の質疑で、集中とは「やらないことを決める」ことだと述べた（言い回しは資料により異なる） | 1画面の目的を1つに絞る。飾りの線・枠・下線や、目的の違う情報を画面から外す |
+| 2005年のスタンフォード大学の講演で、大学で受けたカリグラフィー（西洋の書道）の授業が、最初の Macintosh の美しい文字につながったと話した | 文字を主役にする。大きさと太さの差で階層を作り、見出しは字詰め、数字は等幅にそろえる |
+| 最初の Macintosh（1984年）のアイコンとフォントは Susan Kare が担当。16×16・32×32 の白黒の点という制約の中で、ゴミ箱やフォルダなど親しみやすい絵と、文字ごとに幅の違うフォントを作った | 自前の線のアイコンを少数・同じ太さで使う。あいさつや「おつかれさまです」など、やわらかい言葉を添える |
+| iPod の発表文（2001年）の見出しは “1,000 Songs in Your Pocket”。何ができるかを一言で示し、「これまでで最も使いやすいデジタル機器」をうたった | 画面の見出しは、その画面でできることを一言で書く（例：「今日のやること」） |
+| iPhone の発表（2007年）で、ボタンをなくして大きな画面にし、指で操作すると説明した（“get rid of all these buttons and just make a giant screen”） | 職員の画面は指で使う前提。押せる範囲を広くし（行全体を押せる）、画面は内容を優先し、操作は少なくする |
+| ジョブズは父から「人に見えない塀の裏側も、表と同じように作る」と教わったと伝えられる（伝記作家 W. Isaacson の説明。1985年の雑誌のインタビューでは家具の裏板の話をしている） | 見えない所まで同じ規則で作る：角の丸み・余白・影・フォーカス・空の状態・印刷・読み上げ。基準は自動の確認で毎回確かめる |
+| デザインを率いた Jony Ive は「単純さとは、散らかっていないことではない」と述べている（散らかっていないのは結果） | 減らすこと自体を目的にしない。必要な情報（「根拠：未確認」など）は消さずに、見つけやすくする |
+| Dieter Rams の原則（Vitsœ が公開）：良いデザインは分かりやすく、目立たず、正直で、「できるだけデザインしない」 | 業務の道具なので、画面が主張しすぎない。誇張した表現・演出をしない |
+| Apple の公開の設計指針（2026年6月に原則を掲載）：目的、主体性、責任、なじみやすさ、柔軟さ、単純さ、作り込み、喜び。“Simplicity isn't minimalism.” “Don't mistake delight for decoration.” 押し間違えから簡単に戻れるようにする | 「単純＝ものを減らすこと」と誤解しない。喜びは飾りでなく、使い心地で出す。取り消せる操作には「元に戻す」を付ける |
+| 同じ指針のアクセシビリティなど：触れて操作する部品は44×44pt 以上。文字のコントラストは17pt 以下で4.5:1以上。色だけで情報を伝えない。「動きを減らす」設定では自動の動きを減らす。時間制限のある表示は最小限に。細い文字は避ける。書体の種類は少なく。同じ色に違う意味を持たせない。大事なものを上・先頭に置き、関係するものをまとめ、詳しい情報は必要になってから見せる | v1 の基準（16px 以上・4.5:1 以上・44px 以上）と一致するので変えない。知らせを時間で消さない、細い文字を使わない、色の意味を1つにする、を v2 で明文化 |
+
 ---
 
 ## 3. まとめ：取り入れる考え方
@@ -169,6 +192,18 @@
 | ⑥ 根拠を見せる：AI の回答、法令の根拠、提出の控え | Notion、Drata |
 | ⑦ 確認は取り返しのつかない操作だけ。件数と結果を書く | SmartHR |
 
+追加調査（第2.15節）から、見た目と使い心地について次の約束を加えた（`design-guidelines.md` 第1.1節）。
+
+| 約束 | 主な出どころ |
+|---|---|
+| 引き算：線・枠・下線・飾りを減らし、余白と文字で整理する | Apple II のパンフレット、ジョブズ（1997年）、Rams |
+| 文字が主役：大きさと太さで階層を作る。細い文字は使わない | ジョブズ（2005年の講演）、Susan Kare、Apple の設計指針 |
+| 色は意味にだけ：主色1色と、期限超過・要注意の色 | Apple の設計指針、Rams |
+| 使い心地まで整える：次の件が開く、元に戻せる、知らせは自分で閉じる | ジョブズ（2003年）、Apple の設計指針 |
+| 見えない所まで同じ規則で作り、自動で確かめる | ジョブズの父の教え（Isaacson）、Apple の設計指針（作り込み） |
+| 指で使う：行全体を押せる、押せる範囲44px 以上 | iPhone（2007年）、Apple の設計指針 |
+| 親しみ：あいさつ、やわらかい言葉、少数の自前のアイコン | Macintosh（Susan Kare） |
+
 ## 4. 取り入れないもの
 
 | 他社の機能・考え方 | 取り入れない理由 |
@@ -179,6 +214,11 @@
 | 自動の定期質問（Basecamp） | 新機能を増やさない方針。PHASE 5 以降に検討 |
 | ゲームの要素（連続達成の表示など） | 業務の記録に不要で、職員の負担になりうる |
 | 進み具合の表示をすべての画面に付ける | 調査で必要と分かってから（GOV.UK の推奨） |
+| Apple のフォント（San Francisco）、アイコン（SF Symbols）、色の値、製品の画面・名前・ロゴ | 指示書の禁止事項で、利用許諾の範囲外。フォントは端末に入っている標準フォントを指定するだけにし、色とアイコンは本製品で決めた |
+| 半透明・ガラスのような表現を画面全体に使う | 文字が読みにくくなる。上部の帯と下部のタブの背景だけに控えめに使う |
+| 細い文字、薄い灰色の文字 | コントラストが不足する（Apple の設計指針も細い文字を避けるよう求めている） |
+| 時間で消える知らせ | 読み終わる前に消える。自分で閉じる形にした |
+| 製品発表のような演出（大きな動き・効果音） | 業務の邪魔になる。動きは短く小さく、「動きを減らす」設定では止める |
 | 他社の配色・画面の構成・文言をそのまま使う | 指示書の禁止事項。公開の基準（デジタル庁）以外は考え方だけを使う |
 
 ## 5. 設計への反映箇所
@@ -190,6 +230,7 @@
 | `module-specifications.md` | 督促の型、声かけのリマインド、まとめ送信、週1回のまとめメール、書類の見直し日（PHASE 3 候補）、本部からの配信（PHASE 7 の方向性） |
 | `open-decisions.md` | D-2 の共用タブレット方式の具体像（QR コードでの登録、職員選択と暗証番号、自動ログアウト） |
 | `technical-decisions.md` | TD-070〜TD-077 |
+| `design-guidelines.md` v2、試作品（`../../prototype/`） | 引き算のデザイン（色・文字・形・影・動き・フォーカス）、元に戻す、知らせを自分で閉じる、提出の流れの間はタブを隠す（TD-084〜TD-089） |
 
 ## 6. 利用条件・注意
 
@@ -213,3 +254,6 @@
 - Notion：[Q&A（ヘルプ）](https://www.notion.com/en-gb/help/qna)、[Q&A の仕組み](https://www.notion.com/sv/help/guides/understanding-how-q-and-a-finds-answers-can-help-you-get-better-results)
 - GOV.UK：[Complete multiple tasks](https://design-system.service.gov.uk/patterns/complete-multiple-tasks/)、[Task list](https://design-system.service.gov.uk/components/task-list/)、[Question pages](https://design-system.service.gov.uk/patterns/question-pages/)、[Form structure](https://www.gov.uk/service-manual/design/form-structure)
 - デジタル庁：[デザインシステム](https://design.digital.go.jp/dads/)、[タイポグラフィ](https://design.digital.go.jp/dads/foundations/typography/)、[カラー](https://design.digital.go.jp/dads/foundations/color/)、[カラーのアクセシビリティ](https://design.digital.go.jp/dads/foundations/color/accessibility/)、[ボタン](https://design.digital.go.jp/dads/components/button/usage/)、[インプットテキスト](https://design.digital.go.jp/dads/components/input-text/usage/)、[ウェブアクセシビリティ](https://design.digital.go.jp/dads/webaccessibility/)、[利用上の注意事項](https://design.digital.go.jp/dads/introduction/notices/)
+- Apple（ジョブズ時代の製品と発言。2026-11-21 確認）：[Apple II のパンフレット（Computer History Museum）](https://www.computerhistory.org/brochures/doc-43729572aadaf/)、[“The Guts of a New Machine”（The New York Times Magazine, 2003。Design Observer の再掲）](https://designobserver.com/the-guts-of-a-new-machine/)、[WWDC 1997 の質疑](https://allaboutstevejobs.com/videos/misc/wwdc_1997_closing_chat)、[スタンフォード大学の講演（2005）](https://news.stanford.edu/stories/2005/06/youve-got-find-love-jobs-says)、[Susan Kare のアイコン（Smithsonian Magazine）](https://www.smithsonianmag.com/innovation/how-susan-kare-designed-user-friendly-icons-for-first-macintosh-180973286/)、[Apple Presents iPod（2001）](https://www.apple.com/newsroom/2001/10/23Apple-Presents-iPod/)、[Macworld 2007 基調講演の書き起こし（第三者）](https://singjupost.com/?p=404)、[見えない部分へのこだわり（The Next Web、Isaacson の説明）](https://thenextweb.com/news/steve-jobs-obsession-with-the-quality-of-the-things-unseen)、[Jony Ive の発言（NBC Bay Area、Evening Standard の取材）](https://www.nbcbayarea.com/news/local/5-revelations-for-designers-from-apples-jonathan-ive/1941836/)
+- Dieter Rams：[Good design（Vitsœ）](https://www.vitsoe.com/gb/about/good-design)
+- Apple Human Interface Guidelines：[Design principles](https://developer.apple.com/design/human-interface-guidelines/design-principles)、[Accessibility](https://developer.apple.com/design/human-interface-guidelines/accessibility)、[Typography](https://developer.apple.com/design/human-interface-guidelines/typography)、[Color](https://developer.apple.com/design/human-interface-guidelines/color)、[Layout](https://developer.apple.com/design/human-interface-guidelines/layout)
