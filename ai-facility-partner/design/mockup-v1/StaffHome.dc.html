@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>今日のやること</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#0B5E8A}a:hover{color:#084A6D}
+</style>
+</helmet>
+<div style="width: 390px; height: 1060px; box-sizing: border-box; display: flex; flex-direction: column; background: #F5F6F7; font-family: 'Noto Sans JP', sans-serif; color: #1A1A1A; font-size: 17px; line-height: 1.7">
+<header style="background: #FFFFFF; border-bottom: 1px solid #DADADA; padding: 16px 16px 12px; display: flex; flex-direction: column; gap: 2px">
+<div style="display: flex; justify-content: space-between; color: #4D4D4D"><span>山田 花子さん</span><span>11月20日(木)</span></div>
+<h1 style="margin: 0; font-size: 22px; line-height: 1.4">今日のやること（4件）</h1>
+</header>
+
+<main style="flex: 1 1 auto; padding: 16px; display: flex; flex-direction: column; gap: 20px">
+<section aria-labelledby="h-returned" style="display: flex; flex-direction: column; gap: 8px">
+<h2 id="h-returned" style="margin: 0; font-size: 18px; display: inline-flex; align-items: center; gap: 6px; color: #7A4100">
+<svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+差し戻し（1件）</h2>
+<article style="background: #FFFFFF; border: 1px solid #DADADA; border-radius: 8px; padding: 16px; display: flex; flex-direction: column; gap: 8px">
+<h3 style="margin: 0; font-size: 18px">健康診断の受診報告</h3>
+<p style="margin: 0; padding: 8px 12px; background: #FFF3D6; border-radius: 6px; color: #7A4100">「受診日がちがうようです。もう一度確認してください」<br>佐藤 主任より</p>
+<button type="button" style="height: 56px; border: none; border-radius: 6px; background: #0B5E8A; color: #FFFFFF; font: inherit; font-weight: 700">もう一度提出する</button>
+</article>
+</section>
+
+<section aria-labelledby="h-today" style="display: flex; flex-direction: column; gap: 8px">
+<h2 id="h-today" style="margin: 0; font-size: 18px">今日まで（1件）</h2>
+<article style="background: #FFFFFF; border: 1px solid #DADADA; border-radius: 8px; padding: 16px; display: flex; flex-direction: column; gap: 8px">
+<h3 style="margin: 0; font-size: 18px">感染症の研修レポート</h3>
+<div style="display: flex; flex-wrap: wrap; gap: 4px 16px; color: #4D4D4D">
+<span style="color: #7A4100; font-weight: 700">今日 17:00まで</span>
+<span>依頼：佐藤 主任</span>
+</div>
+<button type="button" style="height: 56px; border: none; border-radius: 6px; background: #0B5E8A; color: #FFFFFF; font: inherit; font-weight: 700">提出する</button>
+</article>
+</section>
+
+<section aria-labelledby="h-request" style="display: flex; flex-direction: column; gap: 8px">
+<h2 id="h-request" style="margin: 0; font-size: 18px">新しい依頼（1件）</h2>
+<article style="background: #FFFFFF; border: 1px solid #DADADA; border-radius: 8px; padding: 16px; display: flex; flex-direction: column; gap: 8px">
+<h3 style="margin: 0; font-size: 18px">物品の棚卸しの手伝い</h3>
+<div style="display: flex; flex-wrap: wrap; gap: 4px 16px; color: #4D4D4D">
+<span>あと3日</span>
+<span>依頼：田中 事務長</span>
+</div>
+<button type="button" style="height: 48px; border: 1px solid #0B5E8A; border-radius: 6px; background: #FFFFFF; color: #0B5E8A; font: inherit; font-weight: 700">内容を見る</button>
+</article>
+</section>
+
+<section aria-labelledby="h-check" style="display: flex; flex-direction: column; gap: 8px">
+<h2 id="h-check" style="margin: 0; font-size: 18px">今日のチェックリスト（介護部）</h2>
+<ul style="list-style: none; margin: 0; padding: 0; background: #FFFFFF; border: 1px solid #DADADA; border-radius: 8px">
+<li style="display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 16px; border-bottom: 1px solid #DADADA">
+<span>居室の温度・湿度の確認</span>
+<button type="button" style="min-width: 88px; height: 44px; border: 1px solid #0B5E8A; border-radius: 6px; background: #FFFFFF; color: #0B5E8A; font: inherit; font-weight: 700">完了</button>
+</li>
+<li style="display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 16px; border-bottom: 1px solid #DADADA">
+<span>おむつ・消耗品の補充</span>
+<button type="button" style="min-width: 88px; height: 44px; border: 1px solid #0B5E8A; border-radius: 6px; background: #FFFFFF; color: #0B5E8A; font: inherit; font-weight: 700">完了</button>
+</li>
+<li style="display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 16px; min-height: 44px">
+<span style="color: #4D4D4D">車いすの空気圧の確認</span>
+<span style="display: inline-flex; align-items: center; gap: 4px; color: #1A1A1A">
+<svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+完了 9:10</span>
+</li>
+</ul>
+</section>
+
+<section aria-labelledby="h-week" style="display: flex; flex-direction: column; gap: 8px">
+<h2 id="h-week" style="margin: 0; font-size: 18px">今週の予定</h2>
+<div style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; background: #FFFFFF; border: 1px solid #DADADA; border-radius: 8px; padding: 8px">
+<a href="#" aria-label="11月17日 月曜 予定 1件" style="display: flex; flex-direction: column; align-items: center; min-height: 64px; padding: 4px 0; color: #1A1A1A; text-decoration: none"><span>月</span><span>17</span><span aria-hidden="true" style="width: 6px; height: 6px; border-radius: 3px; background: #4D4D4D"></span></a>
+<a href="#" aria-label="11月18日 火曜 予定なし" style="display: flex; flex-direction: column; align-items: center; min-height: 64px; padding: 4px 0; color: #1A1A1A; text-decoration: none"><span>火</span><span>18</span></a>
+<a href="#" aria-label="11月19日 水曜 予定 1件" style="display: flex; flex-direction: column; align-items: center; min-height: 64px; padding: 4px 0; color: #1A1A1A; text-decoration: none"><span>水</span><span>19</span><span aria-hidden="true" style="width: 6px; height: 6px; border-radius: 3px; background: #4D4D4D"></span></a>
+<a href="#" aria-current="date" aria-label="11月20日 木曜 今日 予定 4件" style="display: flex; flex-direction: column; align-items: center; min-height: 64px; padding: 4px 0; border-radius: 6px; background: #0B5E8A; color: #FFFFFF; text-decoration: none; font-weight: 700"><span>木</span><span>20</span><span style="font-size: 16px">今日</span></a>
+<a href="#" aria-label="11月21日 金曜 予定 1件" style="display: flex; flex-direction: column; align-items: center; min-height: 64px; padding: 4px 0; color: #1A1A1A; text-decoration: none"><span>金</span><span>21</span><span aria-hidden="true" style="width: 6px; height: 6px; border-radius: 3px; background: #4D4D4D"></span></a>
+<a href="#" aria-label="11月22日 土曜 予定なし" style="display: flex; flex-direction: column; align-items: center; min-height: 64px; padding: 4px 0; color: #1A1A1A; text-decoration: none"><span>土</span><span>22</span></a>
+<a href="#" aria-label="11月23日 日曜 予定なし" style="display: flex; flex-direction: column; align-items: center; min-height: 64px; padding: 4px 0; color: #1A1A1A; text-decoration: none"><span>日</span><span>23</span></a>
+</div>
+</section>
+</main>
+
+<nav aria-label="下部メニュー" style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); background: #FFFFFF; border-top: 1px solid #DADADA">
+<a href="#" aria-current="page" style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 64px; color: #0B5E8A; font-weight: 700; text-decoration: none; font-size: 16px">
+<svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"></path><path d="M5 9.5V21h14V9.5"></path></svg>
+ホーム</a>
+<a href="#" style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 64px; color: #4D4D4D; text-decoration: none; font-size: 16px">
+<svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"></rect><line x1="8" y1="8" x2="16" y2="8"></line><line x1="8" y1="12" x2="16" y2="12"></line><line x1="8" y1="16" x2="13" y2="16"></line></svg>
+業務</a>
+<a href="#" style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 64px; color: #4D4D4D; text-decoration: none; font-size: 16px">
+<svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4"></path><polyline points="7 9 12 4 17 9"></polyline><path d="M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"></path></svg>
+提出</a>
+<a href="#" aria-label="通知 未読2件" style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 64px; color: #4D4D4D; text-decoration: none; font-size: 16px">
+<svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.7 21a2 2 0 0 1-3.4 0"></path></svg>
+通知（2）</a>
+</nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1060}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

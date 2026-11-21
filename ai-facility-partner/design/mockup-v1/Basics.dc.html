@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>デザインの基礎</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#0B5E8A}a:hover{color:#084A6D}
+</style>
+</helmet>
+<div style="width: 1280px; height: 1080px; box-sizing: border-box; padding: 32px 40px; background: #F5F6F7; font-family: 'Noto Sans JP', sans-serif; color: #1A1A1A; font-size: 16px; line-height: 1.7; display: flex; flex-direction: column; gap: 20px">
+<div>
+<h1 style="margin: 0; font-size: 24px; line-height: 1.4">デザインの基礎</h1>
+<p style="margin: 0; color: #4D4D4D">文字・色・ボタン・入力の基準はデジタル庁デザインシステムに合わせ、色と名称は本製品独自のものにしています。</p>
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px">
+
+<section aria-labelledby="h-type" style="background: #FFFFFF; border: 1px solid #DADADA; border-radius: 8px; padding: 20px; display: flex; flex-direction: column; gap: 8px">
+<h2 id="h-type" style="margin: 0; font-size: 20px">文字（Noto Sans JP・16px以上）</h2>
+<p style="margin: 0; font-size: 24px; font-weight: 700; line-height: 1.4">画面名 24px　施設の状況</p>
+<p style="margin: 0; font-size: 20px; font-weight: 700; line-height: 1.5">見出し 20px　要対応</p>
+<p style="margin: 0; font-size: 18px; font-weight: 700; line-height: 1.5">小見出し 18px　今日まで（5件）</p>
+<p style="margin: 0">本文 16px・行の高さ1.7。一文は50文字程度までにします。</p>
+<p style="margin: 0; font-size: 17px">職員用スマホの本文 17px。今日のやることは4件です。</p>
+<p style="margin: 0"><span style="font-size: 32px; font-weight: 700">12</span> 名　件数は32px、単位を必ず添える</p>
+</section>
+
+<section aria-labelledby="h-color" style="background: #FFFFFF; border: 1px solid #DADADA; border-radius: 8px; padding: 20px; display: flex; flex-direction: column; gap: 8px">
+<h2 id="h-color" style="margin: 0; font-size: 20px">色（文字は4.5:1以上）</h2>
+<ul style="list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
+<li style="display: flex; align-items: center; gap: 8px"><span aria-hidden="true" style="width: 32px; height: 32px; border-radius: 6px; background: #1A1A1A"></span><span>本文 #1A1A1A（17.4）</span></li>
+<li style="display: flex; align-items: center; gap: 8px"><span aria-hidden="true" style="width: 32px; height: 32px; border-radius: 6px; background: #4D4D4D"></span><span>補足 #4D4D4D（8.45）</span></li>
+<li style="display: flex; align-items: center; gap: 8px"><span aria-hidden="true" style="width: 32px; height: 32px; border-radius: 6px; background: #0B5E8A"></span><span>主色 #0B5E8A（7.04）</span></li>
+<li style="display: flex; align-items: center; gap: 8px"><span aria-hidden="true" style="width: 32px; height: 32px; border-radius: 6px; background: #B42318"></span><span>超過・エラー #B42318</span></li>
+<li style="display: flex; align-items: center; gap: 8px"><span aria-hidden="true" style="width: 32px; height: 32px; border-radius: 6px; background: #7A4100"></span><span>近い・要修正 #7A4100</span></li>
+<li style="display: flex; align-items: center; gap: 8px"><span aria-hidden="true" style="width: 32px; height: 32px; border-radius: 6px; background: #1849A9"></span><span>進行中・確認待ち #1849A9</span></li>
+<li style="display: flex; align-items: center; gap: 8px"><span aria-hidden="true" style="width: 32px; height: 32px; border-radius: 6px; background: #5C5C5C"></span><span>対象外など #5C5C5C</span></li>
+<li style="display: flex; align-items: center; gap: 8px"><span aria-hidden="true" style="width: 32px; height: 32px; border-radius: 6px; background: #F5F6F7; border: 1px solid #767676"></span><span>画面の背景 #F5F6F7</span></li>
+</ul>
+<p style="margin: 0; color: #4D4D4D">赤は期限超過とエラーだけ。色だけで区別せず、文字とアイコンを添えます。</p>
+</section>
+
+<section aria-labelledby="h-status" style="background: #FFFFFF; border: 1px solid #DADADA; border-radius: 8px; padding: 20px; display: flex; flex-direction: column; gap: 12px">
+<h2 id="h-status" style="margin: 0; font-size: 20px">状態の表示（職員と管理者で同じ言葉）</h2>
+<div style="display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center">
+<span>未着手</span>
+<span style="display: inline-flex; padding: 2px 10px; border-radius: 999px; background: #E8F0FE; color: #1849A9">進行中</span>
+<span style="display: inline-flex; padding: 2px 10px; border-radius: 999px; background: #E8F0FE; color: #1849A9">承認待ち</span>
+<span style="display: inline-flex; align-items: center; gap: 4px; padding: 2px 10px; border-radius: 999px; background: #FFF3D6; color: #7A4100">
+<svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="6" x2="12" y2="13"></line><line x1="12" y1="18" x2="12.01" y2="18"></line></svg>
+差し戻し</span>
+<span style="display: inline-flex; align-items: center; gap: 4px">
+<svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+完了</span>
+<span style="display: inline-flex; padding: 2px 10px; border-radius: 999px; background: #F5F6F7; color: #5C5C5C; border: 1px solid #767676">保留</span>
+</div>
+<div style="display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center">
+<span style="display: inline-flex; align-items: center; gap: 4px; padding: 2px 10px; border-radius: 999px; background: #FDECEA; color: #B42318">
+<svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="6" x2="12" y2="13"></line><line x1="12" y1="18" x2="12.01" y2="18"></line></svg>
+2日超過</span>
+<span style="color: #7A4100; font-weight: 700">あと2日</span>
+<span style="color: #5C5C5C">対象外</span>
+<span style="display: inline-flex; padding: 2px 10px; border-radius: 4px; border: 1px solid #767676; color: #4D4D4D">AIの回答</span>
+</div>
+<p style="margin: 0; color: #4D4D4D">「完了」は色を付けずに静かに。注意が必要なものだけ色付きにします。</p>
+</section>
+
+<section aria-labelledby="h-button" style="background: #FFFFFF; border: 1px solid #DADADA; border-radius: 8px; padding: 20px; display: flex; flex-direction: column; gap: 12px">
+<h2 id="h-button" style="margin: 0; font-size: 20px">ボタン（目立つボタンは1画面に1つ）</h2>
+<div style="display: flex; flex-wrap: wrap; gap: 12px; align-items: center">
+<button type="button" style="height: 48px; padding: 0 20px; border: none; border-radius: 6px; background: #0B5E8A; color: #FFFFFF; font: inherit; font-weight: 700">提出する</button>
+<button type="button" style="height: 48px; padding: 0 20px; border: 1px solid #0B5E8A; border-radius: 6px; background: #FFFFFF; color: #0B5E8A; font: inherit; font-weight: 700">差し戻す</button>
+<button type="button" style="height: 48px; padding: 0 12px; border: none; background: transparent; color: #0B5E8A; font: inherit; text-decoration: underline">キャンセル</button>
+<button type="button" style="height: 48px; padding: 0 20px; border: none; border-radius: 6px; background: #0B5E8A; color: #FFFFFF; font: inherit; font-weight: 700; box-shadow: 0 0 0 2px #FFFFFF, 0 0 0 4px #000000, 0 0 0 8px #FFD43B">フォーカス中</button>
+</div>
+<p style="margin: 0; padding: 8px 12px; background: #F5F6F7; border-radius: 6px">押せない理由を書く例：必要な書類があと1件です　<a href="#">提出する</a></p>
+<p style="margin: 0; color: #4D4D4D">高さは48px（スマホの主ボタンは56px）。文言は「OK」ではなく動詞で書きます。</p>
+</section>
+
+<section aria-labelledby="h-input" style="background: #FFFFFF; border: 1px solid #DADADA; border-radius: 8px; padding: 20px; display: flex; flex-direction: column; gap: 8px">
+<h2 id="h-input" style="margin: 0; font-size: 20px">入力とエラー</h2>
+<label for="due" style="font-weight: 700">期限 <span style="font-weight: 400; color: #4D4D4D">※必須</span></label>
+<span id="due-hint" style="color: #4D4D4D">今日より後の日付を選べます</span>
+<input id="due" type="text" aria-describedby="due-hint due-err" aria-invalid="true" style="height: 48px; box-sizing: border-box; padding: 0 12px; font: inherit; border: 2px solid #B42318; border-radius: 6px">
+<span id="due-err" style="color: #B42318">＊期限を入力してください。今日より後の日付を選べます。</span>
+</section>
+
+<section aria-labelledby="h-words" style="background: #FFFFFF; border: 1px solid #DADADA; border-radius: 8px; padding: 20px; display: flex; flex-direction: column; gap: 8px">
+<h2 id="h-words" style="margin: 0; font-size: 20px">文章（何が起きたか → 原因 → どう直すか）</h2>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 12px">
+<span style="color: #4D4D4D; font-weight: 700">こうしない</span>
+<span style="color: #4D4D4D; font-weight: 700">こう書く</span>
+<span>エラーが発生しました</span>
+<span>ファイルを送れませんでした。25MB を超えています。小さいファイルを選んでください</span>
+<span>提出されていません！</span>
+<span>まだ提出されていません</span>
+<span>権限がありません</span>
+<span>この業務を承認できるのは、指定された承認者（佐藤さん）です</span>
+</div>
+</section>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":1080}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

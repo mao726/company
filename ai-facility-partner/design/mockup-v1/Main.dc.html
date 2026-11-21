@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>管理者ダッシュボード</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#0B5E8A}a:hover{color:#084A6D}
+</style>
+</helmet>
+<div style="min-height: 900px; background: #F5F6F7; font-family: 'Noto Sans JP', sans-serif; color: #1A1A1A; font-size: 16px; line-height: 1.7">
+<header style="background: #FFFFFF; border-bottom: 1px solid #DADADA">
+<div style="max-width: 1200px; margin: 0 auto; padding: 12px 32px; display: flex; flex-wrap: wrap; align-items: center; gap: 16px 24px">
+<div style="display: flex; align-items: baseline; gap: 12px; flex: 1 1 auto">
+<span style="font-size: 20px; font-weight: 700">○○ホーム</span>
+<span style="color: #4D4D4D">11月20日(木)　9:02 更新</span>
+</div>
+<nav aria-label="メインメニュー" style="display: flex; flex-wrap: wrap; gap: 4px">
+<a href="#" aria-current="page" style="padding: 10px 14px; border-radius: 6px; background: #E8F0FE; color: #1849A9; font-weight: 700; text-decoration: none">ホーム</a>
+<a href="#" style="padding: 10px 14px; border-radius: 6px; color: #1A1A1A; text-decoration: none">業務</a>
+<a href="#" style="padding: 10px 14px; border-radius: 6px; color: #1A1A1A; text-decoration: none">提出</a>
+<a href="#" style="padding: 10px 14px; border-radius: 6px; color: #1A1A1A; text-decoration: none">承認待ち</a>
+<a href="#" style="padding: 10px 14px; border-radius: 6px; color: #1A1A1A; text-decoration: none">カレンダー</a>
+<a href="#" style="padding: 10px 14px; border-radius: 6px; color: #1A1A1A; text-decoration: none">書類</a>
+</nav>
+<a href="#" style="display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 14px; border: 1px solid #767676; border-radius: 6px; color: #1A1A1A; text-decoration: none">
+<svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.7 21a2 2 0 0 1-3.4 0"></path></svg>
+通知 3件
+</a>
+</div>
+</header>
+
+<main style="max-width: 1200px; margin: 0 auto; padding: 24px 32px 40px; display: flex; flex-direction: column; gap: 24px">
+<h1 style="margin: 0; font-size: 24px; line-height: 1.4">施設の状況</h1>
+
+<section aria-labelledby="h-urgent" style="display: flex; flex-direction: column; gap: 12px">
+<h2 id="h-urgent" style="margin: 0; font-size: 20px; line-height: 1.5">要対応</h2>
+<div style="display: flex; flex-wrap: wrap; gap: 16px">
+<a href="#" style="flex: 1 1 240px; min-width: 0; display: flex; flex-direction: column; gap: 4px; padding: 16px 20px; background: #FFFFFF; border: 2px solid #B42318; border-radius: 8px; color: #1A1A1A; text-decoration: none">
+<span style="display: inline-flex; align-items: center; gap: 6px; color: #B42318; font-weight: 700">
+<svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+期限超過</span>
+<span><span style="font-size: 32px; font-weight: 700; line-height: 1.3">4</span> 件</span>
+<span style="color: #4D4D4D">うち保留中 1件</span>
+</a>
+<a href="#" style="flex: 1 1 240px; min-width: 0; display: flex; flex-direction: column; gap: 4px; padding: 16px 20px; background: #FFFFFF; border: 1px solid #DADADA; border-radius: 8px; color: #1A1A1A; text-decoration: none">
+<span style="font-weight: 700">承認待ち</span>
+<span><span style="font-size: 32px; font-weight: 700; line-height: 1.3">6</span> 件</span>
+<span style="color: #4D4D4D">あなた宛て 4件</span>
+</a>
+<a href="#" style="flex: 1 1 240px; min-width: 0; display: flex; flex-direction: column; gap: 4px; padding: 16px 20px; background: #FFFFFF; border: 1px solid #DADADA; border-radius: 8px; color: #1A1A1A; text-decoration: none">
+<span style="font-weight: 700">未提出</span>
+<span><span style="font-size: 32px; font-weight: 700; line-height: 1.3">12</span> 名</span>
+<span style="color: #4D4D4D">3件の提出依頼</span>
+</a>
+<a href="#" style="flex: 1 1 240px; min-width: 0; display: flex; flex-direction: column; gap: 4px; padding: 16px 20px; background: #FFFFFF; border: 1px solid #DADADA; border-radius: 8px; color: #1A1A1A; text-decoration: none">
+<span style="font-weight: 700">担当者未設定</span>
+<span><span style="font-size: 32px; font-weight: 700; line-height: 1.3">2</span> 件</span>
+<span style="color: #4D4D4D">担当を決めてください</span>
+</a>
+</div>
+</section>
+
+<div style="display: flex; flex-wrap: wrap; gap: 16px">
+<section aria-labelledby="h-today" style="flex: 1 1 420px; min-width: 0; background: #FFFFFF; border: 1px solid #DADADA; border-radius: 8px; padding: 16px 20px; display: flex; flex-direction: column; gap: 8px">
+<h2 id="h-today" style="margin: 0; font-size: 18px; line-height: 1.5">今日まで（5件）</h2>
+<ul style="list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column">
+<li style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; padding: 10px 0; border-bottom: 1px solid #DADADA">
+<a href="#" style="flex: 1 1 200px; font-weight: 500">浴室設備の点検</a>
+<span style="color: #4D4D4D">山田 花子</span>
+<span style="display: inline-flex; align-items: center; padding: 2px 10px; border-radius: 999px; background: #E8F0FE; color: #1849A9">進行中</span>
+</li>
+<li style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; padding: 10px 0; border-bottom: 1px solid #DADADA">
+<a href="#" style="flex: 1 1 200px; font-weight: 500">感染対策委員会の資料準備</a>
+<span style="color: #4D4D4D">鈴木 一郎</span>
+<span style="display: inline-flex; align-items: center; padding: 2px 10px; border-radius: 999px; background: #E8F0FE; color: #1849A9">承認待ち</span>
+</li>
+<li style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; padding: 10px 0">
+<a href="#" style="flex: 1 1 200px; font-weight: 500">非常用食品の在庫確認</a>
+<span style="color: #4D4D4D">介護部</span>
+<span style="color: #1A1A1A">未着手</span>
+</li>
+</ul>
+<a href="#" style="align-self: flex-start; min-height: 44px; display: inline-flex; align-items: center">すべて見る（5件）</a>
+</section>
+
+<section aria-labelledby="h-soon" style="flex: 1 1 420px; min-width: 0; background: #FFFFFF; border: 1px solid #DADADA; border-radius: 8px; padding: 16px 20px; display: flex; flex-direction: column; gap: 8px">
+<h2 id="h-soon" style="margin: 0; font-size: 18px; line-height: 1.5">期限が近い（3日以内・7件）</h2>
+<ul style="list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column">
+<li style="display: flex; flex-direction: column; gap: 2px; padding: 10px 0; border-bottom: 1px solid #DADADA">
+<div style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px">
+<span style="display: inline-flex; padding: 0 8px; border: 1px solid #767676; border-radius: 4px; color: #4D4D4D">行政提出</span>
+<a href="#" style="flex: 1 1 200px; font-weight: 500">○○に関する変更の届出</a>
+<span style="color: #7A4100; font-weight: 700">あと2日</span>
+</div>
+<div style="display: flex; flex-wrap: wrap; gap: 4px 16px; color: #4D4D4D">
+<span style="display: inline-flex; align-items: center; gap: 4px; color: #7A4100">
+<svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+根拠：未確認</span>
+<span>控え：未登録</span>
+<span>担当：事務長</span>
+</div>
+</li>
+<li style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; padding: 10px 0; border-bottom: 1px solid #DADADA">
+<a href="#" style="flex: 1 1 200px; font-weight: 500">消防設備の自主点検</a>
+<span style="color: #7A4100; font-weight: 700">あと3日</span>
+</li>
+<li style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; padding: 10px 0">
+<a href="#" style="flex: 1 1 200px; font-weight: 500">健康診断の受診報告の回収</a>
+<span style="color: #7A4100; font-weight: 700">あと3日</span>
+</li>
+</ul>
+<a href="#" style="align-self: flex-start; min-height: 44px; display: inline-flex; align-items: center">すべて見る（7件）</a>
+</section>
+</div>
+
+<div style="display: flex; flex-wrap: wrap; gap: 16px">
+<section aria-labelledby="h-events" style="flex: 1 1 420px; min-width: 0; background: #FFFFFF; border: 1px solid #DADADA; border-radius: 8px; padding: 16px 20px; display: flex; flex-direction: column; gap: 8px">
+<h2 id="h-events" style="margin: 0; font-size: 18px; line-height: 1.5">今後30日の委員会・研修</h2>
+<ul style="list-style: none; margin: 0; padding: 0">
+<li style="display: flex; gap: 16px; padding: 8px 0; border-bottom: 1px solid #DADADA"><span style="color: #4D4D4D; min-width: 96px">11月25日(火)</span><a href="#">身体拘束適正化委員会</a></li>
+<li style="display: flex; gap: 16px; padding: 8px 0; border-bottom: 1px solid #DADADA"><span style="color: #4D4D4D; min-width: 96px">11月28日(金)</span><a href="#">感染症の研修（対象 42名）</a></li>
+<li style="display: flex; gap: 16px; padding: 8px 0"><span style="color: #4D4D4D; min-width: 96px">12月 9日(火)</span><a href="#">事故防止委員会</a></li>
+</ul>
+</section>
+
+<section aria-labelledby="h-checks" style="flex: 1 1 420px; min-width: 0; background: #FFFFFF; border: 1px solid #DADADA; border-radius: 8px; padding: 16px 20px; display: flex; flex-direction: column; gap: 8px">
+<h2 id="h-checks" style="margin: 0; font-size: 18px; line-height: 1.5">自動チェック</h2>
+<p style="margin: 0; color: #4D4D4D">決まったルールで見つけた確認事項です（AI ではありません）</p>
+<ul style="list-style: none; margin: 0; padding: 0">
+<li style="padding: 8px 0; border-bottom: 1px solid #DADADA">根拠が「未確認」の行政提出の業務が 3件あります　<a href="#">一覧を見る</a></li>
+<li style="padding: 8px 0; border-bottom: 1px solid #DADADA">退職した職員が担当の業務が 1件残っています　<a href="#">引継ぎをする</a></li>
+<li style="padding: 8px 0">送信できなかった通知が 2件あります　<a href="#">確認する</a></li>
+</ul>
+</section>
+</div>
+
+<section aria-label="完了と件数のまとめ" style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 24px; padding: 12px 20px; background: #FFFFFF; border: 1px solid #DADADA; border-radius: 8px">
+<span style="display: inline-flex; align-items: center; gap: 6px">
+<svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+今月完了した業務 21件（うち例外完了 1件）</span>
+<span style="color: #4D4D4D">未完了：今週 14件 ／ 今月 38件</span>
+</section>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":900}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

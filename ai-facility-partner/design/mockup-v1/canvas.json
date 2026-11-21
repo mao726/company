@@ -1,0 +1,20 @@
+{
+  "v": 3,
+  "createdOnFiles": {"v": 1, "at": "2026-11-21T09:07:26Z"},
+  "title": "AI施設運営パートナー デザイン見本",
+  "launch": {"view": "canvas"},
+  "pages": [],
+  "boards": {
+    "Main.dc.html": {"x": 0, "y": 0, "w": 1280, "h": 900, "title": "管理者ダッシュボード（PC）", "expand": "fill"},
+    "StaffHome.dc.html": {"x": 1360, "y": 0, "w": 390, "h": 1060, "title": "職員ホーム「今日のやること」（スマホ）"},
+    "SubmitFlow.dc.html": {"x": 0, "y": 1180, "w": 1760, "h": 980, "title": "提出の流れ：1画面に1つ（スマホ）"},
+    "StatusTable.dc.html": {"x": 1840, "y": 1180, "w": 1280, "h": 860, "title": "提出状況表とその場での承認（PC）", "expand": "fill"},
+    "Basics.dc.html": {"x": 0, "y": 2280, "w": 1280, "h": 1080, "title": "デザインの基礎（色・文字・ボタン・状態）"}
+  },
+  "order": ["Main.dc.html", "StaffHome.dc.html", "SubmitFlow.dc.html", "StatusTable.dc.html", "Basics.dc.html"],
+  "notes": {
+    "title-main": {"x": 0, "y": -320, "text": "AI施設運営パートナー デザイン見本", "kind": "title1", "maxW": 1750},
+    "note-about": {"x": 1830, "y": 0, "w": 440, "fill": "blue", "size": "m", "text": "これは見た目と使い方の方向性を確かめるための見本です（動作しません）。\n施設名・氏名・業務名・数値はすべて架空です。\n\n基準：デザインガイドライン（docs/product/design-guidelines.md）\n・文字は16px以上\n・文字のコントラスト4.5:1以上\n・ボタンの高さ48〜56px、押せる範囲44px以上\n・赤は期限超過とエラーだけ\n・状態は文字＋アイコン＋色で示す"}
+  },
+  "designSystems": []
+}
