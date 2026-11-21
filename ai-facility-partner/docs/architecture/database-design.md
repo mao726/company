@@ -401,7 +401,7 @@ flowchart LR
 
 | テーブル | 種類 | 主な列 | 説明・制約 | 実装 |
 |---|---|---|---|---|
-| submission_requests | T-F | id, organization_id, facility_id, department_id, title, instructions, due_on, due_time, task_id, **data_class**（`c1` / `c2` / `c3` / `c4`。`c3` は D-8 の決定まで選択不可）, **file_mode**（`file_required` / `file_optional` / `no_file`）, required_items(jsonb), target_rule(jsonb：全員 / 部署 / 職種 / 役職 / 個別), reviewer_staff_id, allow_late, status（`draft` / `open` / `closed`） | 提出依頼。**data_class の入力は必須**。`c4`（健康診断結果など要配慮個人情報）は `no_file`（「提出済み・確認済み」だけを記録し、ファイルを受け取らない）に強制。マイナンバーを含む書類は対象外（画面で明示） | 2b |
+| submission_requests | T-F | id, organization_id, facility_id, department_id, title, instructions, due_on, due_time, task_id, **data_class**（`c1` / `c2` / `c3` / `c4`。`c3` は D-8 の決定まで選択不可）, **file_mode**（`file_required` / `file_optional` / `no_file`）, required_items(jsonb), target_rule(jsonb：全員 / 部署 / 職種 / 役職 / 個別), reviewer_staff_id, allow_late, **reminder_schedule**(jsonb：空＝施設の既定、`{"timings":[]}`＝督促なし、それ以外＝依頼ごとの設定。`escalate_after`＝何回の督促で依頼者に声かけを促すか、既定2回), status（`draft` / `open` / `closed`） | 提出依頼。**data_class の入力は必須**。`c4`（健康診断結果など要配慮個人情報）は `no_file`（「提出済み・確認済み」だけを記録し、ファイルを受け取らない）に強制。マイナンバーを含む書類は対象外（画面で明示） | 2b |
 | submission_targets | T-F | id, request_id, staff_id, department_id（作成時点の所属）, status（`not_submitted` / `submitted` / `approved` / `returned` / `excluded`）, has_login（作成時点）, excluded_reason | UQ(request_id, staff_id)。対象者は依頼作成時に確定して保存 | 2b |
 | submissions | T-F | id, target_id, version, comment, submitted_by, submitted_at, is_proxy（代理登録）, proxy_reason | **追記のみ**。UQ(target_id, version) | 2b |
 | submission_files | T-F | submission_id, file_id | 提出物のファイル。**書類（documents）とは別に保存**し、書類の一覧・検索に出さない。閲覧は本人・確認者・`submission.review` の範囲内の人のみ。確認者が「書類として保管」を選んだ場合だけ、閲覧者リスト付きの「限定」書類として複製 | 2b |
@@ -460,7 +460,7 @@ flowchart LR
 
 | テーブル | 種類 | 主な列 | 説明・制約 | 実装 |
 |---|---|---|---|---|
-| notifications | T-F | id, organization_id, facility_id, recipient_user_id, event, target_kind, target_id, channel（`in_app` / `email` / 将来 `web_push` 等）, title, body, **dedupe_key**, status（`pending` / `sent` / `failed` / `skipped` / `cancelled`）, scheduled_for, attempts, last_error, sent_at, read_at | UQ(dedupe_key) WHERE status <> 'cancelled'（取り消した通知は重複判定から外す。期限を変更して元に戻した場合も、新しい通知を作れる）。`dedupe_key`＝`{event}:{target}:{recipient}:{期限日}:{timing}:{channel}`。`target_kind`/`target_id` は画面へのリンク用の参照で、表示時に閲覧権限を再確認する（整合性が必要なデータではないため、DB-15 の例外） | 2b（メールは3） |
+| notifications | T-F | id, organization_id, facility_id, recipient_user_id, event, target_kind, target_id, channel（`in_app` / `email` / 将来 `web_push` 等）, title, body, **dedupe_key**, urgency（`immediate`＝すぐ送る / `digest`＝まとめて送る）, delivery_id（まとめて送った1通のID）, status（`pending` / `sent` / `failed` / `skipped` / `cancelled`）, scheduled_for, attempts, last_error, sent_at, read_at | UQ(dedupe_key) WHERE status <> 'cancelled'（取り消した通知は重複判定から外す。期限を変更して元に戻した場合も、新しい通知を作れる）。`dedupe_key`＝`{event}:{target}:{recipient}:{期限日}:{timing}:{channel}`。`target_kind`/`target_id` は画面へのリンク用の参照で、表示時に閲覧権限を再確認する（整合性が必要なデータではないため、DB-15 の例外） | 2b（メールは3） |
 
 既定の通知表（施設・法人の設定で置き換え可能）：
 
@@ -485,6 +485,9 @@ flowchart LR
 - 受信時間帯：施設の既定（8時〜19時）と**本人の設定**（夜勤者など）の両方を満たす時間だけ送る。時間外は `scheduled_for` を次の送信可能時刻にする
 - 定期処理が止まっていた場合：再開時、本来の送信時刻から**24時間以内**かつ条件がまだ成り立つものだけ送り、それ以外は `skipped`（理由を記録）
 - 送信失敗：最大3回まで間隔をあけて再送し、失敗は `failed` として管理者画面に表示
+- **まとめ送信**：`digest` の通知は、同じ受信者・同じチャネル・同じ送信時刻帯のものを1通にまとめて送る（例：「今日が期限の提出が2件あります」）。各行には同じ `delivery_id` を記録し、行ごとの履歴と重複防止はそのまま保つ。差し戻し・承認依頼・当日中の期限など急ぐものは `immediate`。本人はマイページでまとめ送信を止められる
+- **声かけのリマインド**：提出依頼の督促を `escalate_after` 回送っても未提出・差し戻し中の人がいる場合、依頼者に「直接声をかけてください（n名）」を1回だけ通知する（アカウントのない職員を含む）
+- **管理職の週1回のまとめ**：今週の期限・期限超過・承認待ちの件数と一覧へのリンクを、管理職に週1回メールで送る（PHASE 3。本文に業務名・氏名を書かない）
 
 ### 4.11 AI
 

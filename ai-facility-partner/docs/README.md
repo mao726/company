@@ -40,6 +40,8 @@ PHASE 0 の質問 Q1〜Q6 は未回答のため、推奨案を「仮定」とし
 | | [module-specifications.md](product/module-specifications.md) | モジュール仕様 |
 | | [user-flows.md](product/user-flows.md) | 業務の流れ |
 | | [screen-design.md](product/screen-design.md) | 画面設計 |
+| | [design-guidelines.md](product/design-guidelines.md) | デザインガイドライン（文字・色・部品・文章） |
+| | [benchmark-research.md](product/benchmark-research.md) | 他業界の製品リサーチと取り入れる点 |
 | development | [development-progress.md](development/development-progress.md) | 進捗 |
 | | [technical-decisions.md](development/technical-decisions.md) | 判断記録 |
 | | [open-decisions.md](development/open-decisions.md) | 判断が必要な事項 |
